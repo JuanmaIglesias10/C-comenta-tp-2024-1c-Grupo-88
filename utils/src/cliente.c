@@ -1,4 +1,4 @@
-#include "cliente.h"
+#include "../include/cliente.h"
 
 void* serializar_paquete(t_paquete* paquete, int bytes)
 {

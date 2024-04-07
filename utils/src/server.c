@@ -1,4 +1,4 @@
-#include "server.h"
+#include "../include/server.h"
 
 void chequearErrores(char* tipoError, int status)
 {
