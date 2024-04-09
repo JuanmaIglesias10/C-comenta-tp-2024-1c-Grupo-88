@@ -7,10 +7,13 @@
 #include<unistd.h>
 #include<netdb.h>
 #include<commons/log.h>
+#include<commons/config.h>
 #include<commons/collections/list.h>
 #include<string.h>
 
-#define PUERTO "4444"
+#define PUERTO "4445"
+
+extern t_log* logger;
 
 void chequearErrores(char* tipoError, int status);
 int iniciar_servidor(void);
