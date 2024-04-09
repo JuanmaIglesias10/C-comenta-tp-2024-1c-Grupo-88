@@ -1,4 +1,6 @@
-#include "../include/protocolo.h"
+#include </home/utnso/tp-2024-1c-Grupo-88/utils/include/protocolo.h>
+
+t_log* logger;
 
 void enviar_mensaje(char* mensaje, int socket_cliente)
 {
