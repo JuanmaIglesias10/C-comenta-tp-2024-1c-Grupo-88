@@ -1,8 +1,5 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include <utils/hello.h>
+#include <../utils/include/protocolo.h>
+#include <../utils/include/sockets.h>
 
-int main(int argc, char* argv[]) {
-    decir_hola("CPU");
-    return 0;
-}
