@@ -1,4 +1,4 @@
-#include </home/utnso/tp-2024-1c-Grupo-88/utils/include/sockets.h>
+#include <../include/sockets.h>
 
 void chequearErrores(char* tipoError, int status)
 {

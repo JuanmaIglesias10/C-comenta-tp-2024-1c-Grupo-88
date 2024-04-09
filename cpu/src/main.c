@@ -1,7 +1,5 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <../utils/include/protocolo.h>
-#include <../utils/include/sockets.h>
+#include <../include/main.h>
+
 
 int main(void) {
     logger = log_create("log.log", "Servidor", 1, LOG_LEVEL_DEBUG);

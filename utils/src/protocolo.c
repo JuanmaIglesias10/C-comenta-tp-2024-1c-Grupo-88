@@ -1,6 +1,21 @@
-#include </home/utnso/tp-2024-1c-Grupo-88/utils/include/protocolo.h>
+#include <../include/protocolo.h>
 
-t_log* logger;
+t_log *logger;
+
+void* serializar_paquete(t_paquete* paquete, int bytes)
+{
+	void * magic = malloc(bytes);
+	int desplazamiento = 0;
+
+	memcpy(magic + desplazamiento, &(paquete->codigo_operacion), sizeof(int));
+	desplazamiento+= sizeof(int);
+	memcpy(magic + desplazamiento, &(paquete->buffer->size), sizeof(int));
+	desplazamiento+= sizeof(int);
+	memcpy(magic + desplazamiento, paquete->buffer->stream, paquete->buffer->size);
+	desplazamiento+= paquete->buffer->size;
+
+	return magic;
+}
 
 void enviar_mensaje(char* mensaje, int socket_cliente)
 {
@@ -22,7 +37,14 @@ void enviar_mensaje(char* mensaje, int socket_cliente)
 	eliminar_paquete(paquete);
 }
 
-t_paquete* crear_paquete(void)
+void crear_buffer(t_paquete* paquete) //no lo estamos usando
+{
+	paquete->buffer = malloc(sizeof(t_buffer));
+	paquete->buffer->size = 0;
+	paquete->buffer->stream = NULL;
+}
+
+t_paquete* crear_paquete(void) // no lo estamos usando
 {
 	t_paquete* paquete = malloc(sizeof(t_paquete));
 	paquete->codigo_operacion = PAQUETE;
