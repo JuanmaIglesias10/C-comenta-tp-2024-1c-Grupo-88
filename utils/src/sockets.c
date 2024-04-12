@@ -8,7 +8,7 @@ void chequearErrores(char* tipoError, int status)
 	}
 }
 
-int iniciar_servidor(void)
+int iniciar_servidor(char* puerto)
 {
 
 	int socket_servidor; // int fd_escucha
@@ -21,7 +21,7 @@ int iniciar_servidor(void)
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_flags = AI_PASSIVE;
 
-	status = getaddrinfo(NULL, PUERTO, &hints, &servinfo); // -1 = ERROR, 0 = OK
+	status = getaddrinfo(NULL, puerto, &hints, &servinfo); // -1 = ERROR, 0 = OK
 	chequearErrores("getaddrinfo error", status);
 
 	// Creamos el socket de escucha del servidor

@@ -16,7 +16,7 @@
 extern t_log* logger;
 
 void chequearErrores(char* tipoError, int status);
-int iniciar_servidor(void);
+int iniciar_servidor(char* puerto);
 int esperar_cliente(int);
 int crear_conexion(char* ip, char* puerto);
 void liberar_conexion(int socket_cliente);

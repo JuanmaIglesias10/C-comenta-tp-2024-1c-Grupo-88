@@ -1,6 +1,6 @@
 #include <../include/protocolo.h>
 
-t_log *logger;
+t_log* logger;
 
 void* serializar_paquete(t_paquete* paquete, int bytes)
 {

@@ -1,5 +1,3 @@
-#include <stdlib.h>
-#include <stdio.h>
 #include <../include/main.h>
 
 int main(void)
@@ -10,7 +8,7 @@ int main(void)
 
 	
 	t_config *config =iniciar_config();
-	t_log* logger = iniciar_logger();
+	t_log* logger = iniciar_logger("logCliente.log","Cliente de cpu",LOG_LEVEL_INFO);
 
 	ip = config_get_string_value(config, "IP");
 	puerto = config_get_string_value(config, "PUERTO");
@@ -33,9 +31,9 @@ t_config *iniciar_config(void)
 	return nuevo_config;
 }
 
-t_log* iniciar_logger(void)
+t_log* iniciar_logger(char* rutaLog, char* nombreProceso , t_log_level level)
 {
-	t_log* nuevo_logger = log_create("tp0.log", "nombre_proceso", true, LOG_LEVEL_INFO);
+	t_log* nuevo_logger = log_create(rutaLog, nombreProceso, true, level);
 	if (nuevo_logger == NULL) {
 		printf("no se pudo crear el log");
 		exit(3);
