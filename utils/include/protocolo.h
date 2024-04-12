@@ -11,7 +11,6 @@
 #include<commons/log.h>
 #include<commons/collections/list.h>
 
-extern t_log* logger;
 
 typedef enum
 {
@@ -39,8 +38,10 @@ void agregar_a_paquete(t_paquete* paquete, void* valor, int tamanio);
 void enviar_paquete(t_paquete* paquete, int socket_cliente);
 void eliminar_paquete(t_paquete* paquete);
 t_list* recibir_paquete(int);
-void recibir_mensaje(int);
+void recibir_mensaje(int, t_log*);
 int recibir_operacion(int);
 void* recibir_buffer(int* size, int socket_cliente);
+t_config *iniciar_config(void);
+t_log* iniciar_logger(char* rutaLog, char* nombreProceso , t_log_level level);
 
 #endif

@@ -1,7 +1,5 @@
 #include <../include/protocolo.h>
 
-t_log* logger;
-
 void* serializar_paquete(t_paquete* paquete, int bytes)
 {
 	void * magic = malloc(bytes);
@@ -101,7 +99,7 @@ t_list* recibir_paquete(int socket_cliente)
 	return valores;
 }
 
-void recibir_mensaje(int socket_cliente)
+void recibir_mensaje(int socket_cliente,t_log* logger)
 {
 	int size;
 	char* buffer = recibir_buffer(&size, socket_cliente);
@@ -130,4 +128,25 @@ void* recibir_buffer(int* size, int socket_cliente)
 	recv(socket_cliente, buffer, *size, MSG_WAITALL);
 
 	return buffer;
+}
+
+t_config *iniciar_config(void)
+{
+	t_config *nuevo_config = config_create("kernel.config");
+	if (nuevo_config == NULL)
+	{
+		perror("Hubo un error en las CONFIG");
+		exit(EXIT_FAILURE);
+	}
+	return nuevo_config;
+}
+
+t_log* iniciar_logger(char* rutaLog, char* nombreProceso , t_log_level level)
+{
+	t_log* nuevo_logger = log_create(rutaLog, nombreProceso, true, level);
+	if (nuevo_logger == NULL) {
+		printf("no se pudo crear el log");
+		exit(3);
+	}
+	return nuevo_logger;
 }
