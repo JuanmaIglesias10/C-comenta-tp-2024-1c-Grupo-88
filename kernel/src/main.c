@@ -2,21 +2,10 @@
 
 int main(void)
 {
-	int conexion;
-	char *ip;
-	char *puerto;
+	t_log * logger;
 
-	
 	t_config *config =iniciar_config();
+	logger = iniciar_logger("logKernel.log","Client",LOG_LEVEL_INFO);
 
-	t_log* logger = iniciar_logger("logCliente.log","Cliente de cpu",LOG_LEVEL_INFO);
-
-	ip = config_get_string_value(config, "IP");
-	puerto = config_get_string_value(config, "PUERTO");
-
-	conexion = crear_conexion(ip, puerto);
-
-	enviar_mensaje("hola, soy el kernel", conexion);
-	liberar_conexion(conexion);
-	config_destroy(config);
+	conectarse(config,"IP","PUERTO_CPU","Kernel");
 }

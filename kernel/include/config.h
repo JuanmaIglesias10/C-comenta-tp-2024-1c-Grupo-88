@@ -2,5 +2,5 @@
 #include <stdio.h>
 #include <../../utils/include/protocolo.h>
 #include <../../utils/include/sockets.h>
-#include "config.h"
 
+t_config* iniciar_config(void);
