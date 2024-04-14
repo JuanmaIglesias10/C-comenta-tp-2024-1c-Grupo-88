@@ -1,14 +1,6 @@
 #include <../include/sockets.h>
 
-void chequearErrores(char* tipoError, int status)
-{
-	if (status == -1) {
-    	fprintf(stderr, "%s: %s\n", tipoError, gai_strerror(status));
-    	exit(1);
-	}
-}
-
-int iniciar_servidor(char* puerto,*t_log logger)
+int iniciar_servidor(char* puerto,t_log* logger)
 {
 
 	int socket_servidor; // int fd_escucha
@@ -89,39 +81,4 @@ int crear_conexion(char *ip, char* puerto)
 void liberar_conexion(int socket_cliente)
 {
 	close(socket_cliente);
-}
-
-int server_escuchar(t_log *logger, char *puerto)
-{
-	int server_fd = iniciar_servidor(puerto);
-	log_info(logger, "Servidor listo para recibir al cliente");
-	int cliente_fd = esperar_cliente(server_fd);
-
-	while (1) {
-		int cod_op = recibir_operacion(cliente_fd);
-		switch (cod_op) {
-		case MENSAJE:
-			recibir_mensaje(cliente_fd);
-			break;
-		case -1:
-			log_error(logger, "el cliente se desconecto. Terminando servidor");
-			return EXIT_FAILURE;
-		default:
-			log_warning(logger,"Operacion desconocida. No quieras meter la pata");
-			break;
-		}
-	}
-	return EXIT_SUCCESS;
-}
-
-void conectarse(t_config *config, char *ip, char *puerto, char *nombreDelModulo) 
-{
-	ip = config_get_string_value(config, "IP");
-	puerto = config_get_string_value(config, "PUERTO_MEMORIA");
-
-	char *conexion = crear_conexion(ip, puerto);
-
-	enviar_mensaje("hola, soy el %s", nombreDelModulo, conexion);
-	liberar_conexion(conexion);
-	config_destroy(config);
 }

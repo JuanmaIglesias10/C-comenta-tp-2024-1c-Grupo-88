@@ -9,8 +9,8 @@
 #include<netdb.h>
 #include<string.h>
 #include<commons/log.h>
+#include<commons/config.h>
 #include<commons/collections/list.h>
-
 
 typedef enum
 {
@@ -41,7 +41,5 @@ t_list* recibir_paquete(int);
 void recibir_mensaje(int, t_log*);
 int recibir_operacion(int);
 void* recibir_buffer(int* size, int socket_cliente);
-t_config *iniciar_config(void);
-t_log* iniciar_logger(char* rutaLog, char* nombreProceso , t_log_level level);
 
 #endif
