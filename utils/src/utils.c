@@ -32,7 +32,6 @@ t_log* iniciar_logger(char* rutaLog, char* nombreProceso , t_log_level level)
 int server_escuchar(t_log *logger, char *puerto)
 {
 	int server_fd = iniciar_servidor(puerto, logger);
-	log_info(logger, "Servidor listo para recibir al cliente");
 	int cliente_fd = esperar_cliente(server_fd, logger);
 
 	while (1) {
@@ -42,24 +41,28 @@ int server_escuchar(t_log *logger, char *puerto)
 			recibir_mensaje(cliente_fd, logger);
 			break;
 		case -1:
-			log_error(logger, "el cliente se desconecto. Terminando servidor");
-			return EXIT_FAILURE;
+			log_info(logger, "El cliente se desconecto.");
+			break;//return EXIT_FAILURE;
 		default:
 			log_warning(logger,"Operacion desconocida. No quieras meter la pata");
 			break;
 		}
+		cliente_fd = esperar_cliente(server_fd, logger);
 	}
 	return EXIT_SUCCESS;
 }
 
-void conectarse(t_config *config, char *keyIP, char* keyPuerto, char *nombreDelModulo) // nombre del modulo al pedo
+void conectarse(t_config *config, char *keyIP, char* keyPuerto, char *nombreDelModulo,t_log* logger)
 {
 	char* ip = config_get_string_value(config, keyIP);
 	char* puerto = config_get_string_value(config, keyPuerto);
 
 	int conexion = crear_conexion(ip, puerto);
-
-	enviar_mensaje("hola, me conecte XD", conexion);
+	log_info(logger, "Me conecte a %s", keyPuerto); // TODO
+	char mensaje[100];
+	sprintf(mensaje, "hola, soy el %s, me conecte XD", nombreDelModulo);
+	enviar_mensaje(mensaje, conexion); 
 	liberar_conexion(conexion);
+	log_info(logger, "Me desconecte de %s", keyPuerto); // TODO
 	config_destroy(config);
 }

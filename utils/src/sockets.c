@@ -41,9 +41,9 @@ int iniciar_servidor(char* puerto,t_log* logger)
 int esperar_cliente(int socket_servidor,t_log* logger){
     
     // Aceptamos un nuevo cliente
+	log_info(logger, "Servidor listo para recibir al cliente");
 	int socket_cliente = accept(socket_servidor, NULL, NULL); // -1 = ERROR, int = OK
 	chequearErrores("accept error", socket_cliente);
-
 	log_info(logger, "Se conecto un cliente!");
 
 	return socket_cliente;
@@ -72,7 +72,7 @@ int crear_conexion(char *ip, char* puerto)
 	// Ahora que tenemos el socket, vamos a conectarlo
 	status = connect(socket_cliente, server_info->ai_addr, server_info->ai_addrlen); // -1 = ERROR
 	chequearErrores("connect error", socket_cliente);
-
+	
 	freeaddrinfo(server_info);
 
 	return socket_cliente;

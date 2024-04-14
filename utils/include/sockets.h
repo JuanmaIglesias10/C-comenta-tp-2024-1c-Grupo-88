@@ -12,7 +12,7 @@
 #include<string.h>
 #include<signal.h>
 
-
+#include "utils.h"
 
 
 int iniciar_servidor(char* puerto, t_log* logger);

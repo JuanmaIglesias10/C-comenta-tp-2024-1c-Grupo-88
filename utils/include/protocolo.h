@@ -12,6 +12,8 @@
 #include<commons/config.h>
 #include<commons/collections/list.h>
 
+#include "utils.h"
+
 typedef enum
 {
 	MENSAJE,
