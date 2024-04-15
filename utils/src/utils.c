@@ -58,11 +58,19 @@ void conectarse(t_config *config, char *keyIP, char* keyPuerto, char *nombreDelM
 	char* puerto = config_get_string_value(config, keyPuerto);
 
 	int conexion = crear_conexion(ip, puerto);
-	log_info(logger, "Me conecte a %s", keyPuerto); // TODO
+
+	char *nombreServer = strchr(keyPuerto, '_');
+    if (nombreServer != NULL) {
+		nombreServer++; //No imprimo el _
+        log_info(logger, "Me conecté a %s", nombreServer);
+    } else {
+        log_info(logger, "Underscore not found."); // Log si no paso un keyPuerto correcto
+    }
+	
 	char mensaje[100];
-	sprintf(mensaje, "hola, soy el %s, me conecte XD", nombreDelModulo);
+	sprintf(mensaje, "Buenas, soy el %s, me conecte", nombreDelModulo);
 	enviar_mensaje(mensaje, conexion); 
 	liberar_conexion(conexion);
-	log_info(logger, "Me desconecte de %s", keyPuerto); // TODO
+	log_info(logger, "Me desconecte de %s", nombreServer); // TODO
 	config_destroy(config);
 }
