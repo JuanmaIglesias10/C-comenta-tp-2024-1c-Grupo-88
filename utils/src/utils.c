@@ -32,62 +32,65 @@ t_log* iniciar_logger(char* rutaLog, char* nombreProceso , t_log_level level)
 int server_escuchar(t_log *logger, char *puerto)
 {
 	int server_fd = iniciar_servidor(puerto, logger);
-	int cliente_fd = esperar_cliente(server_fd, logger);
-	int hs = handshake_servidor(cliente_fd);
-
-	while(hs < 0){
-        log_error(logger,"Resultado del handshake incorrecto");
-        int cliente_fd = esperar_cliente(server_fd, logger);
-		int hs = handshake_servidor(cliente_fd);
-	}
-	
 	while (1) {
+		int cliente_fd = esperar_cliente(server_fd, logger); 
+		int hs = handshake_servidor(cliente_fd); 
+
+		while(hs < 0){ 
+			log_error(logger,"Resultado del handshake incorrecto");
+			liberar_conexion(cliente_fd); 
+			cliente_fd = esperar_cliente(server_fd, logger);
+			hs = handshake_servidor(cliente_fd); 
+		}
+
 		int cod_op = recibir_operacion(cliente_fd);
 		switch (cod_op) {
 		case MENSAJE:
 			recibir_mensaje(cliente_fd, logger);
 			break;
-//		case -1:
-//			log_info(logger, "El cliente se desconecto.");
-//			break;//return EXIT_FAILURE;
 		default:
 			log_warning(logger,"Operacion desconocida. No quieras meter la pata");
 			break;
 		}
 		log_info(logger, "El cliente se desconecto.");
-		cliente_fd = esperar_cliente(server_fd, logger);
+		liberar_conexion(cliente_fd);
 	}
 	return EXIT_SUCCESS;
 }
 
-void conectarse(t_config *config, char *keyIP, char* keyPuerto, char *nombreDelModulo,t_log* logger)
+
+void conectarse(t_config *config, char *keyIP, char* keyPuerto, char *nombreDelModulo, t_log* logger)
 {
 	char* ip = config_get_string_value(config, keyIP);
 	char* puerto = config_get_string_value(config, keyPuerto);
 
 	int conexion = crear_conexion(ip, puerto);
 
-	
-	//keyPuerto = PUERTO_MEMORIA ----> MEMORIA
 	char *nombreServer = strchr(keyPuerto, '_');
     if (nombreServer != NULL) {
-		nombreServer++; //No imprimo el _
+		nombreServer++;
         log_info(logger, "Me conecté a %s", nombreServer);
     } else {
-        log_info(logger, "Underscore not found."); // Log si no paso un keyPuerto correcto
+        log_info(logger, "Underscore not found."); 
     }
 
 	int hs = handshake_cliente(conexion);
 
 	if(hs<0){
 		log_error(logger,"Resultado del handshake incorrecto");
-		return 0;
+		liberar_conexion(conexion);
+		config_destroy(config);
+		return;
 	}
 
 	char mensaje[100];
 	sprintf(mensaje, "Buenas, soy el %s, me conecte", nombreDelModulo);
+
 	enviar_mensaje(mensaje, conexion); 
+
 	liberar_conexion(conexion);
-	log_info(logger, "Me desconecte de %s", nombreServer); // TODO
+
+	log_info(logger, "Me desconecte de %s", nombreServer);
+
 	config_destroy(config);
 }
