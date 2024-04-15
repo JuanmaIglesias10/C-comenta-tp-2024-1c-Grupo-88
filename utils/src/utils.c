@@ -33,16 +33,23 @@ int server_escuchar(t_log *logger, char *puerto)
 {
 	int server_fd = iniciar_servidor(puerto, logger);
 	int cliente_fd = esperar_cliente(server_fd, logger);
+	int hs = handshake_servidor(cliente_fd);
 
+	while(hs < 0){
+        log_error(logger,"Resultado del handshake incorrecto");
+        int cliente_fd = esperar_cliente(server_fd, logger);
+		int hs = handshake_servidor(cliente_fd);
+	}
+	
 	while (1) {
 		int cod_op = recibir_operacion(cliente_fd);
 		switch (cod_op) {
 		case MENSAJE:
 			recibir_mensaje(cliente_fd, logger);
 			break;
-		case -1:
-			log_info(logger, "El cliente se desconecto.");
-			break;//return EXIT_FAILURE;
+//		case -1:
+//			log_info(logger, "El cliente se desconecto.");
+//			break;//return EXIT_FAILURE;
 		default:
 			log_warning(logger,"Operacion desconocida. No quieras meter la pata");
 			break;
@@ -60,6 +67,8 @@ void conectarse(t_config *config, char *keyIP, char* keyPuerto, char *nombreDelM
 
 	int conexion = crear_conexion(ip, puerto);
 
+	
+	//keyPuerto = PUERTO_MEMORIA ----> MEMORIA
 	char *nombreServer = strchr(keyPuerto, '_');
     if (nombreServer != NULL) {
 		nombreServer++; //No imprimo el _
@@ -67,7 +76,14 @@ void conectarse(t_config *config, char *keyIP, char* keyPuerto, char *nombreDelM
     } else {
         log_info(logger, "Underscore not found."); // Log si no paso un keyPuerto correcto
     }
-	
+
+	int hs = handshake_cliente(conexion);
+
+	if(hs<0){
+		log_error(logger,"Resultado del handshake incorrecto");
+		return 0;
+	}
+
 	char mensaje[100];
 	sprintf(mensaje, "Buenas, soy el %s, me conecte", nombreDelModulo);
 	enviar_mensaje(mensaje, conexion); 

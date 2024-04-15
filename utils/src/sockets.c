@@ -78,6 +78,39 @@ int crear_conexion(char *ip, char* puerto)
 	return socket_cliente;
 }
 
+int handshake_cliente(int socket_servidor){
+    uint32_t handshake = 1;
+    uint32_t handshake_result;
+
+    send(socket_servidor, &handshake, sizeof(uint32_t), NULL);
+    recv(socket_servidor, &handshake_result, sizeof(uint32_t), MSG_WAITALL);
+
+		if(handshake_result==2){
+    	return 1;
+		} else {
+			liberar_conexion(socket_servidor);
+			return -1;
+		}
+}
+
+int handshake_servidor(int socket_cliente){
+   	uint32_t handshake;
+    uint32_t resultOk = 2;
+    uint32_t resultError = 1;
+
+    recv(socket_cliente, &handshake, sizeof(uint32_t), MSG_WAITALL);
+    if(handshake == 1){
+       send(socket_cliente, &resultOk, sizeof(uint32_t), NULL);
+	   return 1;
+	} else{
+       send(socket_cliente, &resultError, sizeof(uint32_t), NULL);
+	   liberar_conexion(socket_cliente);
+	   return -1;
+	}
+}
+
+
+
 void liberar_conexion(int socket_cliente)
 {
 	close(socket_cliente);
