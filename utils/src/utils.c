@@ -47,6 +47,7 @@ int server_escuchar(t_log *logger, char *puerto)
 			log_warning(logger,"Operacion desconocida. No quieras meter la pata");
 			break;
 		}
+		log_info(logger, "El cliente se desconecto.");
 		cliente_fd = esperar_cliente(server_fd, logger);
 	}
 	return EXIT_SUCCESS;
