@@ -20,6 +20,4 @@ int main(void)
 
 	logger = iniciar_logger("logKernel.log", "Server", LOG_LEVEL_DEBUG);
 	server_escuchar(logger, "4446");
-
-
 }

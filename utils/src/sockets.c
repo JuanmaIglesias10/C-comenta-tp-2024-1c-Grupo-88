@@ -109,8 +109,6 @@ int handshake_servidor(int socket_cliente){
 	}
 }
 
-
-
 void liberar_conexion(int socket_cliente)
 {
 	close(socket_cliente);
