@@ -82,7 +82,7 @@ int handshake_cliente(int socket_servidor){
     uint32_t handshake = 1;
     uint32_t handshake_result;
 
-    send(socket_servidor, &handshake, sizeof(uint32_t), NULL);
+    send(socket_servidor, &handshake, sizeof(uint32_t), 0);
     recv(socket_servidor, &handshake_result, sizeof(uint32_t), MSG_WAITALL);
 
 		if(handshake_result==2){
@@ -100,10 +100,10 @@ int handshake_servidor(int socket_cliente){
 
     recv(socket_cliente, &handshake, sizeof(uint32_t), MSG_WAITALL);
     if(handshake == 1){
-       send(socket_cliente, &resultOk, sizeof(uint32_t), NULL);
+       send(socket_cliente, &resultOk, sizeof(uint32_t), 0);
 	   return 1;
 	} else{
-       send(socket_cliente, &resultError, sizeof(uint32_t), NULL);
+       send(socket_cliente, &resultError, sizeof(uint32_t), 0);
 	   liberar_conexion(socket_cliente);
 	   return -1;
 	}

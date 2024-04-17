@@ -9,7 +9,7 @@ int main(void) {
 	t_config* config = iniciar_config("../cpu.config");
 	logger = iniciar_logger("logCPU.log","Client",LOG_LEVEL_INFO);
 
-	conectarse(config, "IP", "PUERTO_MEMORIA", "cpu", logger);
+	conectarse(config, "IP", "PUERTO_MEMORIA", "CPU", logger);
 
 	// ----------- KERNEL ------> CPU ------------------------
 

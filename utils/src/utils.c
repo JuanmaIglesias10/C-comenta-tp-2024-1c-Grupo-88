@@ -48,6 +48,9 @@ int server_escuchar(t_log *logger, char *puerto)
 		case MENSAJE:
 			recibir_mensaje(cliente_fd, logger);
 			break;
+		case -1:
+			log_error(logger,"El cliente se desconecto");
+			continue;
 		default:
 			log_warning(logger,"Operacion desconocida. No quieras meter la pata");
 			break;
@@ -66,31 +69,33 @@ void conectarse(t_config *config, char *keyIP, char* keyPuerto, char *nombreDelM
 
 	int conexion = crear_conexion(ip, puerto);
 
-	char *nombreServer = strchr(keyPuerto, '_');
-    if (nombreServer != NULL) {
-		nombreServer++;
-        log_info(logger, "Me conecté a %s", nombreServer);
-    } else {
-        log_info(logger, "Underscore not found."); 
-    }
+	char* nombreServer = obtenerNombreServer(keyPuerto);
 
 	int hs = handshake_cliente(conexion);
-
 	if(hs<0){
 		log_error(logger,"Resultado del handshake incorrecto");
-		liberar_conexion(conexion);
 		config_destroy(config);
 		return;
+	} else {
+		log_info(logger, "Me conecté a %s", nombreServer);
 	}
 
 	char mensaje[100];
 	sprintf(mensaje, "Buenas, soy el %s, me conecte", nombreDelModulo);
-
 	enviar_mensaje(mensaje, conexion); 
 
+
 	liberar_conexion(conexion);
-
 	log_info(logger, "Me desconecte de %s", nombreServer);
-
 	config_destroy(config);
+}
+
+char* obtenerNombreServer(char* keyPuerto){
+	char *nombreServer = strchr(keyPuerto, '_');
+	if (nombreServer != NULL) {
+		nombreServer++;
+		return nombreServer;
+	} else {
+		return "ERROR_NOMBRE";
+	}
 }

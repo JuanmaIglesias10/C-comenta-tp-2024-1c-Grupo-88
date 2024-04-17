@@ -7,14 +7,14 @@ int main(void)
 	t_config *config = iniciar_config("../kernel.config");
 	t_log * logger = iniciar_logger("logKernel.log","Client",LOG_LEVEL_INFO);
 
-	conectarse(config,"IP","PUERTO_CPU","Kernel", logger);
+	conectarse(config,"IP","PUERTO_CPU","KERNEL", logger);
 
 	// ------------  KERNEL ------> MEMORIA -------------------
 	
 	config = iniciar_config("../kernel.config");
 	logger = iniciar_logger("logKernel.log","Client",LOG_LEVEL_INFO);
 
-	conectarse(config, "IP", "PUERTO_MEMORIA", "kernel", logger);
+	conectarse(config, "IP", "PUERTO_MEMORIA", "KERNEL", logger);
 	
 	// ----------- ENTRADA_SALIDA ----> KERNEL ------------------------
 
