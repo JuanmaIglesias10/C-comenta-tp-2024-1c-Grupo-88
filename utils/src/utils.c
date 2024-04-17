@@ -29,36 +29,30 @@ t_log* iniciar_logger(char* rutaLog, char* nombreProceso , t_log_level level)
 	return nuevo_logger;
 }
 
-int server_escuchar(t_log *logger, char *puerto)
+void* server_escuchar(t_log *logger, int cliente_fd, char* nombreCliente)
 {
-	int server_fd = iniciar_servidor(puerto, logger);
-	while (1) {
-		int cliente_fd = esperar_cliente(server_fd, logger); 
-		int hs = handshake_servidor(cliente_fd); 
-
-		while(hs < 0){ 
-			log_error(logger,"Resultado del handshake incorrecto");
-			liberar_conexion(cliente_fd); 
-			cliente_fd = esperar_cliente(server_fd, logger);
-			hs = handshake_servidor(cliente_fd); 
-		}
-
+	int control_key = 1;
+	while (control_key) {
 		int cod_op = recibir_operacion(cliente_fd);
 		switch (cod_op) {
 		case MENSAJE:
-			recibir_mensaje(cliente_fd, logger);
+			// recibir_mensaje(cliente_fd);
+			break;
+		case PAQUETE:
+			// lista = recibir_paquete(cliente_fd);
+			// log_info(logger, "Me llegaron los siguientes valores:\n");
+			// list_iterate(lista, (void*) iterator);
 			break;
 		case -1:
-			log_error(logger,"El cliente se desconecto");
-			continue;
+			log_error(logger, "el cliente %s se desconecto.", nombreCliente);
+			control_key = 0;
+			// return EXIT_FAILURE;
+			break;
 		default:
 			log_warning(logger,"Operacion desconocida. No quieras meter la pata");
 			break;
 		}
-		log_info(logger, "El cliente se desconecto.");
-		liberar_conexion(cliente_fd);
 	}
-	return EXIT_SUCCESS;
 }
 
 
@@ -69,24 +63,24 @@ void conectarse(t_config *config, char *keyIP, char* keyPuerto, char *nombreDelM
 
 	int conexion = crear_conexion(ip, puerto);
 
-	char* nombreServer = obtenerNombreServer(keyPuerto);
+	// char* nombreServer = obtenerNombreServer(keyPuerto);
 
-	int hs = handshake_cliente(conexion);
-	if(hs<0){
-		log_error(logger,"Resultado del handshake incorrecto");
-		config_destroy(config);
-		return;
-	} else {
-		log_info(logger, "Me conecté a %s", nombreServer);
-	}
+	// int hs = handshake_cliente(conexion);
+	// if(hs<0){
+	// 	log_error(logger,"Resultado del handshake incorrecto");
+	// 	config_destroy(config);
+	// 	return;
+	// } else {
+	// 	log_info(logger, "Me conecté a %s", nombreServer);
+	// }
 
-	char mensaje[100];
-	sprintf(mensaje, "Buenas, soy el %s, me conecte", nombreDelModulo);
-	enviar_mensaje(mensaje, conexion); 
+	// char mensaje[100];
+	// sprintf(mensaje, "Buenas, soy el %s, me conecte", nombreDelModulo);
+	// enviar_mensaje(mensaje, conexion); 
 
 
-	liberar_conexion(conexion);
-	log_info(logger, "Me desconecte de %s", nombreServer);
+	// liberar_conexion(conexion);
+	// log_info(logger, "Me desconecte de %s", nombreServer);
 	config_destroy(config);
 }
 

@@ -1,53 +1,44 @@
 #include <../include/sockets.h>
 
-int iniciar_servidor(char* puerto,t_log* logger)
-{
+int iniciar_servidor(char* puerto, t_log* logger) {
+    int socket_servidor;
+    int status;
+    struct addrinfo hints, *servinfo;
 
-	int socket_servidor; // int fd_escucha
-	int status;
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_flags = AI_PASSIVE;
 
-	struct addrinfo hints, *servinfo;
+    status = getaddrinfo(NULL, puerto, &hints, &servinfo);
+    chequearErrores("getaddrinfo error", status);
 
-	memset(&hints, 0, sizeof(hints));
-	hints.ai_family = AF_INET;
-	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_flags = AI_PASSIVE;
+    socket_servidor = socket(servinfo->ai_family,
+                             servinfo->ai_socktype,
+                             servinfo->ai_protocol);
+    chequearErrores("socket error", socket_servidor); // Use socket_servidor for error checking
 
-	status = getaddrinfo(NULL, puerto, &hints, &servinfo); // -1 = ERROR, 0 = OK
-	chequearErrores("getaddrinfo error", status);
+    status = bind(socket_servidor, servinfo->ai_addr, servinfo->ai_addrlen);
+    chequearErrores("bind error", status);
 
-	// Creamos el socket de escucha del servidor
-	socket_servidor = socket(servinfo->ai_family,
-                        	servinfo->ai_socktype,
-                        	servinfo->ai_protocol);
-	chequearErrores("socket error", status);
+    status = listen(socket_servidor, SOMAXCONN);
+    chequearErrores("listen error", status);
 
-	// Asociamos el socket a un puerto
-	status = bind(socket_servidor, servinfo->ai_addr, servinfo->ai_addrlen); // -1 = ERROR, 0 = OK
-	chequearErrores("bind error", status);
+    freeaddrinfo(servinfo);
+    log_trace(logger, "Listo para escuchar a mi cliente");
 
-	// Escuchamos las conexiones entrantes
-	status = listen(socket_servidor, SOMAXCONN); // -1 = ERROR, 0 = OK
-	chequearErrores("listen error", status);
-
-	freeaddrinfo(servinfo);
-	log_trace(logger, "Listo para escuchar a mi cliente");
-
-	return socket_servidor;
-
-	// VER COMO LIBERAR MEMORIA EN CASO DE FALLA free(servinfo);
+    return socket_servidor;
 }
 
-int esperar_cliente(int socket_servidor,t_log* logger){
-    
-    // Aceptamos un nuevo cliente
-	log_info(logger, "Servidor listo para recibir al cliente");
-	int socket_cliente = accept(socket_servidor, NULL, NULL); // -1 = ERROR, int = OK
-	chequearErrores("accept error", socket_cliente);
-	log_info(logger, "Se conecto un cliente!");
+int esperar_cliente(int socket_servidor, t_log* logger, char* nombreCliente) {
+    log_info(logger, "Servidor listo para recibir al cliente");
+    int socket_cliente = accept(socket_servidor, NULL, NULL);
+    chequearErrores("accept error", socket_cliente);
+    log_info(logger, "Se conectó %s", nombreCliente);
 
-	return socket_cliente;
+    return socket_cliente;
 }
+
 
 int crear_conexion(char *ip, char* puerto)
 {
