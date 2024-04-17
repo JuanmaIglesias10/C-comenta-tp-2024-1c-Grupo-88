@@ -1,0 +1,3 @@
+Comando para compilar mas rapido:
+PARARSE EN ./bin
+cd .. && make clean && make all && cd ./bin 

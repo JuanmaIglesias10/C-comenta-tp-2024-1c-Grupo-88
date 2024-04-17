@@ -6,7 +6,7 @@ int iniciar_servidor(char* puerto,t_log* logger)
 	int socket_servidor; // int fd_escucha
 	int status;
 
-	struct addrinfo hints, *servinfo, *p;
+	struct addrinfo hints, *servinfo;
 
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = AF_INET;
