@@ -1,37 +1,35 @@
 #include <../include/sockets.h>
 
-int iniciar_servidor(char* puerto, t_log* logger) {
-    int socket_servidor;
-    int status;
-    struct addrinfo hints, *servinfo;
+int iniciar_servidor(char* PUERTO, t_log* logger)
+{
+	int socket_servidor;
 
-    memset(&hints, 0, sizeof(hints));
-    hints.ai_family = AF_INET;
-    hints.ai_socktype = SOCK_STREAM;
-    hints.ai_flags = AI_PASSIVE;
+	struct addrinfo hints, *server_info, *p;
 
-    status = getaddrinfo(NULL, puerto, &hints, &servinfo);
-    chequearErrores("getaddrinfo error", status);
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = AF_INET;
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_flags = AI_PASSIVE;
 
-    socket_servidor = socket(servinfo->ai_family,
-                             servinfo->ai_socktype,
-                             servinfo->ai_protocol);
-    chequearErrores("socket error", socket_servidor); // Use socket_servidor for error checking
+	getaddrinfo(NULL, PUERTO, &hints, &server_info);
 
-    status = bind(socket_servidor, servinfo->ai_addr, servinfo->ai_addrlen);
-    chequearErrores("bind error", status);
+	// Creamos el socket de escucha del servidor
+	socket_servidor = socket(server_info->ai_family,
+                        server_info->ai_socktype,
+                        server_info->ai_protocol);
+	// Asociamos el socket a un puerto
+	bind(socket_servidor, server_info->ai_addr, server_info->ai_addrlen);
+	// Escuchamos las conexiones entrantes
+	listen(socket_servidor, SOMAXCONN);
 
-    status = listen(socket_servidor, SOMAXCONN);
-    chequearErrores("listen error", status);
+	freeaddrinfo(server_info);
+	log_trace(logger, "Listo para escuchar a mi cliente");
 
-    freeaddrinfo(servinfo);
-    log_trace(logger, "Listo para escuchar a mi cliente");
-
-    return socket_servidor;
+	return socket_servidor;
 }
 
 int esperar_cliente(int socket_servidor, t_log* logger, char* nombreCliente) {
-    log_info(logger, "Servidor listo para recibir al cliente");
+    log_info(logger, "Servidor listo para recibir a %s", nombreCliente);
     int socket_cliente = accept(socket_servidor, NULL, NULL);
     chequearErrores("accept error", socket_cliente);
     log_info(logger, "Se conectó %s", nombreCliente);

@@ -56,12 +56,13 @@ void* server_escuchar(t_log *logger, int cliente_fd, char* nombreCliente)
 }
 
 
-void conectarse(t_config *config, char *keyIP, char* keyPuerto, char *nombreDelModulo, t_log* logger)
+int conectarse(t_config *config, char *keyIP, char* keyPuerto, char *nombreDelModulo, t_log* logger)
 {
 	char* ip = config_get_string_value(config, keyIP);
 	char* puerto = config_get_string_value(config, keyPuerto);
 
 	int conexion = crear_conexion(ip, puerto);
+	return conexion;
 
 	// char* nombreServer = obtenerNombreServer(keyPuerto);
 
