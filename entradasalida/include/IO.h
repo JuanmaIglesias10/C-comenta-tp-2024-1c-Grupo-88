@@ -1,4 +1,3 @@
-#include "atender_kernel.h"
-#include "atender_memoria.h"
+#include "atender.h"
 
 #include <../../utils/include/utils.h>
