@@ -1,6 +1,6 @@
 #include "../include/atender.h"
 
-void* atender_memoria(t_log *logger, int cliente_fd)
+void* atender_memoria(int cliente_fd)
 {
 	int control_key = 1;
 	while (control_key) {
@@ -13,11 +13,11 @@ void* atender_memoria(t_log *logger, int cliente_fd)
                 //
                 break;
             case -1:
-                log_error(logger, "el cliente MEMORIA se desconecto.");
+                log_error(logger_kernel, "el cliente MEMORIA se desconecto.");
                 control_key = 0;
                 break;
             default:
-                log_warning(logger,"Operacion desconocida. No quieras meter la pata");
+                log_warning(logger_kernel,"Operacion desconocida. No quieras meter la pata");
                 break;
             }
 	}
@@ -25,7 +25,7 @@ void* atender_memoria(t_log *logger, int cliente_fd)
 }
 
 
-    void* atender_IO(t_log *logger, int cliente_fd)
+    void* atender_IO(int cliente_fd)
 {
 	int control_key = 1;
 	while (control_key) {
@@ -38,11 +38,11 @@ void* atender_memoria(t_log *logger, int cliente_fd)
                 //
                 break;
             case -1:
-                log_error(logger, "el cliente IO se desconecto.");
+                log_error(logger_kernel, "el cliente IO se desconecto.");
                 control_key = 0;
                 break;
             default:
-                log_warning(logger,"Operacion desconocida. No quieras meter la pata");
+                log_warning(logger_kernel,"Operacion desconocida. No quieras meter la pata");
                 break;
             }
 	}
@@ -50,7 +50,7 @@ void* atender_memoria(t_log *logger, int cliente_fd)
 }
 
 
-void* atender_cpu_int(t_log *logger, int cliente_fd)
+void* atender_cpu_int(int cliente_fd)
 {
 	int control_key = 1;
 	while (control_key) {
@@ -63,18 +63,18 @@ void* atender_cpu_int(t_log *logger, int cliente_fd)
                 //
                 break;
             case -1:
-                log_error(logger, "el cliente CPU (INTERRUPT) se desconecto.");
+                log_error(logger_kernel, "el cliente CPU (INTERRUPT) se desconecto.");
                 control_key = 0;
                 break;
             default:
-                log_warning(logger,"Operacion desconocida. No quieras meter la pata");
+                log_warning(logger_kernel,"Operacion desconocida. No quieras meter la pata");
                 break;
             }
 	}
     return 0;
 }
 
-void* atender_cpu_dis(t_log *logger, int cliente_fd)
+void* atender_cpu_dis(int cliente_fd)
 {
 	int control_key = 1;
 	while (control_key) {
@@ -87,11 +87,11 @@ void* atender_cpu_dis(t_log *logger, int cliente_fd)
                 //
                 break;
             case -1:
-                log_error(logger, "el cliente CPU (DISPATCH) se desconecto.");
+                log_error(logger_kernel, "el cliente CPU (DISPATCH) se desconecto.");
                 control_key = 0;
                 break;
             default:
-                log_warning(logger,"Operacion desconocida. No quieras meter la pata");
+                log_warning(logger_kernel,"Operacion desconocida. No quieras meter la pata");
                 break;
             }
 	}

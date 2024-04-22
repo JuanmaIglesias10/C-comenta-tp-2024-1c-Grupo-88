@@ -1,6 +1,6 @@
 #include "../include/atender.h"
 
-void* atender_memoria(t_log *logger, int cliente_fd)
+void* atender_memoria(int cliente_fd)
 {
 	int control_key = 1;
 	while (control_key) {
@@ -13,18 +13,18 @@ void* atender_memoria(t_log *logger, int cliente_fd)
                 //
                 break;
             case -1:
-                log_error(logger, "el cliente MEMORIA se desconecto.");
+                log_error(logger_cpu, "el cliente MEMORIA se desconecto.");
                 control_key = 0;
                 break;
             default:
-                log_warning(logger,"Operacion desconocida. No quieras meter la pata");
+                log_warning(logger_cpu,"Operacion desconocida. No quieras meter la pata");
                 break;
             }
 	}
     return 0;
 }
 
-void* atender_kernel_dis(t_log *logger, int cliente_fd)
+void* atender_kernel_dis(int cliente_fd)
 {
 	int control_key = 1;
 	while (control_key) {
@@ -37,18 +37,18 @@ void* atender_kernel_dis(t_log *logger, int cliente_fd)
                 //
                 break;
             case -1:
-                log_error(logger, "el cliente KERNEL (DISPATCH) se desconecto.");
+                log_error(logger_cpu, "el cliente KERNEL (DISPATCH) se desconecto.");
                 control_key = 0;
                 break;
             default:
-                log_warning(logger,"Operacion desconocida. No quieras meter la pata");
+                log_warning(logger_cpu,"Operacion desconocida. No quieras meter la pata");
                 break;
             }
 	}
     return 0;
 }
 
-void* atender_kernel_int(t_log *logger, int cliente_fd)
+void* atender_kernel_int(int cliente_fd)
 {
 	int control_key = 1;
 	while (control_key) {
@@ -61,11 +61,11 @@ void* atender_kernel_int(t_log *logger, int cliente_fd)
                 //
                 break;
             case -1:
-                log_error(logger, "el cliente KERNEL (INTERRUPT) se desconecto.");
+                log_error(logger_cpu, "el cliente KERNEL (INTERRUPT) se desconecto.");
                 control_key = 0;
                 break;
             default:
-                log_warning(logger,"Operacion desconocida. No quieras meter la pata");
+                log_warning(logger_cpu,"Operacion desconocida. No quieras meter la pata");
                 break;
             }
 	}

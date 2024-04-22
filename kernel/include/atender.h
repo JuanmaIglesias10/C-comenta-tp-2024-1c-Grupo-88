@@ -1,6 +1,6 @@
-#include "../../utils/include/utils.h"
+#include "kernel.h"
 
-void* atender_memoria(t_log *logger, int cliente_fd);
-void* atender_IO(t_log *logger, int cliente_fd);
-void* atender_cpu_int(t_log *logger, int cliente_fd);
-void* atender_cpu_dis(t_log *logger, int cliente_fd);
+void* atender_memoria(int cliente_fd);
+void* atender_IO(int cliente_fd);
+void* atender_cpu_int(int cliente_fd);
+void* atender_cpu_dis(int cliente_fd);

@@ -1,8 +1,9 @@
-#include "../include/atender.h"
+#include <../include/atender.h>
 
-void* atender_cpu(t_log *logger, int cliente_fd)
+void* atender_cpu( int cliente_fd)
 {
 	int control_key = 1;
+
 	while (control_key) {
 		int cod_op = recibir_operacion(cliente_fd);
 		switch (cod_op) {
@@ -13,12 +14,12 @@ void* atender_cpu(t_log *logger, int cliente_fd)
 			//
 			break;
 		case -1:
-			log_error(logger, "el cliente CPU se desconecto.");
+			log_error(logger_memoria, "el cliente CPU se desconecto.");
 			control_key = 0;
 			// return EXIT_FAILURE;
 			break;
 		default:
-			log_warning(logger,"Operacion desconocida. No quieras meter la pata");
+			log_warning(logger_memoria,"Operacion desconocida. No quieras meter la pata");
 			break;
 		}
 	}
@@ -26,7 +27,7 @@ void* atender_cpu(t_log *logger, int cliente_fd)
 }
 
 
-void* atender_kernel(t_log *logger, int cliente_fd)
+void* atender_kernel(int cliente_fd)
 {
 	int control_key = 1;
 	while (control_key) {
@@ -39,19 +40,19 @@ void* atender_kernel(t_log *logger, int cliente_fd)
 			//
 			break;
 		case -1:
-			log_error(logger, "el cliente KERNEL se desconecto.");
+			log_error(logger_memoria, "el cliente KERNEL se desconecto.");
 			control_key = 0;
 			// return EXIT_FAILURE;
 			break;
 		default:
-			log_warning(logger,"Operacion desconocida. No quieras meter la pata");
+			log_warning(logger_memoria,"Operacion desconocida. No quieras meter la pata");
 			break;
 		}
 	}
 	return 0;
 }
 
-void* atender_IO(t_log *logger, int cliente_fd)
+void* atender_IO( int cliente_fd)
 {
 	int control_key = 1;
 	while (control_key) {
@@ -64,12 +65,12 @@ void* atender_IO(t_log *logger, int cliente_fd)
 			//
 			break;
 		case -1:
-			log_error(logger, "el cliente IO se desconecto.");
+			log_error(logger_memoria, "el cliente IO se desconecto.");
 			control_key = 0;
 			// return EXIT_FAILURE;
 			break;
 		default:
-			log_warning(logger,"Operacion desconocida. No quieras meter la pata");
+			log_warning(logger_memoria,"Operacion desconocida. No quieras meter la pata");
 			break;
 		}
 	}
