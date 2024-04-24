@@ -1,4 +1,4 @@
-#include <../include/atender.h>
+#include <atender.h>
 
 void* atender_cpu( int cliente_fd)
 {

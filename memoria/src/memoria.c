@@ -1,4 +1,5 @@
-#include <../include/memoria.h>
+#include <memoria.h>
+
 t_log* logger_memoria;
 t_config* config_memoria;
 
