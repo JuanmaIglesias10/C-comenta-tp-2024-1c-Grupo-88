@@ -1,4 +1,4 @@
-#include <../include/kernel.h>
+#include <kernel.h>
 
 t_log* logger_kernel;
 t_config* config_kernel;
@@ -52,6 +52,6 @@ int main(void)
 }
 
 void inicializarKernel(){
-	config_kernel = iniciar_config("../kernel.config");
+	config_kernel = iniciar_config("./kernel.config");
 	logger_kernel = iniciar_logger("logKernel.log","Client",LOG_LEVEL_INFO);
 }

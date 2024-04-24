@@ -1,8 +1,8 @@
 #ifndef KERNEL_H
 #define KERNEL_H
 
-#include <../../utils/include/utils.h>
-#include "atender.h"
+#include <utils.h>
+#include <atender.h>
 
 
 extern t_log* logger_kernel;

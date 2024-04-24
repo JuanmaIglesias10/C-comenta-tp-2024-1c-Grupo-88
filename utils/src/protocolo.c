@@ -1,4 +1,4 @@
-#include <../include/protocolo.h>
+#include <protocolo.h>
 
 void* serializar_paquete(t_paquete* paquete, int bytes)
 {

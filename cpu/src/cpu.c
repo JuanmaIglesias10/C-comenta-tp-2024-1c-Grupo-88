@@ -1,4 +1,4 @@
-#include <../include/cpu.h>
+#include <cpu.h>
 
 t_log* logger_cpu;
 t_config* config_cpu;
@@ -48,7 +48,7 @@ int main(void) {
 
 void inicializarCpu() {
 
-	config_cpu = iniciar_config("../cpu.config");
+	config_cpu = iniciar_config("./cpu.config");
 	logger_cpu = iniciar_logger("logCPU.log","CPU",LOG_LEVEL_INFO);
 }
 

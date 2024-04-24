@@ -43,5 +43,5 @@ int main(void) {
 
 void inicializar_memoria(){
 	logger_memoria = iniciar_logger("logMemoria.log", "Server", LOG_LEVEL_DEBUG);
-	config_memoria = config_create("../memoria.config");
+	config_memoria = config_create("./memoria.config");
 }

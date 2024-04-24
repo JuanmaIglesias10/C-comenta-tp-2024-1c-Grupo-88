@@ -1,4 +1,4 @@
-#include <../include/IO.h>
+#include <IO.h>
 
 t_log* logger_IO;
 t_config* config_IO;
@@ -38,6 +38,6 @@ int main(void) {
 void inicializar_IO(){
 
 	logger_IO = iniciar_logger("logEntradaSalida.log","cliente",LOG_LEVEL_INFO);
-	config_IO = iniciar_config("../entradaSalida.config");
+	config_IO = iniciar_config("./entradaSalida.config");
 	
 }

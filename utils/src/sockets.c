@@ -1,10 +1,10 @@
-#include <../include/sockets.h>
+#include <sockets.h>
 
 int iniciar_servidor(char* PUERTO, t_log* logger)
 {
 	int socket_servidor;
 
-	struct addrinfo hints, *server_info, *p;
+	struct addrinfo hints, *server_info; /*p;*/
 
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = AF_INET;

@@ -1,4 +1,4 @@
-#include "../include/atender.h"
+#include <atender.h>
 
 void* atender_memoria(int cliente_fd)
 {

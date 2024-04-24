@@ -1,8 +1,8 @@
 #ifndef CPU_H
 #define CPU_H
 
-#include "atender.h"
-#include <../../utils/include/utils.h>
+#include <atender.h>
+#include <utils.h>
 
 extern t_log* logger_cpu;
 extern t_config* config_cpu;
