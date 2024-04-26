@@ -1,5 +1,11 @@
-#ifndef SOCKETS_H_
-#define SOCKETS_H_
+#ifndef SOCKETS_H
+#define SOCKETS_H
+
+//#include <utils.h>
+#include <commons/log.h> // SI
+#include <sys/socket.h> // SI
+#include <string.h> // memset -- SI
+#include <netdb.h> // uint32_t, uint8_t, getaddrinfo(), 
 
 #include <utils.h>
 
@@ -10,4 +16,4 @@ int handshake_cliente(int socket_servidor);
 int handshake_servidor(int socket_cliente);
 void liberar_conexion(int socket_cliente);
 
-#endif
+#endif /* SOCKETS_H */

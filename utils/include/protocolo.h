@@ -1,26 +1,17 @@
-#ifndef PROTOCOLO_H_
-#define PROTOCOLO_H_
+#ifndef PROTOCOLO_H
+#define PROTOCOLO_H
 
-#include <utils.h>
+//#include <utils.h>
+#include <commons/collections/list.h> // SI
+#include <commons/log.h> // SI
+#include <sys/socket.h> // SI
+#include <stdlib.h> // malloc, free, realloc -- SI
+#include <string.h> // memcpy, strlen - SI
+#include <unistd.h> // close, 
 
-typedef enum
-{
-	MENSAJE,
-	PAQUETE
-} op_code;
+#include <buffer.h> // SI
 
-typedef struct
-{
-	int32_t size;
-	int32_t offset;
-	void* stream;
-} t_buffer;
-
-typedef struct
-{
-	op_code codigo_operacion;
-	t_buffer* buffer;
-} t_paquete;
+void duplicarAltura (t_arbol arbol);
 
 void* serializar_paquete(t_paquete* paquete, int bytes);
 void enviar_mensaje(char* mensaje, int socket_cliente);
@@ -34,4 +25,4 @@ void recibir_mensaje(int, t_log*);
 int recibir_operacion(int);
 void* recibir_buffer(int* size, int socket_cliente);
 
-#endif
+#endif /* PROTOCOLO_H_ */

@@ -1,23 +1,25 @@
-#ifndef UTILS_H_
-#define UTILS_H_
+#ifndef UTILS_H
+#define UTILS_H
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
-#include <unistd.h>
+#include <unistd.h> // close
 #include <sys/socket.h>
 #include <netdb.h>
 #include <string.h>
-#include <commons/log.h>
-#include <commons/config.h>
+#include <commons/log.h> // SI
+#include <commons/config.h> // SI
 #include <commons/collections/list.h>
 #include <pthread.h>
-#include <string.h>
+//#include <stdint.h> // para uint8 y uint32
 
 // headers nuestros
 #include <sockets.h>
+//#include <buffer.h>
 #include <protocolo.h>
-#include <buffer.h>
+
+
 
 void chequearErrores(char* tipoError, int status);
 
@@ -28,4 +30,4 @@ t_config *iniciar_config(char* nombreArchivoconfig);
 t_log* iniciar_logger(char* rutaLog, char* nombreProceso , t_log_level level);
 char* obtenerNombreServer(char* keyPuerto);
 
-#endif
+#endif /* UTILS_H */
