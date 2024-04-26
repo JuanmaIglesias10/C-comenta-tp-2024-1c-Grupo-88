@@ -38,11 +38,10 @@ void agregar_a_paquete(t_paquete* paquete, void* valor, int tamanio);
 void enviar_paquete(t_paquete* paquete, int socket_cliente);
 void eliminar_paquete(t_paquete* paquete);
 t_list* recibir_paquete(int);
-void recibir_mensaje(int, t_log*);
 uint8_t recibir_codOp(int);
 
 // ----------------------- BUFFER -------------------------
-void* recibir_buffer(int* size, int socket_cliente);
+t_buffer* recibir_buffer(int socket_cliente);
 
 // Crea un buffer vacío con offset 0
 t_buffer* crear_buffer();
@@ -54,28 +53,28 @@ void destruir_buffer(t_buffer *buffer);
 void agregar_a_buffer(t_buffer *buffer, void *data, uint32_t size);
 
 // Guarda size bytes del principio del buffer en la dirección data y avanza el offset
-void leer_buffer(t_buffer *buffer, void *data, uint32_t size);
+void* leer_buffer(t_buffer *buffer, uint32_t size);
 
 // ESPECIFICOS
 
 // Agrega un uint32_t al buffer
-void agregar_uint32_a_buffer(t_buffer* buffer, uint32_t data);
+void agregar_buffer_uint32(t_buffer* buffer, uint32_t data);
 
 // Lee un uint32_t del buffer y avanza el offsets
-uint32_t leer_uint32_buffer(t_buffer* buffer);
+uint32_t leer_buffer_uint32(t_buffer* buffer);
 
 // Agrega un uint8_t al buffer
-void agregar_uint8_a_buffer(t_buffer* buffer, uint8_t data);
+void agregar_buffer_uint8(t_buffer* buffer, uint8_t data);
 
 // Lee un uint8_t del buffer y avanza el offset
 uint8_t leer_buffer_uint8(t_buffer* buffer);
 
 // Agrega string al buffer con un uint32_t adelante indicando su longitud
 // calcula la longitud del string en vez de recibirla por parametro
-void agregar_string_a_buffer(t_buffer* buffer, char* string);
+void agregar_buffer_string(t_buffer* buffer, char* string);
 
 // Lee un string y su longitud del buffer y avanza el offset
-char* leer_string_buffer(t_buffer* buffer);
+char* leer_buffer_string(t_buffer* buffer);
 
 
 #endif /* PROTOCOLO_H_ */

@@ -71,40 +71,34 @@ void eliminar_paquete(t_paquete* paquete)
 	free(paquete);
 }
 
-t_list* recibir_paquete(int socket_cliente) // recibir_lista + desarializar lista
-{
-	int size;
-	int desplazamiento = 0;
-	void * buffer;
-	t_list* valores = list_create();
-	int tamanio;
+t_list* deserializar_lista_strings(t_buffer* buffer){
+	t_list* lista_strings = list_create();
+	uint32_t string_size;
 
-	buffer = recibir_buffer(&size, socket_cliente);
-	while(desplazamiento < size)
+	while(buffer->offset < buffer->size)
 	{
-		memcpy(&tamanio, buffer + desplazamiento, sizeof(int));
-		desplazamiento+=sizeof(int);
-		char* valor = malloc(tamanio);
-		memcpy(valor, buffer+desplazamiento, tamanio);
-		desplazamiento+=tamanio;
-		list_add(valores, valor);
+		string_size = leer_buffer_uint32(buffer);
+		char* string = malloc(string_size);
+		string = leer_buffer_string(buffer);
+		list_add(lista_strings, string);
 	}
 	free(buffer);
-	return valores;
+	return lista_strings;
 }
 
 t_list* deserializar_lista(t_buffer* buffer){
+	t_list* lista = list_create();
+	uint32_t elem_size;
 
-
-	
-}
-
-void recibir_mensaje(int socket_cliente, t_log* logger)
-{
-	int size;
-	char* buffer = recibir_buffer(&size, socket_cliente);
-	log_info(logger, "Me llego el mensaje %s", buffer);
+	while(buffer->offset < buffer->size)
+	{
+		elem_size = leer_buffer_uint32(buffer);
+		void* elem = malloc(elem_size);
+		elem = leer_buffer(buffer, elem_size);
+		list_add(lista, elem);
+	}
 	free(buffer);
+	return lista;
 }
 
 uint8_t recibir_codOp(int socket_conexion)
@@ -115,7 +109,7 @@ uint8_t recibir_codOp(int socket_conexion)
 	else
 	{
 		close(socket_conexion);
-		return -1;
+		exit(1);
 	}
 }
 
@@ -126,9 +120,9 @@ t_buffer* recibir_buffer(int socket_conexion){
     recv(socket_conexion, &(buffer -> size), sizeof(uint32_t), MSG_WAITALL);
 
     if(buffer->size != 0){
-        buffer -> stream = malloc(buffer -> size)
+        buffer -> stream = malloc(buffer -> size);
         // Recibo stream del buffer
-        recv(socket_cliente, buffer -> stream, buffer -> size, MSG_WAITALL);
+        recv(socket_conexion, buffer -> stream, buffer -> size, MSG_WAITALL);
     }
     return buffer;
 } // OK
@@ -171,49 +165,49 @@ void agregar_a_buffer(t_buffer* buffer, void* data, uint32_t size) {
 }
 
 // Guarda size bytes del principio del buffer en la dirección data y avanza el offset
-void leer_buffer(t_buffer* buffer, void* data, uint32_t size) {
-	if (buffer == NULL || data == NULL || size == 0) return;
+void* leer_buffer(t_buffer* buffer, uint32_t size) {
+	if (buffer == NULL || size == 0) return NULL;
+	void* data = malloc(size);
     memcpy(data, buffer->stream + buffer->offset, size);
     buffer->offset += size;
+	return data;
 }
 
 // Agrega un uint32_t al buffer
-void agregar_uint32_a_buffer(t_buffer* buffer, uint32_t data){
+void agregar_buffer_uint32(t_buffer* buffer, uint32_t data){
     agregar_a_buffer(buffer, &data, sizeof(uint32_t));
 }
 
 // Lee un uint32_t del buffer y avanza el offset
-uint32_t leer_uint32_buffer(t_buffer* buffer){
-	uint32_t data;
-    leer_buffer(buffer, &data, sizeof(uint32_t));
-    return data;
+uint32_t leer_buffer_uint32(t_buffer* buffer){
+	uint32_t* data = leer_buffer(buffer, sizeof(uint32_t));
+    return *data;
 }
 
 // Agrega un uint8_t al buffer
-void agregar_uint8_a_buffer(t_buffer* buffer, uint8_t data) {
+void agregar_buffer_uint8(t_buffer* buffer, uint8_t data) {
     agregar_a_buffer(buffer, &data, sizeof(uint8_t));
 }
 
 uint8_t leer_buffer_uint8(t_buffer* buffer) {
-    uint8_t data;
-    leer_buffer(buffer, &data, sizeof(uint8_t));
-    return data;
+    uint8_t* data = leer_buffer(buffer, sizeof(uint8_t));
+    return *data;
 }
 
 // Agrega string al buffer con un uint32_t adelante indicando su longitud
 // calcula la longitud del string en vez de recibirla por parametro
-void agregar_string_a_buffer(t_buffer* buffer, char* string) {
+void agregar_buffer_string(t_buffer* buffer, char* string) {
 	uint32_t length = strlen(string);
-    agregar_uint32_a_buffer(buffer, length);
-    agregar_a_buffer(buffer, string, length);
+    agregar_buffer_uint32(buffer, length);
+    agregar_a_buffer(buffer, string, length); 
 }
 
 // Lee un string y su longitud del buffer y avanza el offset
-char* leer_string_buffer(t_buffer* buffer) {
-    uint32_t length = leer_uint32_buffer(buffer); 
+char* leer_buffer_string(t_buffer* buffer) {
+    uint32_t length = leer_buffer_uint32(buffer); 
     char* string = malloc(length + 1); 
     if (string == NULL) return NULL;
-    leer_buffer(buffer, string, length);
+    string = leer_buffer(buffer, length);
     string[length] = '\0'; // Null-terminate the string
     return string;
 }
