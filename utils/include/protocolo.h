@@ -1,19 +1,7 @@
 #ifndef PROTOCOLO_H_
 #define PROTOCOLO_H_
 
-#include<stdio.h>
-#include<stdlib.h>
-#include<signal.h>
-#include<unistd.h>
-#include<sys/socket.h>
-#include<netdb.h>
-#include<string.h>
-#include<commons/log.h>
-#include<commons/config.h>
-#include<commons/collections/list.h>
-#include <pthread.h>
-
-#include "utils.h"
+#include <utils.h>
 
 typedef enum
 {
@@ -23,7 +11,8 @@ typedef enum
 
 typedef struct
 {
-	int size;
+	int32_t size;
+	int32_t offset;
 	void* stream;
 } t_buffer;
 

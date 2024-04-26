@@ -29,6 +29,7 @@ t_log* iniciar_logger(char* rutaLog, char* nombreProceso , t_log_level level)
 	return nuevo_logger;
 }
 
+/*
 void* server_escuchar(t_log *logger, int cliente_fd, char* nombreCliente)
 {
 	int control_key = 1;
@@ -54,7 +55,7 @@ void* server_escuchar(t_log *logger, int cliente_fd, char* nombreCliente)
 		}
 	}
 }
-
+*/
 
 int conectarse(t_config *config, char *keyIP, char* keyPuerto, char *nombreDelModulo, t_log* logger)
 {

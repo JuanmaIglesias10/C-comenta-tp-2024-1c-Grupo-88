@@ -50,11 +50,12 @@ t_paquete* crear_paquete(void) // no lo estamos usando
 	return paquete;
 }
 
-void agregar_a_paquete(t_paquete* paquete, void* valor, int tamanio)
+void agregar_a_paquete(t_paquete* paquete, void* valor, int tamanio) // stream_add
 {
 	paquete->buffer->stream = realloc(paquete->buffer->stream, paquete->buffer->size + tamanio + sizeof(int));
 
 	memcpy(paquete->buffer->stream + paquete->buffer->size, &tamanio, sizeof(int));
+	
 	memcpy(paquete->buffer->stream + paquete->buffer->size + sizeof(int), valor, tamanio);
 
 	paquete->buffer->size += tamanio + sizeof(int);
@@ -77,7 +78,7 @@ void eliminar_paquete(t_paquete* paquete)
 	free(paquete);
 }
 
-t_list* recibir_paquete(int socket_cliente)
+t_list* recibir_paquete(int socket_cliente) // recibir_lista + desarializar lista
 {
 	int size;
 	int desplazamiento = 0;
