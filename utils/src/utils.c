@@ -34,7 +34,7 @@ void* server_escuchar(t_log *logger, int cliente_fd, char* nombreCliente)
 {
 	int control_key = 1;
 	while (control_key) {
-		int cod_op = recibir_operacion(cliente_fd);
+		int cod_op = recibir_codOp(cliente_fd);
 		switch (cod_op) {
 		case MENSAJE:
 			// recibir_mensaje(cliente_fd);

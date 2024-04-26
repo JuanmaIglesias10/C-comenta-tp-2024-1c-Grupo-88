@@ -1,0 +1,11 @@
+	t_buffer* bufferMemoria = crear_buffer();
+	agregar_uint32_a_buffer(bufferMemoria,4294967295);
+	agregar_a_buffer_uint8(bufferMemoria,255);
+	agregar_a_buffer_string(bufferMemoria,"TpDelOrto");
+	uint32_t valor = leer_uint32_buffer(bufferMemoria);
+	uint8_t valor1 = leer_buffer_uint8(bufferMemoria);
+	char* valor2 =  leer_string_buffer(bufferMemoria);
+	printf("%u",valor);
+	printf("%u",valor1);
+	printf("%s",valor2);
+	destruir_buffer(bufferMemoria);

@@ -4,7 +4,7 @@ void* atender_memoria( int cliente_fd)
 {
 	int control_key = 1;
 	while (control_key) {
-		int cod_op = recibir_operacion(cliente_fd);
+		int cod_op = recibir_codOp(cliente_fd);
 		switch (cod_op) {
             case MENSAJE:
                 //
@@ -28,7 +28,7 @@ void* atender_kernel( int cliente_fd)
 {
 	int control_key = 1;
 	while (control_key) {
-		int cod_op = recibir_operacion(cliente_fd);
+		int cod_op = recibir_codOp(cliente_fd);
 		switch (cod_op) {
             case MENSAJE:
                 //

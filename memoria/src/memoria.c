@@ -4,7 +4,7 @@ t_log* logger_memoria;
 t_config* config_memoria;
 
 int main(void) {
-
+	
 	inicializar_memoria();
 	
 	char* PUERTO_MEMORIA = config_get_string_value(config_memoria, "PUERTO_ESCUCHA");
@@ -39,7 +39,6 @@ int main(void) {
 	// server_escuchar(logger);
 
 }
-
 
 void inicializar_memoria(){
 	logger_memoria = iniciar_logger("logMemoria.log", "Server", LOG_LEVEL_DEBUG);
