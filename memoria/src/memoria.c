@@ -41,7 +41,7 @@ int main(void) {
 
 	pthread_t hilo_memoria_kernel;
 	pthread_create(&hilo_memoria_kernel, NULL, (void*)atender_kernel(fd_kernel), NULL);
-	pthread_join(hilo_memoria_kernel, NULL);
+	pthread_detach(hilo_memoria_kernel);
 
 	pthread_t hilo_memoria_IO;
 	pthread_create(&hilo_memoria_IO, NULL, (void*)atender_IO( fd_IO), NULL);

@@ -3,6 +3,7 @@
 
 #include "utils.h"
 #include "atender.h"
+#include <pthread.h>
 
 // Declare global variables as extern
 extern t_log* logger_memoria;
