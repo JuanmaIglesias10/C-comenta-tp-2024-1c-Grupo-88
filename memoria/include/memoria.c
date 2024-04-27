@@ -1,4 +1,4 @@
-#include <memoria.h>
+#include "memoria.h"
 
 t_log* logger_memoria;
 t_config* config_memoria;
@@ -8,7 +8,7 @@ int main(void) {
 	t_buffer* bufferMemoria = crear_buffer();
 	agregar_buffer_uint32(bufferMemoria,4294967295);
 	agregar_buffer_uint8(bufferMemoria,255);
-	agregar_buffer_string(bufferMemoria,"TpDelOrto");
+	agregar_buffer_string(bufferMemoria,"AltoTP");
 	uint32_t valor = leer_buffer_uint32(bufferMemoria);
 	uint8_t valor1 = leer_buffer_uint8(bufferMemoria);
 	char* valor2 =  leer_buffer_string(bufferMemoria);

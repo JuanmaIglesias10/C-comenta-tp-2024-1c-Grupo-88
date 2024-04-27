@@ -1,8 +1,8 @@
-#ifndef MEMORIA_H
-#define MEMORIA_H
+#ifndef MEMORIA_H_
+#define MEMORIA_H_
 
-#include <utils.h>
-#include <atender.h>
+#include "utils.h"
+#include "atender.h"
 
 // Declare global variables as extern
 extern t_log* logger_memoria;
@@ -12,5 +12,5 @@ extern int fd_memoria;
 // Function declarations
 void inicializar_memoria();
 
-#endif
+#endif /* MEMORIA_H_ */
 

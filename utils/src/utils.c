@@ -1,12 +1,4 @@
-#include <utils.h>
-
-void chequearErrores(char* tipoError, int status)
-{
-	if (status == -1) {
-    	fprintf(stderr, "%s: %s\n", tipoError, gai_strerror(status));
-    	exit(1);
-	}
-}
+#include "utils.h"
 
 t_config* iniciar_config(char* nombreArchivoconfig)
 {
@@ -84,7 +76,7 @@ int conectarse(t_config *config, char *keyIP, char* keyPuerto, char *nombreDelMo
 	// liberar_conexion(conexion);
 	// log_info(logger, "Me desconecte de %s", nombreServer);
 	config_destroy(config);
-}
+} // TODO
 
 char* obtenerNombreServer(char* keyPuerto){
 	char *nombreServer = strchr(keyPuerto, '_');
@@ -94,4 +86,4 @@ char* obtenerNombreServer(char* keyPuerto){
 	} else {
 		return "ERROR_NOMBRE";
 	}
-}
+} // TODO

@@ -1,4 +1,4 @@
-#include <sockets.h>
+#include "sockets.h"
 
 int iniciar_servidor(char* PUERTO, t_log* logger)
 {
@@ -101,4 +101,12 @@ int handshake_servidor(int socket_cliente){
 void liberar_conexion(int socket_cliente)
 {
 	close(socket_cliente);
+}
+
+void chequearErrores(char* tipoError, int status)
+{
+	if (status == -1) {
+    	fprintf(stderr, "%s: %s\n", tipoError, gai_strerror(status));
+    	exit(1);
+	}
 }

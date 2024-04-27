@@ -1,4 +1,4 @@
-#include <protocolo.h>
+#include "protocolo.h"
 
 void* serializar_paquete(t_paquete* paquete, int bytes)
 {
@@ -13,7 +13,7 @@ void* serializar_paquete(t_paquete* paquete, int bytes)
 	desplazamiento+= paquete->buffer->size;
 
 	return magic;
-}
+} // TODO: revisar
 
 void enviar_mensaje(char* mensaje, int socket_cliente)
 {
@@ -33,7 +33,7 @@ void enviar_mensaje(char* mensaje, int socket_cliente)
 
 	free(a_enviar);
 	eliminar_paquete(paquete);
-}
+} // TODO: revisar
 
 t_paquete* crear_paquete(op_code codigo)
 {
@@ -41,7 +41,7 @@ t_paquete* crear_paquete(op_code codigo)
 	paquete->codigo_operacion = codigo;
  	paquete->buffer =  crear_buffer();
 	return paquete;
-}
+} // TODO: revisar
 
 void agregar_a_paquete(t_paquete* paquete, void* valor, int tamanio) // stream_add
 {
@@ -52,7 +52,7 @@ void agregar_a_paquete(t_paquete* paquete, void* valor, int tamanio) // stream_a
 	memcpy(paquete->buffer->stream + paquete->buffer->size + sizeof(int), valor, tamanio);
 
 	paquete->buffer->size += tamanio + sizeof(int);
-}
+} // TODO: revisar
 
 void enviar_paquete(t_paquete* paquete, int socket_cliente) 
 {
@@ -62,14 +62,14 @@ void enviar_paquete(t_paquete* paquete, int socket_cliente)
 	send(socket_cliente, a_enviar, bytes, 0);
 
 	free(a_enviar);
-}
+} // TODO: revisar
 
 void eliminar_paquete(t_paquete* paquete)
 {
 	free(paquete->buffer->stream);
 	free(paquete->buffer);
 	free(paquete);
-}
+} // TODO: revisar
 
 t_list* deserializar_lista_strings(t_buffer* buffer){
 	t_list* lista_strings = list_create();
@@ -84,7 +84,7 @@ t_list* deserializar_lista_strings(t_buffer* buffer){
 	}
 	free(buffer);
 	return lista_strings;
-}
+} // OK
 
 t_list* deserializar_lista(t_buffer* buffer){
 	t_list* lista = list_create();
@@ -99,7 +99,7 @@ t_list* deserializar_lista(t_buffer* buffer){
 	}
 	free(buffer);
 	return lista;
-}
+} // OK
 
 uint8_t recibir_codOp(int socket_conexion)
 {
@@ -111,7 +111,7 @@ uint8_t recibir_codOp(int socket_conexion)
 		close(socket_conexion);
 		exit(1);
 	}
-}
+} // TODO: ver si esta ok lo del exit
 
 t_buffer* recibir_buffer(int socket_conexion){
     t_buffer* buffer = crear_buffer();
@@ -137,7 +137,7 @@ void enviar_buffer(t_buffer* buffer, int socket_conexion){
         // Enviamos el stream del buffer
         send(socket_conexion, buffer->stream, buffer->size, 0);
     }
-}
+} // TODO: no se podria hacer 1 solo send y listo?
 
 
 // ---------------- BUFFER -------------------
@@ -148,13 +148,13 @@ t_buffer* crear_buffer() {
 	buffer->stream = NULL;
 	buffer->offset = 0;
 	return buffer;
-}
+} // OK
 
 // Libera la memoria asociada al buffer
 void destruir_buffer(t_buffer* buffer) {
     free(buffer->stream);
     free(buffer);
-}
+} // OK
 
 // Agrega un stream al final del buffer
 void agregar_a_buffer(t_buffer* buffer, void* data, uint32_t size) {
@@ -162,7 +162,7 @@ void agregar_a_buffer(t_buffer* buffer, void* data, uint32_t size) {
     buffer->stream = realloc(buffer->stream, buffer->size + size);
     memcpy(buffer->stream + buffer->size, data, size);
     buffer->size += size;
-}
+} // OK
 
 // Guarda size bytes del principio del buffer en la dirección data y avanza el offset
 void* leer_buffer(t_buffer* buffer, uint32_t size) {
@@ -171,36 +171,35 @@ void* leer_buffer(t_buffer* buffer, uint32_t size) {
     memcpy(data, buffer->stream + buffer->offset, size);
     buffer->offset += size;
 	return data;
-}
+} // OK
 
 // Agrega un uint32_t al buffer
 void agregar_buffer_uint32(t_buffer* buffer, uint32_t data){
     agregar_a_buffer(buffer, &data, sizeof(uint32_t));
-}
+} // OK
 
 // Lee un uint32_t del buffer y avanza el offset
 uint32_t leer_buffer_uint32(t_buffer* buffer){
 	uint32_t* data = leer_buffer(buffer, sizeof(uint32_t));
     return *data;
-}
+} // OK
 
 // Agrega un uint8_t al buffer
 void agregar_buffer_uint8(t_buffer* buffer, uint8_t data) {
     agregar_a_buffer(buffer, &data, sizeof(uint8_t));
-}
+} // OK
 
 uint8_t leer_buffer_uint8(t_buffer* buffer) {
     uint8_t* data = leer_buffer(buffer, sizeof(uint8_t));
     return *data;
-}
+} // OK
 
 // Agrega string al buffer con un uint32_t adelante indicando su longitud
-// calcula la longitud del string en vez de recibirla por parametro
 void agregar_buffer_string(t_buffer* buffer, char* string) {
 	uint32_t length = strlen(string);
     agregar_buffer_uint32(buffer, length);
     agregar_a_buffer(buffer, string, length); 
-}
+} // OK
 
 // Lee un string y su longitud del buffer y avanza el offset
 char* leer_buffer_string(t_buffer* buffer) {
@@ -210,4 +209,4 @@ char* leer_buffer_string(t_buffer* buffer) {
     string = leer_buffer(buffer, length);
     string[length] = '\0'; // Null-terminate the string
     return string;
-}
+} // OK

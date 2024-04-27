@@ -1,7 +1,6 @@
-#ifndef PROTOCOLO_H
-#define PROTOCOLO_H
+#ifndef PROTOCOLO_H_
+#define PROTOCOLO_H_
 
-//#include <utils.h>
 #include <commons/collections/list.h> // SI
 #include <commons/log.h> // SI
 #include <sys/socket.h> // SI
@@ -10,6 +9,8 @@
 #include <unistd.h> // close,
 #include <netdb.h>
 
+// nuestros headers
+// ninguno
 
 typedef struct
 {
@@ -30,49 +31,38 @@ typedef struct
 	t_buffer* buffer;
 } t_paquete;
 
+#include "utils.h"
 
-void* serializar_paquete(t_paquete* paquete, int bytes);
-void enviar_mensaje(char* mensaje, int socket_cliente);
-t_paquete* crear_paquete(op_code);
+void* serializar_paquete(t_paquete* paquete, int bytes); // TODO: revisar
+void enviar_mensaje(char* mensaje, int socket_cliente); // TODO: no lo usa nadie
+t_paquete* crear_paquete(op_code); // TODO: revisar
 void agregar_a_paquete(t_paquete* paquete, void* valor, int tamanio);
-void enviar_paquete(t_paquete* paquete, int socket_cliente);
-void eliminar_paquete(t_paquete* paquete);
-t_list* recibir_paquete(int);
-uint8_t recibir_codOp(int);
+void enviar_paquete(t_paquete* paquete, int socket_cliente); // TODO: revisar
+void eliminar_paquete(t_paquete* paquete); // TODO: revisar
+t_list* recibir_paquete(int); // TODO: no lo usa nadie
+uint8_t recibir_codOp(int); // lo usan 4 los modulos
 
-// ----------------------- BUFFER -------------------------
+// ----------------------- BUFFER GENERAL-------------------------
 t_buffer* recibir_buffer(int socket_cliente);
-
 // Crea un buffer vacío con offset 0
 t_buffer* crear_buffer();
-
 // Libera la memoria asociada al buffer
 void destruir_buffer(t_buffer *buffer);
-
 // Agrega un stream al buffer en la posición actual y avanza el offset
 void agregar_a_buffer(t_buffer *buffer, void *data, uint32_t size);
-
 // Guarda size bytes del principio del buffer en la dirección data y avanza el offset
 void* leer_buffer(t_buffer *buffer, uint32_t size);
-
-// ESPECIFICOS
-
+// -------------------- BUFFER ESPECIFICOS --------------------   
 // Agrega un uint32_t al buffer
 void agregar_buffer_uint32(t_buffer* buffer, uint32_t data);
-
 // Lee un uint32_t del buffer y avanza el offsets
 uint32_t leer_buffer_uint32(t_buffer* buffer);
-
 // Agrega un uint8_t al buffer
 void agregar_buffer_uint8(t_buffer* buffer, uint8_t data);
-
 // Lee un uint8_t del buffer y avanza el offset
 uint8_t leer_buffer_uint8(t_buffer* buffer);
-
 // Agrega string al buffer con un uint32_t adelante indicando su longitud
-// calcula la longitud del string en vez de recibirla por parametro
 void agregar_buffer_string(t_buffer* buffer, char* string);
-
 // Lee un string y su longitud del buffer y avanza el offset
 char* leer_buffer_string(t_buffer* buffer);
 
