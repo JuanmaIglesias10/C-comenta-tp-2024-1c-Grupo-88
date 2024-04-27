@@ -13,11 +13,9 @@ int main(void) {
 	// ------------  ENTRADA/SALIDA ------> KERNEL -------------------
 
 	fd_kernel = conectarse(config_IO, "IP", "PUERTO_KERNEL", "ENTRADASALIDA", logger_IO);
-	log_info(logger_IO,"Conexion con KERNEL exitosa");
 
 
 	fd_memoria = conectarse(config_IO, "IP", "PUERTO_MEMORIA", "ENTRADASALIDA", logger_IO);
-	log_info(logger_IO,"Conexion con MEMORIA exitosa");
 
 
 	pthread_t hilo_kernel;

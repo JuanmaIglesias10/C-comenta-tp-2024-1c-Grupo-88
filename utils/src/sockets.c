@@ -50,6 +50,10 @@ int crear_conexion(char *ip, char* puerto)
 	hints.ai_flags = AI_PASSIVE;
 
 	status = getaddrinfo(ip, puerto, &hints, &server_info);
+	if (status != 0) {
+        fprintf(stderr, "Error en getaddrinfo: %s\n", gai_strerror(status));
+        exit(EXIT_FAILURE);
+    }
 	chequearErrores("getaddrinfo error", status);
 
 	// Ahora vamos a crear el socket.
@@ -60,8 +64,8 @@ int crear_conexion(char *ip, char* puerto)
 
 	// Ahora que tenemos el socket, vamos a conectarlo
 	status = connect(socket_cliente, server_info->ai_addr, server_info->ai_addrlen); // -1 = ERROR
-	chequearErrores("connect error", socket_cliente);
 	
+	chequearErrores("connect error", status);
 	freeaddrinfo(server_info);
 
 	return socket_cliente;
@@ -107,6 +111,6 @@ void chequearErrores(char* tipoError, int status)
 {
 	if (status == -1) {
     	fprintf(stderr, "%s: %s\n", tipoError, gai_strerror(status));
-    	exit(1);
+    	exit(EXIT_FAILURE);
 	}
 }

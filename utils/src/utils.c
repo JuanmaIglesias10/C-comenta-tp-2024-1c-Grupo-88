@@ -16,7 +16,7 @@ t_log* iniciar_logger(char* rutaLog, char* nombreProceso , t_log_level level)
 	t_log* nuevo_logger = log_create(rutaLog, nombreProceso, true, level);
 	if (nuevo_logger == NULL) {
 		printf("no se pudo crear el log");
-		exit(3);
+		exit(1);
 	}
 	return nuevo_logger;
 }
@@ -55,7 +55,9 @@ int conectarse(t_config *config, char *keyIP, char* keyPuerto, char *nombreDelMo
 	char* puerto = config_get_string_value(config, keyPuerto);
 
 	int conexion = crear_conexion(ip, puerto);
+	log_info(logger, "Conexion con %s exitosa", obtenerNombreServer(keyPuerto));
 	return conexion;
+
 
 	// char* nombreServer = obtenerNombreServer(keyPuerto);
 
@@ -75,7 +77,6 @@ int conectarse(t_config *config, char *keyIP, char* keyPuerto, char *nombreDelMo
 
 	// liberar_conexion(conexion);
 	// log_info(logger, "Me desconecte de %s", nombreServer);
-	config_destroy(config);
 } // TODO
 
 char* obtenerNombreServer(char* keyPuerto){

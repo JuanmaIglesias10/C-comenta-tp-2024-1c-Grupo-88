@@ -42,8 +42,7 @@ obj/%.o: src/%.c $(SRCS_H) $(DEPS) | $(dir $(OBJS))
 	$(CC) $(CFLAGS) -c -o "$@" $< $(IDIRS:%=-I%)
 
 .SECONDEXPANSION:
-$(DEPS): $$(shell find $$(patsubst %bin/,%src/,$$(dir $$@)) -iname "*.c") \
-	$$(shell find $$(patsubst %bin/,%src/,$$(dir $$@)) -iname "*.h")
+$(DEPS): $$(shell find $$(patsubst %bin/,%src/,$$(dir $$@)) -iname "*.c" -or -iname "*.h")
 	make --no-print-directory -C $(patsubst %bin/,%,$(dir $@)) 3>&1 1>&2 2>&3 | sed -E 's,(src/)[^ ]+\.(c|h)\:,$(patsubst %bin/,%,$(dir $@))&,' 3>&2 2>&1 1>&3
 
 $(sort $(dir $(BIN) $(OBJS))):

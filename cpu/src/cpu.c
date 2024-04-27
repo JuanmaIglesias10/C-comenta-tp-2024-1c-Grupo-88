@@ -13,7 +13,7 @@ int main(void) {
 
 	/*					  CONEXION CON MEMORIA 						*/
 	fd_memoria = conectarse(config_cpu, "IP", "PUERTO_MEMORIA", "CPU", logger_cpu);
-	log_info(logger_cpu,"Conexion con MEMORIA exitosa");
+	// log_info(logger_cpu,"Conexion con MEMORIA exitosa");
 
 	/*				    INICIO EL SERVIDOR DISPATCH		 			*/
 	fd_cpuDispatch = iniciar_servidor("8006", logger_cpu);

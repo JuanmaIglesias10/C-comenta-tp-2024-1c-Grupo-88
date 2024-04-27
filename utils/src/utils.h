@@ -11,7 +11,7 @@
 #include <commons/log.h> // SI
 #include <commons/config.h> // SI
 #include <commons/collections/list.h>
-//#include <pthread.h>
+#include <pthread.h>
 //#include <stdint.h> // para uint8 y uint32
 
 // nuestros headers

@@ -6,6 +6,7 @@
 #include <string.h> // memset() - SI
 #include <netdb.h> // uint32_t, uint8_t, getaddrinfo() - SI
 #include <unistd.h> // close()
+#include <stdlib.h>
 
 // nuestros headers
 // ninguno

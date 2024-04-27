@@ -1,28 +1,18 @@
 #include "kernel.h"
 
-t_log* logger_kernel;
-t_config* config_kernel;
-int fd_memoria;
-int fd_cpu_dis;
-int fd_cpu_int;
-int fd_kernel;
-
 int main(void)
 {
 
-	inicializarKernel();
+	inicializarKernel(); 
 
 	/*					  CONEXION CON MEMORIA						*/
 	fd_memoria = conectarse(config_kernel, "IP", "PUERTO_MEMORIA", "KERNEL", logger_kernel);
-	log_info(logger_kernel,"Conexion con MEMORIA exitosa");
 
 	/*					CONEXION CON CPU DISPATCH					*/
 	fd_cpu_dis = conectarse(config_kernel,"IP","PUERTO_CPU_DISPATCH","KERNEL", logger_kernel);
-	log_info(logger_kernel,"Conexion con CPU DISPATCH exitosa");
 
 	/*					CONEXION CON CPU INTERRUPT					*/
 	fd_cpu_int = conectarse(config_kernel,"IP","PUERTO_CPU_INTERRUPT","KERNEL", logger_kernel);
-	log_info(logger_kernel,"Conexion con CPU INTERRUPT exitosa");
 
 	/*				    INICIO EL SERVIDOR KERNEL			 		*/
 	fd_kernel = iniciar_servidor("4446", logger_kernel);
@@ -49,6 +39,7 @@ int main(void)
 	liberar_conexion(fd_memoria);
 	liberar_conexion(fd_cpu_dis);
 	liberar_conexion(fd_cpu_int);
+
 }
 
 void inicializarKernel(){
