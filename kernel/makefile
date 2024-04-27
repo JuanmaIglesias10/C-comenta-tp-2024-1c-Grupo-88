@@ -5,11 +5,11 @@ CC=gcc
 
 # Set prerrequisites
 SRCS_C += $(shell find src/ -iname "*.c")
-SRCS_H += $(shell find include/ -iname "*.h")
+SRCS_H += $(shell find src/ -iname "*.h")
 DEPS = $(foreach STL,$(STATIC_LIBPATHS),$(STL:%=%/bin/lib$(notdir $(STL)).a))
 
 # Set header paths to (-I)nclude
-IDIRS += $(addsuffix /include,$(STATIC_LIBPATHS) .)
+IDIRS += $(addsuffix /src,$(STATIC_LIBPATHS) .)
 
 # Set library paths to (-L)ook
 LIBDIRS = $(addsuffix /bin,$(STATIC_LIBPATHS))
@@ -43,7 +43,7 @@ obj/%.o: src/%.c $(SRCS_H) $(DEPS) | $(dir $(OBJS))
 
 .SECONDEXPANSION:
 $(DEPS): $$(shell find $$(patsubst %bin/,%src/,$$(dir $$@)) -iname "*.c") \
-	$$(shell find $$(patsubst %bin/,%include/,$$(dir $$@)) -iname "*.h")
+	$$(shell find $$(patsubst %bin/,%src/,$$(dir $$@)) -iname "*.h")
 	make --no-print-directory -C $(patsubst %bin/,%,$(dir $@)) 3>&1 1>&2 2>&3 | sed -E 's,(src/)[^ ]+\.(c|h)\:,$(patsubst %bin/,%,$(dir $@))&,' 3>&2 2>&1 1>&3
 
 $(sort $(dir $(BIN) $(OBJS))):

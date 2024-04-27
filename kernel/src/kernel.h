@@ -2,7 +2,7 @@
 #define KERNEL_H
 
 #include <utils.h>
-#include <atender.h>
+#include "atender.h"
 
 
 extern t_log* logger_kernel;

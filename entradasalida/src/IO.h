@@ -1,8 +1,9 @@
 #ifndef IO_H
 #define IO_H
 
-#include <atender.h>
+#include "atender.h"
 #include <utils.h>
+#include <pthread.h>
 
 
 extern t_log* logger_IO;
