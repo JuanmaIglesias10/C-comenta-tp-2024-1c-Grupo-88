@@ -1,9 +1,9 @@
 #include "sockets.h"
 
-int iniciar_servidor(char* PUERTO, t_log* logger)
+int iniciar_servidor(int puerto, t_log* logger)
 {
 	int socket_servidor;
-
+	char* PUERTO = string_itoa(puerto);
 	struct addrinfo hints, *server_info; /*p;*/
 
 	memset(&hints, 0, sizeof(hints));

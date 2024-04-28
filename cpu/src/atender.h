@@ -1,7 +1,8 @@
 #ifndef ATENDER_H_
 #define ATENDER_H_
 
-#include "cpu.h"
+#include "diccionario_cpu.h"
+#include "utils.h"
 
 void* atender_memoria(int cliente_fd);
 void* atender_kernel_dis(int cliente_fd);

@@ -3,15 +3,16 @@
 
 #include <commons/log.h> // SI
 #include <sys/socket.h> // socket() - SI
-#include <string.h> // memset() - SI
+#include <commons/string.h> // memset() - SI
 #include <netdb.h> // uint32_t, uint8_t, getaddrinfo() - SI
 #include <unistd.h> // close()
 #include <stdlib.h>
+#include <string.h>
 
 // nuestros headers
 // ninguno
 
-int iniciar_servidor(char* puerto, t_log* logger); // lo usan los modulos
+int iniciar_servidor(int puerto, t_log* logger); // lo usan los modulos
 int esperar_cliente(int, t_log*, char*); // lo usan los modulos
 void liberar_conexion(int socket_cliente); // lo usan los modulos
 

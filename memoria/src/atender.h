@@ -6,6 +6,7 @@
 
 #include "utils.h"
 #include "memoria.h"
+#include "diccionario_memoria.h"
 
 void* atender_cpu( int cliente_fd);
 void* atender_IO( int cliente_fd);

@@ -4,14 +4,13 @@
 #include "utils.h"
 #include "atender.h"
 #include <pthread.h>
+#include "diccionario_memoria.h"
 
-// Declare global variables as extern
-extern t_log* logger_memoria;
-extern t_config* config_memoria;
-extern int fd_memoria;
 
 // Function declarations
 void inicializar_memoria();
+void inicializar_config();
+void inicializar_conexiones();
 
 #endif /* MEMORIA_H_ */
 

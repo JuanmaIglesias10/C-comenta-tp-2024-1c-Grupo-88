@@ -1,18 +1,14 @@
-#ifndef IO_H
-#define IO_H
+#ifndef IO_H_
+#define IO_H_
 
-#include "atender.h"
-#include <utils.h>
 #include <pthread.h>
 
-
-extern t_log* logger_IO;
-extern t_config* config_IO;
-extern int fd_kernel;
-extern int fd_memoria;
-
+#include "atender.h"
+#include "utils.h"
+#include "diccionario_IO.h"
 
 void inicializar_IO();
+void inicializar_config_IO();
+void inicializar_conexiones();
 
-
-#endif
+#endif /* IO_H_ */

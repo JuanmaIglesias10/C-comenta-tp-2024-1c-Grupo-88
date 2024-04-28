@@ -5,7 +5,9 @@
 #include <diccionario_kernel.h>
 #include <utils.h>
 
-void inicializarKernel();
+void inicializar_kernel();
+void inicializar_conexiones();
+void iniciar_config_kernel();
 
 
 #endif

@@ -1,18 +1,12 @@
-#ifndef CPU_H
-#define CPU_H
+#ifndef CPU_H_
+#define CPU_H_
 
+#include "utils.h"
 #include "atender.h"
-#include <utils.h>
-
-extern t_log* logger_cpu;
-extern t_config* config_cpu;
-
-extern int fd_memoria;
-extern int fd_cpuDispatch;
-extern int fd_cpuInterrupt;
-
+#include "diccionario_cpu.h"
 
 void inicializarCpu();
+void inicializar_config();
+void inicializar_conexiones();
 
-
-#endif
+#endif /* CPU_H */
