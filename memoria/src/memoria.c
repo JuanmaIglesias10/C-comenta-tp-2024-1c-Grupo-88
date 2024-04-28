@@ -46,4 +46,6 @@ void inicializar_conexiones() {
 
 	liberar_conexion(fd_memoria);
 
+
 }
+
