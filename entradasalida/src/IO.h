@@ -1,8 +1,6 @@
 #ifndef IO_H_
 #define IO_H_
 
-#include <pthread.h>
-
 #include "atender.h"
 #include "utils.h"
 #include "diccionario_IO.h"

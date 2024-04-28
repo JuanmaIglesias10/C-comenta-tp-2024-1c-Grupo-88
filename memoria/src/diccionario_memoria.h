@@ -1,8 +1,6 @@
 #ifndef DICCIONARIO_MEMORIA_H_
 #define DICCIONARIO_MEMORIA_H_
 
-#include <commons/log.h>
-#include <commons/config.h> 
 #include <utils.h>
 
 

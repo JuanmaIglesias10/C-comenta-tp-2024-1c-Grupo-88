@@ -7,8 +7,8 @@
 #include <unistd.h> // close
 #include <sys/socket.h>
 #include <netdb.h>
-#include <commons/log.h> // SI
-#include <commons/config.h> // SI
+#include <commons/log.h>
+#include <commons/config.h>
 #include <commons/collections/list.h>
 #include <commons/string.h>
 #include <string.h>
@@ -31,12 +31,15 @@ typedef struct{
     uint32_t edx;
     uint32_t si;
     uint32_t di;
-}registros_cpu;
+} registros_cpu;
 
-//Hechas por nosotros para conectarse y escuchar
-void* server_escuchar(t_log* logger, int fd_cliente, char* nombreCliente); // memoria.c
-int conectarse(char* IP, int puerto, char* nombreConexion, t_log* logger); // kernel.c , cpu.c , IO.c
-t_config* iniciar_config(char* nombreArchivoconfig); // kernel.c , cpu.c , IO.c
-t_log* iniciar_logger(char* rutaLog, char* nombreProceso , t_log_level level); // memoria.c , kernel.c , cpu.c , IO.c
+
+void* server_escuchar(t_log* logger, int fd_cliente, char* nombreCliente); 
+
+int conectarse(char* IP, int puerto, char* nombreConexion, t_log* logger);
+
+t_config* iniciar_config(char* nombreArchivoconfig);
+
+t_log* iniciar_logger(char* rutaLog, char* nombreProceso , t_log_level level);
 
 #endif /* UTILS_H_ */

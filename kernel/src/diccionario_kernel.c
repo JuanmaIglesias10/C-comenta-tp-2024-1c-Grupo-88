@@ -15,3 +15,5 @@ t_queue* colaNew;
 t_queue* colaReady;
 t_queue* colaBloqueados;
 t_queue* colaFinalizados;
+
+int pid_a_asignar;

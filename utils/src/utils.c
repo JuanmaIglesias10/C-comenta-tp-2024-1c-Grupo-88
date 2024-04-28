@@ -27,3 +27,4 @@ int conectarse(char* IP, int puerto, char* nombreConexion, t_log* logger){
 	log_info(logger, "Conexion exitosa con %s" , nombreConexion);
 	return conexion;
 } 
+

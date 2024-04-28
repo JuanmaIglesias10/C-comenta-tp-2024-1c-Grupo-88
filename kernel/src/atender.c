@@ -71,11 +71,14 @@ void* atender_cpu_int(int cliente_fd)
                 break;
             }
 	}
+
     return 0;
 }
 
 void* atender_cpu_dis(int cliente_fd)
 {
+	log_info(logger_kernel, "llege 2");
+
 	int control_key = 1;
 	while (control_key) {
 		int cod_op = recibir_codOp(cliente_fd);
@@ -95,5 +98,6 @@ void* atender_cpu_dis(int cliente_fd)
                 break;
             }
 	}
+	log_info(logger_kernel, "llege 3");
     return 0;
 }

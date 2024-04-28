@@ -1,9 +1,6 @@
 #ifndef ATENDER_H_
 #define ATENDER_H_
 
-#include "commons/log.h"
-#include "commons/config.h"
-
 #include "utils.h"
 #include "memoria.h"
 #include "diccionario_memoria.h"

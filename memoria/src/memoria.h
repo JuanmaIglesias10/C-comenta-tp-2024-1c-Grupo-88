@@ -3,7 +3,6 @@
 
 #include "utils.h"
 #include "atender.h"
-#include <pthread.h>
 #include "diccionario_memoria.h"
 
 
