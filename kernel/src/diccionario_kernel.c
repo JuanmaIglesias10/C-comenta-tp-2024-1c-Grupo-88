@@ -9,6 +9,7 @@ int fd_memoria;
 int fd_cpu_dis;
 int fd_cpu_int;
 int fd_kernel;
+int fd_IO;
 
 // Colas
 t_queue* colaNew;

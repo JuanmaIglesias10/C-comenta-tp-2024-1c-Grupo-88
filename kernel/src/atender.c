@@ -1,10 +1,9 @@
 #include "atender.h"
 
-void* atender_memoria(int cliente_fd)
+void* atender_memoria()
 {
-	int control_key = 1;
-	while (control_key) {
-		int cod_op = recibir_codOp(cliente_fd);
+	while (1) {
+		int cod_op = recibir_codOp(fd_memoria);
 		switch (cod_op) {
             case MENSAJE:
                 //
@@ -12,24 +11,19 @@ void* atender_memoria(int cliente_fd)
             case PAQUETE:
                 //
                 break;
-            case -1:
-                log_error(logger_kernel, "el cliente MEMORIA se desconecto.");
-                control_key = 0;
-                break;
             default:
-                log_warning(logger_kernel,"Operacion desconocida. No quieras meter la pata");
+                log_info(logger_kernel, "Se desconectó MEMORIA");
                 break;
             }
 	}
-    return 0;
+    return NULL;
 }
 
 
-    void* atender_IO(int cliente_fd)
+void* atender_IO()
 {
-	int control_key = 1;
-	while (control_key) {
-		int cod_op = recibir_codOp(cliente_fd);
+	while (1) {
+		int cod_op = recibir_codOp(fd_IO);
 		switch (cod_op) {
             case MENSAJE:
                 //
@@ -37,24 +31,18 @@ void* atender_memoria(int cliente_fd)
             case PAQUETE:
                 //
                 break;
-            case -1:
-                log_error(logger_kernel, "el cliente IO se desconecto.");
-                control_key = 0;
-                break;
             default:
-                log_warning(logger_kernel,"Operacion desconocida. No quieras meter la pata");
+                log_info(logger_kernel, "Se desconectó IO");
                 break;
             }
 	}
-    return 0;
+    return NULL;
 }
 
-
-void* atender_cpu_int(int cliente_fd)
+void* atender_cpu_dis()
 {
-	int control_key = 1;
-	while (control_key) {
-		int cod_op = recibir_codOp(cliente_fd);
+	while (1) {
+		int cod_op = recibir_codOp(fd_cpu_dis);
 		switch (cod_op) {
             case MENSAJE:
                 //
@@ -62,26 +50,18 @@ void* atender_cpu_int(int cliente_fd)
             case PAQUETE:
                 //
                 break;
-            case -1:
-                log_error(logger_kernel, "el cliente CPU (INTERRUPT) se desconecto.");
-                control_key = 0;
-                break;
             default:
-                log_warning(logger_kernel,"Operacion desconocida. No quieras meter la pata");
+                log_info(logger_kernel, "Se desconectó CPU (DISPATCH)");
                 break;
             }
 	}
-
-    return 0;
+    return NULL;
 }
 
-void* atender_cpu_dis(int cliente_fd)
+void* atender_cpu_int()
 {
-	log_info(logger_kernel, "llege 2");
-
-	int control_key = 1;
-	while (control_key) {
-		int cod_op = recibir_codOp(cliente_fd);
+	while (1) {
+		int cod_op = recibir_codOp(fd_cpu_int);
 		switch (cod_op) {
             case MENSAJE:
                 //
@@ -89,15 +69,10 @@ void* atender_cpu_dis(int cliente_fd)
             case PAQUETE:
                 //
                 break;
-            case -1:
-                log_error(logger_kernel, "el cliente CPU (DISPATCH) se desconecto.");
-                control_key = 0;
-                break;
             default:
-                log_warning(logger_kernel,"Operacion desconocida. No quieras meter la pata");
+                log_info(logger_kernel, "Se desconectó CPU (INTERRUPT)");
                 break;
             }
 	}
-	log_info(logger_kernel, "llege 3");
-    return 0;
+    return NULL;
 }

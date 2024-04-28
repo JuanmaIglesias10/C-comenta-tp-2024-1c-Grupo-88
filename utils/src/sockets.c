@@ -40,6 +40,7 @@ int esperar_cliente(int socket_servidor, t_log* logger, char* nombreCliente) {
 
 int crear_conexion(char *ip, char* puerto)
 {
+	/*
 	struct addrinfo hints;
 	struct addrinfo *server_info;
 	int status;
@@ -66,6 +67,28 @@ int crear_conexion(char *ip, char* puerto)
 	status = connect(socket_cliente, server_info->ai_addr, server_info->ai_addrlen); // -1 = ERROR
 	
 	chequearErrores("connect error", status);
+	freeaddrinfo(server_info);
+
+	return socket_cliente;
+	*/
+	struct addrinfo hints;
+	struct addrinfo *server_info;
+
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = AF_INET;
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_flags = AI_PASSIVE;
+
+	getaddrinfo(ip, puerto, &hints, &server_info);
+
+	// Ahora vamos a crear el socket.
+	int socket_cliente = socket(server_info->ai_family,
+                         server_info->ai_socktype,
+                         server_info->ai_protocol);
+
+	// Ahora que tenemos el socket, vamos a conectarlo
+	connect(socket_cliente, server_info->ai_addr, server_info->ai_addrlen);
+
 	freeaddrinfo(server_info);
 
 	return socket_cliente;
@@ -113,4 +136,4 @@ void chequearErrores(char* tipoError, int status)
     	fprintf(stderr, "%s: %s\n", tipoError, gai_strerror(status));
     	exit(EXIT_FAILURE);
 	}
-}
+}//TODO : Esto arruina las conexiones :D

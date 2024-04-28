@@ -1,49 +1,39 @@
 #include "atender.h"
 
-void* atender_memoria( int cliente_fd)
+void* atender_memoria()
 {
-	int control_key = 1;
-	while (control_key) {
-		int cod_op = recibir_codOp(cliente_fd);
-		switch (cod_op) {
+while (1) {
+        int cod_op = recibir_codOp(fd_memoria);
+        switch (cod_op) {
             case MENSAJE:
                 //
                 break;
             case PAQUETE:
                 //
                 break;
-            case -1:
-                log_error(logger_IO, "el cliente MEMORIA se desconecto.");
-                control_key = 0;
-                break;
             default:
-                log_warning(logger_IO,"Operacion desconocida. No quieras meter la pata");
+                log_info(logger_IO, "Se desconectó MEMORIA");
                 break;
             }
-	}
-    return 0;
+    }
+return NULL;
 }
 
-void* atender_kernel( int cliente_fd)
+void* atender_kernel()
 {
-	int control_key = 1;
-	while (control_key) {
-		int cod_op = recibir_codOp(cliente_fd);
-		switch (cod_op) {
+while (1) {
+        int cod_op = recibir_codOp(fd_kernel);
+        switch (cod_op) {
             case MENSAJE:
                 //
                 break;
             case PAQUETE:
                 //
                 break;
-            case -1:
-                log_error(logger_IO, "el cliente KERNEL se desconecto.");
-                control_key = 0;
-                break;
             default:
-                log_warning(logger_IO,"Operacion desconocida. No quieras meter la pata");
+                log_info(logger_IO, "Se desconectó KERNEL");
                 break;
             }
-	}
-    return 0;
+    }
+return NULL;
 }

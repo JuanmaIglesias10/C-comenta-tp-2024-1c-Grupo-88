@@ -5,8 +5,8 @@
 #include "memoria.h"
 #include "diccionario_memoria.h"
 
-void* atender_cpu( int cliente_fd);
-void* atender_IO( int cliente_fd);
-void* atender_kernel( int cliente_fd);
+void* atender_cpu();
+void* atender_IO();
+void* atender_kernel();
 
 #endif /* ATENDER_H_ */

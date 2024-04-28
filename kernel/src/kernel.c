@@ -36,29 +36,27 @@ void inicializar_conexiones(){
 
 	fd_kernel = iniciar_servidor(config_kernel.puerto_escucha, logger_kernel);
 
-	int fd_IO = esperar_cliente(fd_kernel, logger_kernel,"IO"); 
-	log_info(logger_kernel, "llege 1");
+	fd_IO = esperar_cliente(fd_kernel, logger_kernel,"IO"); 
 
-	// pthread_t hilo_cpu_dis;
-	// pthread_create(&hilo_cpu_dis, NULL, (void*)atender_cpu_dis(fd_cpu_dis), NULL);
-	// pthread_detach(hilo_cpu_dis);
+	pthread_t hilo_memoria;
+	pthread_create(&hilo_memoria, NULL, (void*)atender_memoria, NULL);
+	pthread_detach(hilo_memoria);
 
-	// pthread_t hilo_cpu_int;
-	// pthread_create(&hilo_cpu_int, NULL, (void*)atender_cpu_int(fd_cpu_int), NULL);
-	// pthread_detach(hilo_cpu_int);
+	pthread_t hilo_IO;
+	pthread_create(&hilo_IO, NULL, (void*)atender_IO, NULL);
+	pthread_detach(hilo_IO);
 
-	// pthread_t hilo_memoria;
-	// pthread_create(&hilo_memoria, NULL, (void*)atender_memoria(fd_memoria), NULL);
-	// pthread_detach(hilo_memoria);
+	pthread_t hilo_cpu_dis;
+	pthread_create(&hilo_cpu_dis, NULL, (void*)atender_cpu_dis, NULL);
+	pthread_detach(hilo_cpu_dis);
 
-	// pthread_t hilo_IO;
-	// pthread_create(&hilo_IO, NULL, (void*)atender_IO(fd_IO), NULL);
-	// pthread_detach(hilo_IO);
+	pthread_t hilo_cpu_int;
+	pthread_create(&hilo_cpu_int, NULL, (void*)atender_cpu_int, NULL);
+	pthread_detach(hilo_cpu_int);
 
-	log_info(logger_kernel, "llege 4");
-	liberar_conexion(fd_memoria);
-	liberar_conexion(fd_cpu_dis);
-	liberar_conexion(fd_cpu_int);
+	// liberar_conexion(fd_memoria);
+	// liberar_conexion(fd_cpu_dis);
+	// liberar_conexion(fd_cpu_int);
 }
 
 void inciar_consola(){

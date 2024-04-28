@@ -77,6 +77,8 @@ extern int fd_memoria;
 extern int fd_cpu_dis;
 extern int fd_cpu_int;
 extern int fd_kernel;
+extern int fd_IO;
+
 
 // Colas
 extern t_queue* colaNew;
