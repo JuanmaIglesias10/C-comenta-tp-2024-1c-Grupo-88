@@ -1,9 +1,9 @@
-#include <sockets.h>
+#include "sockets.h"
 
-int iniciar_servidor(char* PUERTO, t_log* logger)
+int iniciar_servidor(int puerto, t_log* logger)
 {
 	int socket_servidor;
-
+	char* PUERTO = string_itoa(puerto);
 	struct addrinfo hints, *server_info; /*p;*/
 
 	memset(&hints, 0, sizeof(hints));
@@ -50,6 +50,10 @@ int crear_conexion(char *ip, char* puerto)
 	hints.ai_flags = AI_PASSIVE;
 
 	status = getaddrinfo(ip, puerto, &hints, &server_info);
+	if (status != 0) {
+        fprintf(stderr, "Error en getaddrinfo: %s\n", gai_strerror(status));
+        exit(EXIT_FAILURE);
+    }
 	chequearErrores("getaddrinfo error", status);
 
 	// Ahora vamos a crear el socket.
@@ -60,8 +64,8 @@ int crear_conexion(char *ip, char* puerto)
 
 	// Ahora que tenemos el socket, vamos a conectarlo
 	status = connect(socket_cliente, server_info->ai_addr, server_info->ai_addrlen); // -1 = ERROR
-	chequearErrores("connect error", socket_cliente);
 	
+	chequearErrores("connect error", status);
 	freeaddrinfo(server_info);
 
 	return socket_cliente;
@@ -101,4 +105,12 @@ int handshake_servidor(int socket_cliente){
 void liberar_conexion(int socket_cliente)
 {
 	close(socket_cliente);
+}
+
+void chequearErrores(char* tipoError, int status)
+{
+	if (status == -1) {
+    	fprintf(stderr, "%s: %s\n", tipoError, gai_strerror(status));
+    	exit(EXIT_FAILURE);
+	}
 }

@@ -21,6 +21,16 @@
         "kind": "none"
       },
       "problemMatcher": []
+    },
+    {
+      "label": "clean-and-build",
+      "dependsOrder": "sequence",
+      "dependsOn": ["clean", "build"],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": ["$gcc"]
     }
   ]
 }

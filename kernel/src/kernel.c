@@ -1,33 +1,40 @@
-#include <kernel.h>
-
-t_log* logger_kernel;
-t_config* config_kernel;
-int fd_memoria;
-int fd_cpu_dis;
-int fd_cpu_int;
-int fd_kernel;
+#include "kernel.h"
 
 int main(void)
 {
+	inicializar_kernel(); 
 
-	inicializarKernel();
+}
+void inicializar_kernel(){
+	logger_kernel = iniciar_logger("logKernel.log","KERNEL",LOG_LEVEL_INFO);
+	iniciar_config_kernel();
+	inicializar_conexiones();
+}
 
-	/*					  CONEXION CON MEMORIA						*/
-	fd_memoria = conectarse(config_kernel, "IP", "PUERTO_MEMORIA", "KERNEL", logger_kernel);
-	log_info(logger_kernel,"Conexion con MEMORIA exitosa");
+void iniciar_config_kernel(){
+	config = config_create("./kernel.config");
+	config_kernel.puerto_escucha = config_get_int_value(config, "PUERTO_ESCUCHA");
+	config_kernel.ip_memoria = config_get_string_value(config, "IP_MEMORIA");
+	config_kernel.puerto_memoria = config_get_int_value(config, "PUERTO_MEMORIA");
+	config_kernel.ip_cpu = config_get_string_value(config, "IP_CPU");
+	config_kernel.puerto_cpu_dispatch = config_get_int_value(config, "PUERTO_CPU_DISPATCH");
+	config_kernel.puerto_cpu_interrupt = config_get_int_value(config, "PUERTO_CPU_INTERRUPT");
+	config_kernel.algoritmo_planificacion = config_get_string_value(config, "ALGORITMO_PLANIFICACION");
+	config_kernel.quantum = config_get_int_value(config, "QUANTUM");
+	// config_kernel.recursos = config_get_string_value(config, "RECURSOS");
+	// config_kernel.instancias_recursos = config_get_string_value(config, "INSTANCIAS_RECURSOS");
+	config_kernel.grado_multiprogramacion = config_get_int_value(config, "GRADO_MULTIPROGRAMACION");
+}
 
-	/*					CONEXION CON CPU DISPATCH					*/
-	fd_cpu_dis = conectarse(config_kernel,"IP","PUERTO_CPU_DISPATCH","KERNEL", logger_kernel);
-	log_info(logger_kernel,"Conexion con CPU DISPATCH exitosa");
+void inicializar_conexiones(){
+	fd_memoria = conectarse(config_kernel.ip_memoria , config_kernel.puerto_memoria ,"MEMORIA", logger_kernel);
 
-	/*					CONEXION CON CPU INTERRUPT					*/
-	fd_cpu_int = conectarse(config_kernel,"IP","PUERTO_CPU_INTERRUPT","KERNEL", logger_kernel);
-	log_info(logger_kernel,"Conexion con CPU INTERRUPT exitosa");
+	fd_cpu_dis = conectarse(config_kernel.ip_cpu ,config_kernel.puerto_cpu_dispatch, "CPU DISPATCH", logger_kernel);
 
-	/*				    INICIO EL SERVIDOR KERNEL			 		*/
-	fd_kernel = iniciar_servidor("4446", logger_kernel);
+	fd_cpu_int = conectarse(config_kernel.ip_cpu,config_kernel.puerto_cpu_interrupt,"CPU INTERRUPT", logger_kernel);
 
-	/*				     KERNEL ESPERA AL CLIENTE IO			 	*/
+	fd_kernel = iniciar_servidor(config_kernel.puerto_escucha, logger_kernel);
+
 	int fd_IO = esperar_cliente(fd_kernel, logger_kernel,"IO"); 
 
 	pthread_t hilo_cpu_dis;
@@ -49,9 +56,4 @@ int main(void)
 	liberar_conexion(fd_memoria);
 	liberar_conexion(fd_cpu_dis);
 	liberar_conexion(fd_cpu_int);
-}
-
-void inicializarKernel(){
-	config_kernel = iniciar_config("./kernel.config");
-	logger_kernel = iniciar_logger("logKernel.log","Client",LOG_LEVEL_INFO);
 }
