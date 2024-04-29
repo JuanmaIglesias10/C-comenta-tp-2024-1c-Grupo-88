@@ -33,7 +33,6 @@ typedef enum {
 
 typedef struct {
 	char* path;
-	int prioridad;
 	uint32_t pid;
 	uint32_t program_counter;
 	uint32_t quantum;

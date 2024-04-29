@@ -8,6 +8,9 @@ int main(void)
 }
 
 void inicializar_kernel(){
+
+	pid_a_asignar = 0;
+
 	logger_kernel = iniciar_logger("logKernel.log","KERNEL",LOG_LEVEL_INFO);
 	iniciar_config_kernel();
 	inicializar_conexiones();
@@ -189,14 +192,13 @@ t_codigo_operacion get_codigo_operacion(char* comando, int cant_par){
 	}
 }
 
-   
-t_pcb* creando_PCB(char* path, int prioridad){
+// Crear PCB
+t_pcb* crear_PCB(char* path){
 
 	t_pcb* PCB_creado = malloc(sizeof(t_pcb));
 	PCB_creado->registros = malloc(sizeof(registros_cpu));
 
 	PCB_creado->pid = pid_a_asignar;
-	PCB_creado->prioridad = prioridad;
 	PCB_creado->registros->ax=0;
 	PCB_creado->registros->bx=0;
 	PCB_creado->registros->cx=0;
@@ -209,8 +211,10 @@ t_pcb* creando_PCB(char* path, int prioridad){
 	PCB_creado->registros->di=0;
 
 	PCB_creado->path = path;
-	PCB_creado->estado = NEW;
+	PCB_creado->estado = NULO;
 	PCB_creado->program_counter= 0;
 	PCB_creado->quantum=0;
-	return 0;
+
+	pid_a_asignar++;
+	return PCB_creado;
 }
