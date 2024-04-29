@@ -38,7 +38,7 @@ typedef struct {
 	uint32_t program_counter;
 	uint32_t quantum;
 	registros_cpu* registros;
-	estado_proceso* estado;	
+	estado_proceso estado;	
 } t_pcb;
 /*
 printf("---MENU---\n");

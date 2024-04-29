@@ -209,8 +209,8 @@ t_pcb* creando_PCB(char* path, int prioridad){
 	PCB_creado->registros->di=0;
 
 	PCB_creado->path = path;
-	PCB_creado->estado= NULO;
-	// PCB_creado->program_counter= 0;
-	// PCB_creado->quantum=0;
+	PCB_creado->estado = NEW;
+	PCB_creado->program_counter= 0;
+	PCB_creado->quantum=0;
 	return 0;
 }
