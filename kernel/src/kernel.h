@@ -2,6 +2,7 @@
 #define KERNEL_H_
 
 #include <diccionario_kernel.h>
+#include "consola.h"
 #include <atender.h>
 #include <utils.h>
 
@@ -17,6 +18,7 @@ void mostrar_opciones_consola();
 void atender_consola(char* inpt);
 t_codigo_operacion get_codigo_operacion(char* , int );
 
+void iniciarProceso(char* path);
 t_pcb* crear_PCB(char* path);
 
 #endif

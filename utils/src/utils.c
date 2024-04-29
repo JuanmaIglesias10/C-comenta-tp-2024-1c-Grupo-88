@@ -28,3 +28,6 @@ int conectarse(char* IP, int puerto, char* nombreConexion, t_log* logger){
 	return conexion;
 } 
 
+void enviar_codOp(int fd_servidor , uint8_t codOp){
+	send(fd_servidor, &codOp , sizeof(uint8_t) , 0);
+}
