@@ -60,15 +60,18 @@ void inicializar_conexiones(){
 	// liberar_conexion(fd_cpu_dis);
 	// liberar_conexion(fd_cpu_int);
 }
-
 void iniciarProceso(char* path) {
 	t_pcb* pcb_nuevo = crear_PCB(path);
 	enviar_codOp(fd_memoria , INICIAR_PROCESO_SOLICITUD);
 	
 	t_buffer* bufferKernel = crear_buffer();
 
-	agregar_buffer_uint32(bufferKernel,pcb_nuevo->pid);
-	agregar_buffer_string(bufferKernel,pcb_nuevo->path)
+
+
+
+
+	// agregar_buffer_uint32(bufferKernel,pcb_nuevo->pid);
+	// agregar_buffer_string(bufferKernel,pcb_nuevo->path);
 	// TO DO lo demas
 }
 

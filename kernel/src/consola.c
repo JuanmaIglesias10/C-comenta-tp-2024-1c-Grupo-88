@@ -5,7 +5,7 @@ void inciar_consola(){
 	char* input;
 	while(1){
 		mostrar_opciones_consola();
-		input  = readline(">");
+	input  = readline(">");
 		if (strcmp(input, "EXIT") == 0) {
             free(input);
             break;
