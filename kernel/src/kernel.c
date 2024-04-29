@@ -63,15 +63,14 @@ void inciar_consola(){
 	char* input;
 	while(1){
 		mostrar_opciones_consola();
-		input  = readline("Ingrese la opción\n> ");
-		add_history(input);
-		atender_consola(input);
+		input  = readline(">");
 		if (strcmp(input, "EXIT") == 0) {
             free(input);
             break;
-		free(input);
 		}
-	log_info(logger_kernel, "CONSOLA TERMINADA");
+		// add_history(input);
+		atender_consola(input);
+		free(input);
 	}
 }
 
@@ -142,9 +141,6 @@ void atender_consola(char* input){
 			string_array_destroy(lista_mensaje);
 			break;
     }
-
-	
-
 }
 
 t_codigo_operacion get_codigo_operacion(char* comando, int cant_par){

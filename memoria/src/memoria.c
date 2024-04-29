@@ -1,7 +1,6 @@
 #include "memoria.h"
 
 int main(void) {
-	
 	inicializar_memoria();
 	
 }
@@ -43,8 +42,9 @@ void inicializar_conexiones() {
 
 	pthread_t hilo_memoria_IO;
 	pthread_create(&hilo_memoria_IO, NULL, (void*)atender_IO, NULL);
-	pthread_detach(hilo_memoria_IO);
-	liberar_conexion(fd_memoria);
+	pthread_join(hilo_memoria_IO,NULL);
+	
+	// liberar_conexion(fd_memoria);
 
 
 }

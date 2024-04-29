@@ -37,7 +37,7 @@ void inicializar_conexiones(){
 
 	pthread_t hilo_kernel;
 	pthread_create(&hilo_kernel, NULL, (void*)atender_kernel, NULL);
-	pthread_detach(hilo_kernel);
+	pthread_join(hilo_kernel, NULL);
 
 
 	// liberar_conexion(fd_kernel);
