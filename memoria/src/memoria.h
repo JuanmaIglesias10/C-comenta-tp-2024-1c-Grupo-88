@@ -11,5 +11,7 @@ void inicializar_memoria();
 void inicializar_config();
 void inicializar_conexiones();
 void iniciar_proceso();
+
+t_list* obtenerInstrucciones(char* rutaArchivo);
 #endif /* MEMORIA_H_ */
 

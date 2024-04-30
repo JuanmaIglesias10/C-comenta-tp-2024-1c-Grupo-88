@@ -44,6 +44,35 @@ typedef struct{
     uint32_t di;
 } registros_cpu;
 
+typedef struct{
+	codigoInstruccion codigo;
+	char* par1;
+	char* par2;
+	char* par3;
+}t_instruccion;
+
+typedef enum{
+	SET,
+	MOV_IN,
+	MOV_OUT,
+    SUM, 
+    SUB, 
+    JNZ, 
+    RESIZE, 
+    COPY_STRING, 
+	WAIT, 
+	SIGNAL, 
+	IO_GEN_SLEEP, 
+	IO_STDIN_READ, 
+	IO_STDOUT_WRITE, 
+	IO_FS_CREATE, 
+	IO_FS_DELETE, 
+	IO_FS_TRUNCATE, 
+	IO_FS_WRITE, 
+	IO_FS_READ,
+    EXIT 
+}t_codigo_instruccion;
+
 // conexiones
 void* server_escuchar(t_log* logger, int fd_cliente, char* nombreCliente); 
 int conectarse(char* IP, int puerto, char* nombreConexion, t_log* logger);

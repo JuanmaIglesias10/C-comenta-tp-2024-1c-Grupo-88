@@ -52,13 +52,64 @@ void iniciar_proceso(){
 	t_buffer* bufferMemoria = recibir_buffer(fd_kernel);
 	//Recibo el PID y el path del .txt
 	uint32_t pid = leer_buffer_uint32(bufferMemoria);
-	char* pathKernel = leer_buffer_string(bufferMemoria);
+	char* nombreArchivo = leer_buffer_string(bufferMemoria);
 	destruir_buffer(bufferMemoria);
 	//Combino el path del .txt con el path del config
-	char* rutaCompleta = string_new();
-	string_append(&rutaCompleta, config_memoria.path_instrucciones);
-	string_append(&rutaCompleta, pathKernel);
+	char* rutaArchivo = string_new();
+	string_append(&rutaArchivo, config_memoria.path_instrucciones); //     /home/utnso/scripts-pruebas/
+	string_append(&rutaArchivo, nombreArchivo); // /home/utnso/scripts-pruebas/ + hola.txt
 
-	// t_list* listaInstrucciones = parsearArchivo(rutaCompleta, logger_memoria);
+	t_list* listaInstrucciones = obtenerInstrucciones(rutaArchivo);
+}
 
+t_list* obtenerInstrucciones(char* rutaArchivo){
+	FILE* archivo = fopen(rutaArchivo, "r");
+    if (archivo == NULL) {
+        perror("Error al abrir el archivo");
+        return 1;
+    }
+
+    char linea[100];
+
+    t_instruccion instruccion;
+    while (fgets(linea, sizeof(linea), archivo)) {
+		//Obtengo la primer linea del archivo y avanza para la siguiente iteracion del while
+        char* token = strtok(linea, " \n");
+
+
+
+        if (strcmp(token, "SET") == 0)
+            instruccion.codigo = SET;
+        else if (strcmp(token, "SUM") == 0)
+            instruccion.codigo = SUM;
+        else if (strcmp(token, "SUB") == 0)
+            instruccion.codigo = SUB;
+        // Agrega más casos para cada valor del enum según sea necesario
+
+        token = strtok(NULL, " \n");
+        instruccion.par1 = strdup(token);
+
+        token = strtok(NULL, " \n");
+        instruccion.par2 = strdup(token);
+
+        token = strtok(NULL, " \n");
+        if (token != NULL) {
+            instruccion.par3 = strdup(token);
+        } else {
+            instruccion.par3 = NULL; // Si par3 no está presente, asigna NULL
+        }
+        // Aquí puedes realizar cualquier operación que necesites con la instrucción
+        // Por ejemplo, imprimir los valores almacenados en la estructura
+        printf("Código: %d, Par1: %s, Par2: %s, Par3: %s\n",
+               instruccion.codigo, instruccion.par1,
+               instruccion.par2, instruccion.par3);
+
+        // Libera la memoria asignada dinámicamente para evitar fugas de memoria
+        free(instruccion.par1);
+        free(instruccion.par2);
+        free(instruccion.par3);
+    }
+
+    fclose(archivo);
+    return 0;
 }
