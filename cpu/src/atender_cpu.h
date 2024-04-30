@@ -1,5 +1,5 @@
-#ifndef ATENDER_H_
-#define ATENDER_H_
+#ifndef ATENDER_CPU_H_
+#define ATENDER_CPU_H_
 
 #include "diccionario_cpu.h"
 #include "utils.h"

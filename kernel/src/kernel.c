@@ -65,13 +65,13 @@ void iniciarProceso(char* path) {
 	enviar_codOp(fd_memoria , INICIAR_PROCESO_SOLICITUD);
 	
 	t_buffer* bufferKernel = crear_buffer();
+	//Agrego el path del pid y el path del .txt
+	agregar_buffer_uint32(bufferKernel,pcb_nuevo->pid);
+	agregar_buffer_string(bufferKernel, pcb_nuevo->path);
+	//Envio el buffer a memoria
+	enviar_buffer(bufferKernel, fd_memoria);
+	destruir_buffer(bufferKernel);
 
-
-
-
-
-	// agregar_buffer_uint32(bufferKernel,pcb_nuevo->pid);
-	// agregar_buffer_string(bufferKernel,pcb_nuevo->path);
 	// TO DO lo demas
 }
 

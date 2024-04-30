@@ -1,5 +1,5 @@
-#ifndef ATENDER_H_
-#define ATENDER_H_
+#ifndef ATENDER_IO_H_
+#define ATENDER_IO_H_
 
 #include "IO.h"
 #include "diccionario_IO.h"

@@ -1,5 +1,5 @@
-#ifndef ATENDER_H_
-#define ATENDER_H_
+#ifndef ATENDER_MEMORIA_H_
+#define ATENDER_MEMORIA_H_
 
 #include "utils.h"
 #include "memoria.h"

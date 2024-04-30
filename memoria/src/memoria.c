@@ -45,7 +45,20 @@ void inicializar_conexiones() {
 	pthread_join(hilo_memoria_IO,NULL);
 	
 	// liberar_conexion(fd_memoria);
-
-
 }
 
+void iniciar_proceso(){
+	//Recibo el buffer 
+	t_buffer* bufferMemoria = recibir_buffer(fd_kernel);
+	//Recibo el PID y el path del .txt
+	uint32_t pid = leer_buffer_uint32(bufferMemoria);
+	char* pathKernel = leer_buffer_string(bufferMemoria);
+	destruir_buffer(bufferMemoria);
+	//Combino el path del .txt con el path del config
+	char* rutaCompleta = string_new();
+	string_append(&rutaCompleta, config_memoria.path_instrucciones);
+	string_append(&rutaCompleta, pathKernel);
+
+	// t_list* listaInstrucciones = parsearArchivo(rutaCompleta, logger_memoria);
+
+}

@@ -1,7 +1,7 @@
 #ifndef IO_H_
 #define IO_H_
 
-#include "atender.h"
+#include "atender_IO.h"
 #include "utils.h"
 #include "diccionario_IO.h"
 

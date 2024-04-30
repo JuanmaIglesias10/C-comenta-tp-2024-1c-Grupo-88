@@ -3,7 +3,7 @@
 
 #include <diccionario_kernel.h>
 #include "consola.h"
-#include <atender.h>
+#include <atender_kernel.h>
 #include <utils.h>
 
 

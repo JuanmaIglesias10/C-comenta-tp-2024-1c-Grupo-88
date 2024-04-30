@@ -1,5 +1,5 @@
-#ifndef ATENDER_H_
-#define ATENDER_H_
+#ifndef ATENDER_KERNEL_H_
+#define ATENDER_KERNEL_H_
 
 #include <kernel.h>
 

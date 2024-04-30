@@ -2,7 +2,7 @@
 #define MEMORIA_H_
 
 #include "utils.h"
-#include "atender.h"
+#include "atender_memoria.h"
 #include "diccionario_memoria.h"
 
 
@@ -10,6 +10,6 @@
 void inicializar_memoria();
 void inicializar_config();
 void inicializar_conexiones();
-
+void iniciar_proceso();
 #endif /* MEMORIA_H_ */
 

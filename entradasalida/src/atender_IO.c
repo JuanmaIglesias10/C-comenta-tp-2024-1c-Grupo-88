@@ -1,4 +1,4 @@
-#include "atender.h"
+#include "atender_IO.h"
 
 void* atender_memoria()
 {

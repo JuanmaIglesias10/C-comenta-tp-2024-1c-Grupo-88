@@ -1,4 +1,4 @@
-#include "atender.h"
+#include "atender_memoria.h"
 
 void* atender_cpu()
 {	
@@ -27,8 +27,7 @@ void* atender_kernel()
 
 		switch(codigoDeKernel){
 			case INICIAR_PROCESO_SOLICITUD:
-			log_info(logger_memoria , "Que onda papucho");
-				// iniciar_proceso();
+				iniciar_proceso();
 				break;
 			case FINALIZAR_PROCESO_SOLICITUD:
 				// finalizarProceso();
