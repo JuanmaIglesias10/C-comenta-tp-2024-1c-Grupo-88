@@ -3,7 +3,7 @@
 int main(void)
 {
 	inicializar_kernel(); 
-	inciar_consola();
+	iniciar_consola();
 }
 
 void inicializar_kernel(){
@@ -77,6 +77,12 @@ void inicializarListasColas(){
 	colaFINISHED = queue_create();
 }
 
+t_list* ejecutar_script(char* pathScript){
+	t_list* scriptProcesos = parsearArchivoScript(pathScript);
+	return scriptProcesos;
+	
+}
+
 void iniciarProceso(char* path) {
 	t_pcb* pcb_nuevo = crear_PCB(path);
 	enviar_codOp(fd_memoria , INICIAR_PROCESO_SOLICITUD);
@@ -122,4 +128,48 @@ t_pcb* crear_PCB(char* path){
 
 	pid_a_asignar++;
 	return PCB_creado;
+}
+
+
+t_list* parsearArchivoScript(char* pathScript){
+	t_list* listaScript = list_create();
+	FILE* archivo = fopen(pathScript ,"r");
+	char linea[100];
+	char* parametros;
+	t_script* script;
+	while (fgets(linea, sizeof(linea), archivo)) {
+		//INICIAR_PROCESO Hola.txt
+		strtok(linea, "\n");
+		script = malloc(sizeof(t_script));
+        script->par1 = NULL;
+        parametros = strtok(linea, " ");
+        script->codigo_operacion = obtenerCodigoOperacion(parametros);
+		parametros = strtok(NULL, " ");
+		if(parametros != NULL){
+			script->par1 = malloc(strlen(parametros) + 1);
+			strcpy(script->par1, parametros);
+			string_append(&(script->par1), "\0");
+		}
+		list_add(listaScript,script);
+	}
+	fclose(archivo);
+	return listaScript;
+
+}
+
+t_codigo_operacion obtenerCodigoOperacion(char* parametro) {
+	if(strcmp(parametro,"EJECUTAR_SCRIPT") == 0)
+		return EJECUTAR_SCRIPT;
+	if(strcmp(parametro,"INICIAR_PROCESO") == 0)
+		return INICIAR_PROCESO;
+	if(strcmp(parametro,"FINALIZAR_PROCESO") == 0)
+		return FINALIZAR_PROCESO;
+	if(strcmp(parametro,"INICIAR_PLANIFICACION") == 0)
+		return INICIAR_PLANIFICACION;
+	if(strcmp(parametro,"DETENER_PLANIFICACION") == 0)
+		return DETENER_PLANIFICACION;
+	if(strcmp(parametro,"MULTIPROGRAMACION") == 0)
+		return MULTIPROGRAMACION;
+	if(strcmp(parametro,"PROCESO_ESTADO") == 0)
+		return PROCESO_ESTADO;
 }

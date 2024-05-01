@@ -47,26 +47,38 @@ void inicializar_conexiones() {
 	// liberar_conexion(fd_memoria);
 }
 
+
 void iniciar_proceso(){
 	//Recibo el buffer 
 	t_buffer* bufferMemoria = recibir_buffer(fd_kernel);
 	//Recibo el PID y el path del .txt
 	uint32_t pid = leer_buffer_uint32(bufferMemoria);
-	char* nombreArchivo = leer_buffer_string(bufferMemoria);
+	char* nombreArchivoInstrucciones = leer_buffer_string(bufferMemoria);
 	destruir_buffer(bufferMemoria);
 	//Combino el path del .txt con el path del config
-	char* rutaArchivo = string_new();
-	string_append(&rutaArchivo, config_memoria.path_instrucciones); //     /home/utnso/scripts-pruebas/
-	string_append(&rutaArchivo, nombreArchivo); // /home/utnso/scripts-pruebas/ + hola.txt
+	char* rutaArchivoInstrucciones = string_new();
+	string_append(&rutaArchivoInstrucciones, config_memoria.path_instrucciones); //     /home/utnso/scripts-pruebas/
+	string_append(&rutaArchivoInstrucciones, nombreArchivoInstrucciones); // /home/utnso/scripts-pruebas/ + hola.txt
 
-	t_list* listaInstrucciones = obtenerInstrucciones(rutaArchivo);
+	t_list* listaInstrucciones = obtenerInstrucciones(rutaArchivoInstrucciones);
+	t_link_element *actual = listaInstrucciones->head;                    
+		while(actual != NULL){
+			t_instruccion* comando = (t_instruccion *)(actual->data);
+			printf("%u ",comando->codigo);
+			printf("%s ",comando->par1);
+			printf("%s ",comando->par2); 
+			printf("%s ",comando->par3); 
+			printf("%s ",comando->par4); 
+			printf("%s \n",comando->par5); 
+			actual = actual->next;
+		}
 }
 
-t_list* obtenerInstrucciones(char* rutaArchivo){
+t_list* obtenerInstrucciones(char* pathArchivo){
     //Creo mi lista de instrucciones
-    t_list* listaInstrucciones;
+    t_list* listaInstrucciones = list_create();
 
-	FILE* archivo = fopen(rutaArchivo, "r");
+	FILE* archivo = fopen(pathArchivo, "r");
     if (archivo == NULL) {
         log_info(logger_memoria , "Error al abrir el archivo");
         return 1;
@@ -91,7 +103,6 @@ t_list* obtenerInstrucciones(char* rutaArchivo){
         instruccion->par3 = NULL;
         instruccion->par4 = NULL;
         instruccion->par5 = NULL;
-        log_info(logger_memoria, "no exploté");
         // SET
         parametros = strtok(linea, " ");
         instruccion->codigo = obtenerCodigoInstruccion(parametros);

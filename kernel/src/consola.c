@@ -1,7 +1,7 @@
 #include "consola.h"
 
 
-void inciar_consola(){
+void iniciar_consola(){
 	char* input;
 	while(1){
 		mostrar_opciones_consola();
@@ -29,62 +29,30 @@ void mostrar_opciones_consola(){
 }
 
 
-void atender_consola(char* input){ 
+//INICIAR_PROCESO PATH
+//INICIAR_PLANIFICACION
+
+void atender_consola(char* input){
 	char** lista_mensaje = string_split(input, " ");
 	int cant_par = string_array_size(lista_mensaje) - 1;
+	if(lista_mensaje[1] == NULL){
+		lista_mensaje[1] = NULL;
+	}
 	t_codigo_operacion cod_operacion = get_codigo_operacion(lista_mensaje[0], cant_par);
+	if(cod_operacion == EJECUTAR_SCRIPT){
+		t_list* lista_script = ejecutar_script(lista_mensaje[1]);
+		string_array_destroy(lista_mensaje);
 
-	switch(cod_operacion){
-		case EJECUTAR_SCRIPT:
-			// ejecutar_script(lista_mensaje[1]);
-			string_array_destroy(lista_mensaje); 
-            break;
-    	case INICIAR_PROCESO:
-			iniciarProceso(lista_mensaje[1]);
-			string_array_destroy(lista_mensaje); 
-            break;
-    	case FINALIZAR_PROCESO:
-			// finalizarProceso(lista_mensaje[1]);
-			//detectarDeadlock();
-			string_array_destroy(lista_mensaje); 
-    		break;
-    	case INICIAR_PLANIFICACION:
-    		log_info(logger_kernel, "INICIO DE PLANIFICACIÓN");
-			// iniciarPlanificacion();
-			string_array_destroy(lista_mensaje);
-    		break;
-    	case DETENER_PLANIFICACION:
-    		log_info(logger_kernel, "PAUSA DE PLANIFICACIÓN");
-			// detenerPlanificacion();
-			string_array_destroy(lista_mensaje);
-    		break;
-    	case MULTIPROGRAMACION:
-			// cambiar_grado_multiprogramacion(lista_mensaje[1]);
-			string_array_destroy(lista_mensaje);
-    		break;
-    	case PROCESO_ESTADO:
-			// procesosPorEstado();
-			string_array_destroy(lista_mensaje); 
-    		break;
-		case E_PARAMETROS:
-			log_info(logger_kernel, "Error en los parametros pasados");
-			string_array_destroy(lista_mensaje);
-			break;
-		case MENSAJE_VACIO:
-			log_info(logger_kernel, "Mensaje recibido vacio");
-			string_array_destroy(lista_mensaje);
-			break;
-		case BASURA:
-			log_info(logger_kernel, "Operacion desconocida");
-			string_array_destroy(lista_mensaje);
-			break;
-		default:
-			log_warning(logger_kernel,"Operacion desconocida (default)");
-			string_array_destroy(lista_mensaje);
-			break;
-    }
+		t_link_element *actual = lista_script->head;                    
+		while(actual != NULL){
+			t_script* comando = (t_script *)(actual->data);
+			switchComandos(comando->codigo_operacion, comando->par1);  
+			actual = actual->next;
+		}
+	} else {
+		switchComandos(cod_operacion, lista_mensaje[1]);
+	}
 }
-
 t_codigo_operacion get_codigo_operacion(char* comando, int cant_par){
 	if(strcmp(comando, "EJECUTAR_SCRIPT") == 0){
 		if(cant_par != 1){return E_PARAMETROS;}
@@ -128,5 +96,53 @@ t_codigo_operacion get_codigo_operacion(char* comando, int cant_par){
 	else{
 		log_info(logger_kernel, "El valor ingresado no es correcto.");
 		return BASURA;
+	}
+}
+
+void switchComandos(uint8_t codOp, char* lista_mensaje){
+	switch(codOp){
+		case INICIAR_PROCESO:
+			iniciarProceso(lista_mensaje);
+			free(lista_mensaje); 
+			break;
+		case FINALIZAR_PROCESO:
+			// finalizarProceso(lista_mensaje);
+			//detectarDeadlock();
+			free(lista_mensaje); 
+			break;
+		case INICIAR_PLANIFICACION:
+			log_info(logger_kernel, "INICIO DE PLANIFICACIÓN");
+			// iniciarPlanificacion();
+			free(lista_mensaje);
+			break;
+		case DETENER_PLANIFICACION:
+			log_info(logger_kernel, "PAUSA DE PLANIFICACIÓN");
+			// detenerPlanificacion();
+			free(lista_mensaje);
+			break;
+		case MULTIPROGRAMACION:
+			// cambiar_grado_multiprogramacion(lista_mensaje);
+			free(lista_mensaje);
+			break;
+		case PROCESO_ESTADO:
+			// procesosPorEstado();
+			free(lista_mensaje); 
+			break;
+		case E_PARAMETROS:
+			log_info(logger_kernel, "Error en los parametros pasados");
+			free(lista_mensaje);
+			break;
+		case MENSAJE_VACIO:
+			log_info(logger_kernel, "Mensaje recibido vacio");
+			free(lista_mensaje);
+			break;
+		case BASURA:
+			log_info(logger_kernel, "Operacion desconocida");
+			free(lista_mensaje);
+			break;
+		default:
+			log_warning(logger_kernel,"Operacion desconocida (default)");
+			free(lista_mensaje);
+			break;
 	}
 }

@@ -39,6 +39,7 @@ typedef struct {
 	registros_cpu* registros;
 	estado_proceso estado;	
 } t_pcb;
+
 /*
 printf("---MENU---\n");
 	printf("1. EJECUTAR_SCRIPT\n"); //PATH => Archivo de comandos, se encuentra en maquina donde corra el kernel 1
@@ -62,8 +63,14 @@ typedef enum{
 	MENSAJE_VACIO,
 	BASURA
 } t_codigo_operacion;
-/* VARIABLES GLOBALES */
 
+typedef struct {
+	t_codigo_operacion codigo_operacion;
+	char* par1;
+} t_script;
+
+
+/* VARIABLES GLOBALES */
 extern int pid_a_asignar;
 
 // Logger Y Config

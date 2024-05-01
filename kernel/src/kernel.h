@@ -14,11 +14,14 @@ void inicializar_conexiones();
 void iniciar_config_kernel();
 
 // CONSOLA
-void inciar_consola();
+void iniciar_consola();
 void mostrar_opciones_consola();
 void atender_consola(char* inpt);
 t_codigo_operacion get_codigo_operacion(char* , int );
 
+t_list* ejecutar_script(char* pathScript);
+t_list* parsearArchivoScript(char* pathScript);
+t_codigo_operacion obtenerCodigoOperacion(char* parametro);
 void iniciarProceso(char* path);
 t_pcb* crear_PCB(char* path);
 
