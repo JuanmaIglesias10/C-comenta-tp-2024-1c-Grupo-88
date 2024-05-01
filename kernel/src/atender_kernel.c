@@ -3,7 +3,7 @@
 void* atender_memoria()
 {
 	while (1) {
-		int cod_op = recibir_codOp(fd_memoria);
+		uint8_t cod_op = recibir_codOp(fd_memoria);
 		switch (cod_op) {
             case MENSAJE:
                 //
@@ -23,7 +23,7 @@ void* atender_memoria()
 void* atender_IO()
 {
 	while (1) {
-		int cod_op = recibir_codOp(fd_IO);
+		uint8_t cod_op = recibir_codOp(fd_IO);
 		switch (cod_op) {
             case MENSAJE:
                 //
@@ -42,7 +42,7 @@ void* atender_IO()
 void* atender_cpu_dis()
 {
 	while (1) {
-		int cod_op = recibir_codOp(fd_cpu_dis);
+		uint8_t cod_op = recibir_codOp(fd_cpu_dis);
 		switch (cod_op) {
             case MENSAJE:
                 //
@@ -61,7 +61,7 @@ void* atender_cpu_dis()
 void* atender_cpu_int()
 {
 	while (1) {
-		int cod_op = recibir_codOp(fd_cpu_int);
+		uint8_t cod_op = recibir_codOp(fd_cpu_int);
 		switch (cod_op) {
             case MENSAJE:
                 //

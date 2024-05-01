@@ -3,7 +3,7 @@
 void* atender_cpu()
 {	
 	while (1) {
-		int cod_op = recibir_codOp(fd_cpu);
+		uint8_t cod_op = recibir_codOp(fd_cpu);
 		switch (cod_op) {
 		case MENSAJE:
 			//
@@ -44,7 +44,7 @@ void* atender_kernel()
 void* atender_IO()
 {
 	while (1) {
-		int cod_op = recibir_codOp(fd_IO);
+		uint8_t cod_op = recibir_codOp(fd_IO);
 		switch (cod_op) {
 		case MENSAJE:
 			//

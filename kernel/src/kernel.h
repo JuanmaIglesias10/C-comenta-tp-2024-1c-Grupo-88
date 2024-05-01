@@ -9,6 +9,7 @@
 
 // CONEXIONES
 void inicializar_kernel();
+void inicializarListasColas();
 void inicializar_conexiones();
 void iniciar_config_kernel();
 

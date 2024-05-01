@@ -3,14 +3,6 @@
 
 #include <utils.h>
 
-
-	/*PUERTO_ESCUCHA=8002
-		TAM_MEMORIA=4096
-		TAM_PAGINA=32
-		PATH_INSTRUCCIONES=/home/utnso/scripts-pruebas
-		RETARDO_RESPUESTA=1000
-*/
-
 typedef struct{
     int puerto_escucha;
     int tam_memoria;

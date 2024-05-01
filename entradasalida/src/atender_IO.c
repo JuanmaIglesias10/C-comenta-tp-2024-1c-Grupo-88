@@ -3,7 +3,7 @@
 void* atender_memoria()
 {
 while (1) {
-        int cod_op = recibir_codOp(fd_memoria);
+        uint8_t cod_op = recibir_codOp(fd_memoria);
         switch (cod_op) {
             case MENSAJE:
                 //
@@ -22,7 +22,7 @@ return NULL;
 void* atender_kernel()
 {
 while (1) {
-        int cod_op = recibir_codOp(fd_kernel);
+        uint8_t cod_op = recibir_codOp(fd_kernel);
         switch (cod_op) {
             case MENSAJE:
                 //

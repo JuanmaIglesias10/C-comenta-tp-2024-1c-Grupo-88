@@ -1,5 +1,6 @@
 #include "utils.h"
 
+
 t_config* iniciar_config(char* nombreArchivoconfig)
 {
 	t_config *nuevo_config = config_create(nombreArchivoconfig);
@@ -28,6 +29,14 @@ int conectarse(char* IP, int puerto, char* nombreConexion, t_log* logger){
 	return conexion;
 } 
 
+
+// Enviar y Recibir codigo operacion. (PARA ENUMS)
 void enviar_codOp(int fd_servidor , uint8_t codOp){
 	send(fd_servidor, &codOp , sizeof(uint8_t) , 0);
+}
+
+uint8_t quehacesaca(int fd){
+	uint8_t codigo;
+	recv(fd , &codigo , sizeof(uint8_t), MSG_WAITALL);
+	return codigo;
 }

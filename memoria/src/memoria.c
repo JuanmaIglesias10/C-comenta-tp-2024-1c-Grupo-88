@@ -63,53 +63,126 @@ void iniciar_proceso(){
 }
 
 t_list* obtenerInstrucciones(char* rutaArchivo){
+    //Creo mi lista de instrucciones
+    t_list* listaInstrucciones;
+
 	FILE* archivo = fopen(rutaArchivo, "r");
     if (archivo == NULL) {
-        perror("Error al abrir el archivo");
+        log_info(logger_memoria , "Error al abrir el archivo");
         return 1;
     }
-
+    /*      EJEMPLO DE ARCHIVOS DE INSTRUCCIONES     */
+                // SET AX 03 
+                // SUM BX 04
+                // JNZ CX 04
+                // RESIZE  BX   06   NULL
+                //    ^     ^    ^
+                // codIn   Par  Par   
     char linea[100];
-
-    t_instruccion instruccion;
+    char* parametros;
+    t_instruccion* instruccion;
     while (fgets(linea, sizeof(linea), archivo)) {
-		//Obtengo la primer linea del archivo y avanza para la siguiente iteracion del while
-        char* token = strtok(linea, " \n");
+		// SET AX 03
+    	strtok(linea, "\n");
 
+        instruccion = malloc(sizeof(t_instruccion));
+        instruccion->par1 = NULL;
+        instruccion->par2 = NULL;
+        instruccion->par3 = NULL;
+        instruccion->par4 = NULL;
+        instruccion->par5 = NULL;
+        log_info(logger_memoria, "no exploté");
+        // SET
+        parametros = strtok(linea, " ");
+        instruccion->codigo = obtenerCodigoInstruccion(parametros);
 
-
-        if (strcmp(token, "SET") == 0)
-            instruccion.codigo = SET;
-        else if (strcmp(token, "SUM") == 0)
-            instruccion.codigo = SUM;
-        else if (strcmp(token, "SUB") == 0)
-            instruccion.codigo = SUB;
-        // Agrega más casos para cada valor del enum según sea necesario
-
-        token = strtok(NULL, " \n");
-        instruccion.par1 = strdup(token);
-
-        token = strtok(NULL, " \n");
-        instruccion.par2 = strdup(token);
-
-        token = strtok(NULL, " \n");
-        if (token != NULL) {
-            instruccion.par3 = strdup(token);
-        } else {
-            instruccion.par3 = NULL; // Si par3 no está presente, asigna NULL
-        }
-        // Aquí puedes realizar cualquier operación que necesites con la instrucción
-        // Por ejemplo, imprimir los valores almacenados en la estructura
-        printf("Código: %d, Par1: %s, Par2: %s, Par3: %s\n",
-               instruccion.codigo, instruccion.par1,
-               instruccion.par2, instruccion.par3);
-
-        // Libera la memoria asignada dinámicamente para evitar fugas de memoria
-        free(instruccion.par1);
-        free(instruccion.par2);
-        free(instruccion.par3);
+        //Seteo mi cantidad de parametros (maximo 5)
+        int numParametro = 1;
+        //AX
+        parametros = strtok(NULL, " ");
+		while(parametros != NULL){
+			obtenerParametrosInstruccion(numParametro, instruccion, parametros);
+			numParametro++;
+			//03
+			parametros = strtok(NULL, " ");
+		}
+		list_add(listaInstrucciones, instruccion);
     }
 
     fclose(archivo);
-    return 0;
+    return listaInstrucciones;
+}
+
+t_codigo_instruccion obtenerCodigoInstruccion(char* charParametro){
+    if(strcmp(charParametro,"SET") == 0)
+		return SET;
+	if(strcmp(charParametro,"MOV_IN") == 0)
+		return MOV_IN;
+	if(strcmp(charParametro,"MOV_OUT") == 0)
+		return MOV_OUT;
+	if(strcmp(charParametro,"SUM") == 0)
+		return SUM;
+	if(strcmp(charParametro,"SUB") == 0)
+		return SUB;
+	if(strcmp(charParametro,"JNZ") == 0)
+		return JNZ;
+	if(strcmp(charParametro,"RESIZE") == 0)
+		return RESIZE;
+	if(strcmp(charParametro,"COPY_STRING") == 0)
+		return COPY_STRING;
+	if(strcmp(charParametro,"WAIT") == 0)
+		return WAIT;
+	if(strcmp(charParametro,"SIGNAL") == 0)
+		return SIGNAL;
+	if(strcmp(charParametro,"IO_GEN_SLEEP") == 0)
+		return IO_GEN_SLEEP;
+	if(strcmp(charParametro,"IO_STDIN_READ") == 0)
+		return IO_STDIN_READ;
+	if(strcmp(charParametro,"IO_STDOUT_WRITE") == 0)
+		return IO_STDOUT_WRITE;
+	if(strcmp(charParametro,"IO_FS_CREATE") == 0)
+		return IO_FS_CREATE;
+	if(strcmp(charParametro,"IO_FS_DELETE") == 0)
+		return IO_FS_DELETE;
+	if(strcmp(charParametro,"IO_FS_TRUNCATE") == 0)
+		return IO_FS_TRUNCATE;
+    if(strcmp(charParametro,"IO_FS_WRITE") == 0)
+        return IO_FS_WRITE;
+    if(strcmp(charParametro,"IO_FS_READ") == 0)
+        return IO_FS_READ;
+    if(strcmp(charParametro,"EXIT") == 0)
+        return EXIT;
+}
+
+void obtenerParametrosInstruccion(int numParametro, t_instruccion* instrucciones, char* parametros){
+    //Obtengo el tamaño del char* y le añado +1 por el \0
+	int tam = strlen(parametros) + 1;
+    //Dependiendo del numPar (incrementando en el while), lo asigno a su respectivo instrucciones->par{numero}
+	switch(numParametro){
+		case 1:
+			instrucciones->par1 = malloc(tam);
+			strcpy(instrucciones->par1, parametros);
+			string_append(&(instrucciones->par1), "\0");
+			break;
+		case 2:
+			instrucciones->par2 = malloc(tam);
+			strcpy(instrucciones->par2, parametros);
+			string_append(&(instrucciones->par2), "\0");
+			break;
+		case 3:
+			instrucciones->par3 = malloc(tam);
+			strcpy(instrucciones->par3, parametros);
+			string_append(&(instrucciones->par3), "\0");
+			break;
+        case 4:
+			instrucciones->par4 = malloc(tam);
+			strcpy(instrucciones->par4, parametros);
+			string_append(&(instrucciones->par4), "\0");
+			break;
+        case 5:
+			instrucciones->par5 = malloc(tam);
+			strcpy(instrucciones->par5, parametros);
+			string_append(&(instrucciones->par5), "\0");
+			break;
+		}
 }

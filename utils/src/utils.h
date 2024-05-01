@@ -44,12 +44,6 @@ typedef struct{
     uint32_t di;
 } registros_cpu;
 
-typedef struct{
-	codigoInstruccion codigo;
-	char* par1;
-	char* par2;
-	char* par3;
-}t_instruccion;
 
 typedef enum{
 	SET,
@@ -73,6 +67,15 @@ typedef enum{
     EXIT 
 }t_codigo_instruccion;
 
+typedef struct{
+	t_codigo_instruccion codigo;
+	char* par1;
+	char* par2;
+	char* par3;
+	char* par4;
+	char* par5;
+}t_instruccion;
+
 // conexiones
 void* server_escuchar(t_log* logger, int fd_cliente, char* nombreCliente); 
 int conectarse(char* IP, int puerto, char* nombreConexion, t_log* logger);
@@ -83,5 +86,6 @@ t_log* iniciar_logger(char* rutaLog, char* nombreProceso , t_log_level level);
 
 // Nos sirve para enviar un codigo de operacion (ENUM) hacia otro modulo.
 void enviar_codOp(int fd_cliente , uint8_t codOp);
+uint8_t quehacesaca(int fd);
 
 #endif /* UTILS_H_ */

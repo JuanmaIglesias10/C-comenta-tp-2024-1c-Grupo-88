@@ -28,7 +28,7 @@ typedef enum {
 	READY,
 	EXEC,
 	BLOCKED,
-	EXIT
+	FINISHED
 } estado_proceso;
 
 typedef struct {
@@ -78,11 +78,13 @@ extern int fd_cpu_int;
 extern int fd_kernel;
 extern int fd_IO;
 
+//Listas
+extern t_list* procesos_globales;
 
 // Colas
-extern t_queue* colaNew;
-extern t_queue* colaReady;
-extern t_queue* colaBloqueados;
-extern t_queue* colaFinalizados;
+extern t_queue* colaNEW;
+extern t_queue* colaREADY;
+extern t_queue* colaBLOCKED;
+extern t_queue* colaFINISHED;
 
 #endif 

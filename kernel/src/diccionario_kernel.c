@@ -11,10 +11,13 @@ int fd_cpu_int;
 int fd_kernel;
 int fd_IO;
 
+//Listas
+t_list* procesos_globales;
+
 // Colas
-t_queue* colaNew;
-t_queue* colaReady;
-t_queue* colaBloqueados;
-t_queue* colaFinalizados;
+t_queue* colaNEW;
+t_queue* colaREADY;
+t_queue* colaBLOCKED;
+t_queue* colaFINISHED;
 
 int pid_a_asignar;

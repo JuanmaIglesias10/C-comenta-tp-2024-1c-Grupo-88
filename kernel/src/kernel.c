@@ -13,6 +13,11 @@ void inicializar_kernel(){
 	logger_kernel = iniciar_logger("logKernel.log","KERNEL",LOG_LEVEL_INFO);
 	iniciar_config_kernel();
 	inicializar_conexiones();
+	inicializarListasColas();
+
+
+	
+
 }
 
 void iniciar_config_kernel(){
@@ -31,7 +36,6 @@ void iniciar_config_kernel(){
 }
 
 void inicializar_conexiones(){
-
 	fd_memoria = conectarse(config_kernel.ip_memoria , config_kernel.puerto_memoria ,"MEMORIA", logger_kernel);
 	fd_cpu_dis = conectarse(config_kernel.ip_cpu ,config_kernel.puerto_cpu_dispatch, "CPU DISPATCH", logger_kernel);
 	fd_cpu_int = conectarse(config_kernel.ip_cpu,config_kernel.puerto_cpu_interrupt,"CPU INTERRUPT", logger_kernel);
@@ -60,6 +64,19 @@ void inicializar_conexiones(){
 	// liberar_conexion(fd_cpu_dis);
 	// liberar_conexion(fd_cpu_int);
 }
+
+void inicializarListasColas(){
+    procesos_globales = list_create();
+	// procesosBloqueadosPageFault = list_create();
+    // tablaArchivosAbiertos = list_create();
+    // listaArchivosGlobales = list_create();
+
+	colaNEW = queue_create();
+	colaREADY = queue_create();
+	colaBLOCKED = queue_create();
+	colaFINISHED = queue_create();
+}
+
 void iniciarProceso(char* path) {
 	t_pcb* pcb_nuevo = crear_PCB(path);
 	enviar_codOp(fd_memoria , INICIAR_PROCESO_SOLICITUD);
@@ -71,6 +88,11 @@ void iniciarProceso(char* path) {
 	//Envio el buffer a memoria
 	enviar_buffer(bufferKernel, fd_memoria);
 	destruir_buffer(bufferKernel);
+
+	// Recibo todo ok de MEMORIA
+	// mensajeKernelMem codigo_operacion = recibir_codigo(fd_memoria);
+
+	
 
 	// TO DO lo demas
 }
