@@ -2,11 +2,11 @@
 
 int main(void) {
 
-	inicializarCpu();
+	inicializar_cpu();
 
 }
 
-void inicializarCpu() {
+void inicializar_cpu() {
 
 	logger_cpu = iniciar_logger("logCPU.log","CPU",LOG_LEVEL_INFO);
 	inicializar_config();

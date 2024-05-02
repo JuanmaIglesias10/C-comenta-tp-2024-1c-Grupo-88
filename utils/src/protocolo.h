@@ -39,11 +39,15 @@ t_paquete* crear_paquete(op_code); // TODO: revisar
 void agregar_a_paquete(t_paquete* paquete, void* valor, int tamanio);
 void enviar_paquete(t_paquete* paquete, int socket_cliente); // TODO: revisar
 void eliminar_paquete(t_paquete* paquete); // TODO: revisar
-t_list* recibir_paquete(int); // TODO: no lo usa nadie
-uint8_t recibir_codOp(int); // lo usan 4 los modulos
 
+
+t_list* deserializar_lista_strings(t_buffer* buffer);
+t_list* deserializar_lista(t_buffer* buffer);
+// t_list* recibir_paquete(int); // NO está en el .c (????????)
+uint8_t recibir_codOp(int); // lo usan 4 los modulos
 // ----------------------- BUFFER GENERAL-------------------------
 t_buffer* recibir_buffer(int socket_cliente);
+void enviar_buffer(t_buffer* buffer, int socket_conexion);
 // Crea un buffer vacío con offset 0
 t_buffer* crear_buffer();
 // Libera la memoria asociada al buffer

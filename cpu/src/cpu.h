@@ -5,7 +5,7 @@
 #include "atender_cpu.h"
 #include "diccionario_cpu.h"
 
-void inicializarCpu();
+void inicializar_cpu();
 void inicializar_config();
 void inicializar_conexiones();
 

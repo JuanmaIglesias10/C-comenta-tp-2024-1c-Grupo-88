@@ -46,12 +46,16 @@ void atender_consola(char* input){
 		t_link_element *actual = lista_script->head;                    
 		while(actual != NULL){
 			t_script* comando = (t_script *)(actual->data);
-			switchComandos(comando->codigo_operacion, comando->par1);  
+			switch_comandos(comando->codigo_operacion, comando->par1);  
+			// free(comando);
 			actual = actual->next;
 		}
+		
+		list_destroy_and_destroy_elements(lista_script, (void*)script_destroy);
 	} else {
-		switchComandos(cod_operacion, lista_mensaje[1]);
+		switch_comandos(cod_operacion, lista_mensaje[1]);
 	}
+	
 }
 t_codigo_operacion get_codigo_operacion(char* comando, int cant_par){
 	if(strcmp(comando, "EJECUTAR_SCRIPT") == 0){
@@ -99,10 +103,10 @@ t_codigo_operacion get_codigo_operacion(char* comando, int cant_par){
 	}
 }
 
-void switchComandos(uint8_t codOp, char* lista_mensaje){
+void switch_comandos(uint8_t codOp, char* lista_mensaje){
 	switch(codOp){
 		case INICIAR_PROCESO:
-			iniciarProceso(lista_mensaje);
+			iniciar_proceso(lista_mensaje);
 			free(lista_mensaje); 
 			break;
 		case FINALIZAR_PROCESO:
@@ -145,4 +149,12 @@ void switchComandos(uint8_t codOp, char* lista_mensaje){
 			free(lista_mensaje);
 			break;
 	}
+}
+
+
+void script_destroy(t_script* script_a_destruir){
+	// free(script_a_destruir->codigo_operacion);
+	free(script_a_destruir->par1);
+	free(script_a_destruir);
+	return;
 }

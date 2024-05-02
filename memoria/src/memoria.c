@@ -8,6 +8,12 @@ int main(void) {
 void inicializar_memoria(){
 	logger_memoria = iniciar_logger("logMemoria.log", "MEMORIA", LOG_LEVEL_INFO);
 	inicializar_config();
+	listaProcesos = list_create();
+	pthread_mutex_init(&mutex_lista_procesos, NULL);
+	
+	
+
+
 	inicializar_conexiones();
 }
 
@@ -57,44 +63,48 @@ void iniciar_proceso(){
 	destruir_buffer(bufferMemoria);
 	//Combino el path del .txt con el path del config
 	char* rutaArchivoInstrucciones = string_new();
-	string_append(&rutaArchivoInstrucciones, config_memoria.path_instrucciones); //     /home/utnso/scripts-pruebas/
-	string_append(&rutaArchivoInstrucciones, nombreArchivoInstrucciones); // /home/utnso/scripts-pruebas/ + hola.txt
+	string_append(&rutaArchivoInstrucciones, config_memoria.path_instrucciones); 
+	string_append(&rutaArchivoInstrucciones, nombreArchivoInstrucciones);
 
-	t_list* listaInstrucciones = obtenerInstrucciones(rutaArchivoInstrucciones);
-	t_link_element *actual = listaInstrucciones->head;                    
-		while(actual != NULL){
-			t_instruccion* comando = (t_instruccion *)(actual->data);
-			printf("%u ",comando->codigo);
-			printf("%s ",comando->par1);
-			printf("%s ",comando->par2); 
-			printf("%s ",comando->par3); 
-			printf("%s ",comando->par4); 
-			printf("%s \n",comando->par5); 
-			actual = actual->next;
-		}
+	t_list* listaInstrucciones = obtener_instrucciones(rutaArchivoInstrucciones);
+					
+	t_proceso* procesoNuevo = crear_proceso(listaInstrucciones, pid, 0);
+
+	log_info(logger_memoria, "Creación: PID: %d - Tamaño: 0", pid); //LOG OBLIGATORIO, NO QUITAR!!!!!!
+
+	pthread_mutex_lock(&mutex_lista_procesos);
+	list_add(listaProcesos, procesoNuevo);
+	pthread_mutex_unlock(&mutex_lista_procesos);
+	
+	//Todo ok -> Mando confirmacion a kernel 
+	enviar_codigo(fd_kernel,INICIAR_PROCESO_OK);
+	
+	list_destroy_and_destroy_elements(listaInstrucciones, (void*)instrucciones_destroy);
+	free(rutaArchivoInstrucciones);
 }
 
-t_list* obtenerInstrucciones(char* pathArchivo){
-    //Creo mi lista de instrucciones
+t_proceso* crear_proceso(t_list* listaInstrucciones, uint32_t pid, uint32_t tamanio){
+	t_proceso* proceso = malloc(sizeof(t_proceso));
+
+	proceso->instrucciones = listaInstrucciones;
+	proceso->pid = pid;
+	proceso->cantMaxMarcos = tamanio / config_memoria.tam_pagina;
+
+	return proceso;
+}
+
+t_list* obtener_instrucciones(char* pathArchivo){
     t_list* listaInstrucciones = list_create();
 
 	FILE* archivo = fopen(pathArchivo, "r");
     if (archivo == NULL) {
         log_info(logger_memoria , "Error al abrir el archivo");
-        return 1;
+        return NULL;
     }
-    /*      EJEMPLO DE ARCHIVOS DE INSTRUCCIONES     */
-                // SET AX 03 
-                // SUM BX 04
-                // JNZ CX 04
-                // RESIZE  BX   06   NULL
-                //    ^     ^    ^
-                // codIn   Par  Par   
     char linea[100];
     char* parametros;
     t_instruccion* instruccion;
     while (fgets(linea, sizeof(linea), archivo)) {
-		// SET AX 03
     	strtok(linea, "\n");
 
         instruccion = malloc(sizeof(t_instruccion));
@@ -103,18 +113,15 @@ t_list* obtenerInstrucciones(char* pathArchivo){
         instruccion->par3 = NULL;
         instruccion->par4 = NULL;
         instruccion->par5 = NULL;
-        // SET
-        parametros = strtok(linea, " ");
-        instruccion->codigo = obtenerCodigoInstruccion(parametros);
 
-        //Seteo mi cantidad de parametros (maximo 5)
+        parametros = strtok(linea, " ");
+        instruccion->codigo = obtener_codigo_instruccion(parametros);
+
         int numParametro = 1;
-        //AX
         parametros = strtok(NULL, " ");
 		while(parametros != NULL){
-			obtenerParametrosInstruccion(numParametro, instruccion, parametros);
+			obtener_parametros_instruccion(numParametro, instruccion, parametros);
 			numParametro++;
-			//03
 			parametros = strtok(NULL, " ");
 		}
 		list_add(listaInstrucciones, instruccion);
@@ -124,7 +131,7 @@ t_list* obtenerInstrucciones(char* pathArchivo){
     return listaInstrucciones;
 }
 
-t_codigo_instruccion obtenerCodigoInstruccion(char* charParametro){
+t_codigo_instruccion obtener_codigo_instruccion(char* charParametro){
     if(strcmp(charParametro,"SET") == 0)
 		return SET;
 	if(strcmp(charParametro,"MOV_IN") == 0)
@@ -163,9 +170,12 @@ t_codigo_instruccion obtenerCodigoInstruccion(char* charParametro){
         return IO_FS_READ;
     if(strcmp(charParametro,"EXIT") == 0)
         return EXIT;
+	else{
+		return 100; //TODO
+	}
 }
 
-void obtenerParametrosInstruccion(int numParametro, t_instruccion* instrucciones, char* parametros){
+void obtener_parametros_instruccion(int numParametro, t_instruccion* instrucciones, char* parametros){
     //Obtengo el tamaño del char* y le añado +1 por el \0
 	int tam = strlen(parametros) + 1;
     //Dependiendo del numPar (incrementando en el while), lo asigno a su respectivo instrucciones->par{numero}
@@ -196,4 +206,15 @@ void obtenerParametrosInstruccion(int numParametro, t_instruccion* instrucciones
 			string_append(&(instrucciones->par5), "\0");
 			break;
 		}
+}
+
+void instrucciones_destroy(t_instruccion* instrucciones_a_destruir){
+	// free(script_a_destruir->codigo_operacion);
+	free(instrucciones_a_destruir->par1);
+	free(instrucciones_a_destruir->par2);
+	free(instrucciones_a_destruir->par3);
+	free(instrucciones_a_destruir->par4);
+	free(instrucciones_a_destruir->par5);
+	free(instrucciones_a_destruir);
+	return;
 }

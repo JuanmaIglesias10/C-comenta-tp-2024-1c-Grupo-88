@@ -11,6 +11,12 @@ typedef struct{
     int retardo_respuesta;
  }t_config_memoria;
 
+typedef struct{
+	uint32_t pid;
+	t_list* instrucciones;
+	uint32_t cantMaxMarcos;
+}t_proceso;
+
 // variables globales Memoria
 
 // Logger Y Config
@@ -24,6 +30,17 @@ extern int fd_cpu;
 extern int fd_kernel;
 extern int fd_IO;
 
+//Listas
+extern t_list* listaProcesos;
+
+
+// Semaforos
+extern pthread_mutex_t mutex_lista_procesos;
+
+
 // fin variables globales Memoria
+
+
+
 
 #endif

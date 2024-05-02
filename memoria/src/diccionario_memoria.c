@@ -11,3 +11,9 @@ int fd_cpu;
 int fd_kernel;
 int fd_IO;
 
+//Listas
+t_list* listaProcesos;
+
+//Semaforos
+pthread_mutex_t mutex_lista_procesos;
+

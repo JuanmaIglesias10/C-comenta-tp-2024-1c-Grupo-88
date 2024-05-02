@@ -13,7 +13,7 @@ void inicializar_kernel(){
 	logger_kernel = iniciar_logger("logKernel.log","KERNEL",LOG_LEVEL_INFO);
 	iniciar_config_kernel();
 	inicializar_conexiones();
-	inicializarListasColas();
+	inicializar_listas_colas();
 
 
 	
@@ -65,7 +65,7 @@ void inicializar_conexiones(){
 	// liberar_conexion(fd_cpu_int);
 }
 
-void inicializarListasColas(){
+void inicializar_listas_colas(){
     procesos_globales = list_create();
 	// procesosBloqueadosPageFault = list_create();
     // tablaArchivosAbiertos = list_create();
@@ -78,12 +78,12 @@ void inicializarListasColas(){
 }
 
 t_list* ejecutar_script(char* pathScript){
-	t_list* scriptProcesos = parsearArchivoScript(pathScript);
+	t_list* scriptProcesos = parsear_archivo_script(pathScript);
 	return scriptProcesos;
 	
 }
 
-void iniciarProceso(char* path) {
+void iniciar_proceso(char* path) {
 	t_pcb* pcb_nuevo = crear_PCB(path);
 	enviar_codOp(fd_memoria , INICIAR_PROCESO_SOLICITUD);
 	
@@ -95,8 +95,8 @@ void iniciarProceso(char* path) {
 	enviar_buffer(bufferKernel, fd_memoria);
 	destruir_buffer(bufferKernel);
 
-	// Recibo todo ok de MEMORIA
-	// mensajeKernelMem codigo_operacion = recibir_codigo(fd_memoria);
+	// Recibo codigo de MEMORIA
+	mensajeKernelMem codigo_operacion =  recibir_codigo(fd_memoria);
 
 	
 
@@ -131,7 +131,7 @@ t_pcb* crear_PCB(char* path){
 }
 
 
-t_list* parsearArchivoScript(char* pathScript){
+t_list* parsear_archivo_script(char* pathScript){
 	t_list* listaScript = list_create();
 	FILE* archivo = fopen(pathScript ,"r");
 	char linea[100];
@@ -143,7 +143,7 @@ t_list* parsearArchivoScript(char* pathScript){
 		script = malloc(sizeof(t_script));
         script->par1 = NULL;
         parametros = strtok(linea, " ");
-        script->codigo_operacion = obtenerCodigoOperacion(parametros);
+        script->codigo_operacion = obtener_codigo_operacion(parametros);
 		parametros = strtok(NULL, " ");
 		if(parametros != NULL){
 			script->par1 = malloc(strlen(parametros) + 1);
@@ -157,7 +157,7 @@ t_list* parsearArchivoScript(char* pathScript){
 
 }
 
-t_codigo_operacion obtenerCodigoOperacion(char* parametro) {
+t_codigo_operacion obtener_codigo_operacion(char* parametro) {
 	if(strcmp(parametro,"EJECUTAR_SCRIPT") == 0)
 		return EJECUTAR_SCRIPT;
 	if(strcmp(parametro,"INICIAR_PROCESO") == 0)
@@ -172,4 +172,5 @@ t_codigo_operacion obtenerCodigoOperacion(char* parametro) {
 		return MULTIPROGRAMACION;
 	if(strcmp(parametro,"PROCESO_ESTADO") == 0)
 		return PROCESO_ESTADO;
+	return EXIT_FAILURE;
 }
