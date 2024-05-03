@@ -78,7 +78,7 @@ void inicializar_listas_colas(){
 }
 
 t_list* ejecutar_script(char* pathScript){
-	t_list* scriptProcesos = parsear_archivo_script(pathScript);
+	t_list* scriptProcesos = obtener_lista_script(pathScript);
 	return scriptProcesos;
 	
 }
@@ -96,10 +96,8 @@ void iniciar_proceso(char* path) {
 	destruir_buffer(bufferKernel);
 
 	// Recibo codigo de MEMORIA
-	mensajeKernelMem codigo_operacion =  recibir_codigo(fd_memoria);
-
+	mensajeKernelMem codigo_operacion =  recibir_codOp(fd_memoria);
 	
-
 	// TO DO lo demas
 }
 
@@ -131,7 +129,7 @@ t_pcb* crear_PCB(char* path){
 }
 
 
-t_list* parsear_archivo_script(char* pathScript){
+t_list* obtener_lista_script(char* pathScript){
 	t_list* listaScript = list_create();
 	FILE* archivo = fopen(pathScript ,"r");
 	char linea[100];

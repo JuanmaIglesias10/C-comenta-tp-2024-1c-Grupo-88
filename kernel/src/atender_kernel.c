@@ -5,9 +5,6 @@ void* atender_memoria()
 	while (1) {
 		uint8_t cod_op = recibir_codOp(fd_memoria);
 		switch (cod_op) {
-            case INICIAR_PROCESO_OK:
-                //
-                break;
             case PAQUETE:
                 //
                 break;

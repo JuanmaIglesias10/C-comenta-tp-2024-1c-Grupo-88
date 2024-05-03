@@ -77,7 +77,7 @@ void iniciar_proceso(){
 	pthread_mutex_unlock(&mutex_lista_procesos);
 	
 	//Todo ok -> Mando confirmacion a kernel 
-	enviar_codigo(fd_kernel,INICIAR_PROCESO_OK);
+	enviar_codOp(fd_kernel,INICIAR_PROCESO_OK);
 	
 	list_destroy_and_destroy_elements(listaInstrucciones, (void*)instrucciones_destroy);
 	free(rutaArchivoInstrucciones);
