@@ -102,5 +102,7 @@ t_log* iniciar_logger(char* rutaLog, char* nombreProceso , t_log_level level);
 // Nos sirve para enviar un codigo de operacion (ENUM) hacia otro modulo.
 void enviar_codOp(int fd_cliente , uint8_t codOp);
 
+// Leer los registros del buffer
+t_registro* buffer_read_registros(t_buffer* buffer);
 
 #endif /* UTILS_H_ */
