@@ -60,3 +60,10 @@ void inicializar_conexiones(){
 
 	// log_destroy(logger_cpu);
 }
+
+
+
+void ejecutar_proceso(){
+
+
+} 
