@@ -5,12 +5,9 @@ void* atender_memoria()
 	while (1) {
 		uint8_t cod_op = recibir_codOp(fd_memoria);
 		switch (cod_op) {
-<<<<<<< HEAD
             case MENSAJE:
                 //'
                 break;
-=======
->>>>>>> bc0622d8746bce68cefbdf752b73053b7097895f
             case PAQUETE:
                 //
                 break;

@@ -98,12 +98,8 @@ void iniciar_proceso(char* path) {
 	destruir_buffer(bufferKernel);
 
 	// Recibo codigo de MEMORIA
-<<<<<<< HEAD
 	// mensajeKernelMem codigo_operacion =  recibir_codigo(fd_memoria);
 
-=======
-	mensajeKernelMem codigo_operacion =  recibir_codOp(fd_memoria);
->>>>>>> bc0622d8746bce68cefbdf752b73053b7097895f
 	
 	// TO DO lo demas
 }
