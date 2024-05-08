@@ -23,6 +23,6 @@ t_list* ejecutar_script(char* pathScript);
 t_list* parsear_archivo_script(char* pathScript);
 t_codigo_operacion obtener_codigo_operacion(char* parametro);
 void iniciar_proceso(char* path);
-t_pcb* crear_PCB(char* path);
+t_pcb* crear_PCB();
 
 #endif

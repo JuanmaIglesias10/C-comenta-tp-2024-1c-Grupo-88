@@ -29,28 +29,21 @@ typedef enum {
 	EXEC,
 	BLOCKED,
 	FINISHED
-} estado_proceso;
+} t_estado_proceso;
 
-typedef struct {
-	char* path;
-	uint32_t pid;
-	uint32_t program_counter;
-	uint32_t quantum;
-	registros_cpu* registros;
-	estado_proceso estado;	
-} t_pcb;
+typedef struct{
+	t_cde* cde;
+	t_estado_proceso estado;
+	// char* path;
+	// int prioridad;
+	// t_list* archivos_abiertos;
+	// t_list* archivos_solicitados;
+	// t_list* recursos_asignados;
+	// t_list* recursos_solicitados;
+	// bool flag_clock;
+	// bool fin_q;
+}t_pcb;
 
-/*
-printf("---MENU---\n");
-	printf("1. EJECUTAR_SCRIPT\n"); //PATH => Archivo de comandos, se encuentra en maquina donde corra el kernel 1
-	printf("2. INICIAR_PROCESO\n"); //PATH => Archivo pseudocodigo memoria 1
-	printf("3. FINALIZAR_PROCESO\n"); //PID 1
-	printf("4. INICIAR_PLANIFICACION\n"); //0
-	printf("5. DETENER_PLANIFICACION\n"); //0
-	printf("6. MULTIPROGRAMACION\n"); //VALOR 1
-	printf("7. PROCESO_ESTADO\n"); // 0
-	printf("8. EXIT\n"); //0
-*/
 typedef enum{
     EJECUTAR_SCRIPT,
 	INICIAR_PROCESO,
@@ -95,3 +88,11 @@ extern t_queue* colaBLOCKED;
 extern t_queue* colaFINISHED;
 
 #endif 
+
+// typedef struct {
+// 	char* path;
+// 	uint32_t pid;
+// 	uint32_t quantum;
+// 	t_registros* registros;
+// 	t_estado_proceso estado;	
+// } t_pcb;

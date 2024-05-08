@@ -5,8 +5,8 @@ void* atender_memoria()
 	while (1) {
 		uint8_t cod_op = recibir_codOp(fd_memoria);
 		switch (cod_op) {
-            case INICIAR_PROCESO_OK:
-                //
+            case MENSAJE:
+                //'
                 break;
             case PAQUETE:
                 //
@@ -42,11 +42,11 @@ void* atender_IO()
 void* atender_cpu_dis()
 {
 	while (1) {
-		uint8_t cod_op = recibir_codOp(fd_cpu_dis);
+		mensajeKernelCpu cod_op = recibir_codOp(fd_cpu_dis);
 		switch (cod_op) {
-            case MENSAJE:
-                //
-                break;
+            t_buffer* buffer = buffer_create();
+            
+            break;
             case PAQUETE:
                 //
                 break;

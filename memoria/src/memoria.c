@@ -65,7 +65,7 @@ void iniciar_proceso(){
 	char* rutaArchivoInstrucciones = string_new();
 	string_append(&rutaArchivoInstrucciones, config_memoria.path_instrucciones); 
 	string_append(&rutaArchivoInstrucciones, nombreArchivoInstrucciones);
-
+	log_info(logger_memoria, "hola negri");
 	t_list* listaInstrucciones = obtener_instrucciones(rutaArchivoInstrucciones);
 					
 	t_proceso* procesoNuevo = crear_proceso(listaInstrucciones, pid, 0);
@@ -77,7 +77,7 @@ void iniciar_proceso(){
 	pthread_mutex_unlock(&mutex_lista_procesos);
 	
 	//Todo ok -> Mando confirmacion a kernel 
-	enviar_codigo(fd_kernel,INICIAR_PROCESO_OK);
+	// enviar_codigo(fd_kernel,INICIAR_PROCESO_OK);
 	
 	list_destroy_and_destroy_elements(listaInstrucciones, (void*)instrucciones_destroy);
 	free(rutaArchivoInstrucciones);

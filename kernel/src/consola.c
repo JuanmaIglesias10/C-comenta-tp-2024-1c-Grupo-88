@@ -45,7 +45,7 @@ void atender_consola(char* input){
 
 		t_link_element *actual = lista_script->head;                    
 		while(actual != NULL){
-			t_script* comando = (t_script *)(actual->data);
+			t_script* comando = (t_script *)(actual->data); 
 			switch_comandos(comando->codigo_operacion, comando->par1);  
 			// free(comando);
 			actual = actual->next;

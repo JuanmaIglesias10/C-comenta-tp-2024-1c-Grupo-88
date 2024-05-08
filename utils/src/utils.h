@@ -26,24 +26,39 @@ typedef enum{
 	FINALIZAR_PROCESO_OK
 }mensajeKernelMem;
 
+typedef enum{
+	EJECUTAR_PROCESO,
+	INTERRUPT,
+	DESALOJO,
+	CDE,
+	ALGORITMO_PLANIFICACION,
+	HAY_PAGE_FAULT,
+	DIRECCION_FISICA_OK
+}mensajeKernelCpu;
+
+
 // nuestros headers
 #include "protocolo.h"
 #include "sockets.h"
 
 typedef struct{
-    uint32_t pc;
-    uint8_t ax;
-    uint8_t bx;
-    uint8_t cx;
-    uint8_t dx;
-    uint32_t eax;
-    uint32_t ebx;
-    uint32_t ecx;
-    uint32_t edx;
-    uint32_t si;
-    uint32_t di;
-} registros_cpu;
+    uint8_t AX;
+    uint8_t BX;
+    uint8_t CX;
+    uint8_t DX;
+    uint32_t EAX;
+    uint32_t EBX;
+    uint32_t ECX;
+    uint32_t EDX;
+    uint32_t SI; //Contiene la dirección lógica de memoria de origen desde donde se va a copiar un string.
+    uint32_t DI; //Contiene la dirección lógica de memoria de destino a donde se va a copiar un string.
+} t_registros;
 
+typedef struct{
+	uint32_t pid;
+	uint32_t program_counter; ////indica la próxima instrucción a ejecutar
+	t_registros* registros;
+}t_cde;
 
 typedef enum{
 	SET,
@@ -86,6 +101,6 @@ t_log* iniciar_logger(char* rutaLog, char* nombreProceso , t_log_level level);
 
 // Nos sirve para enviar un codigo de operacion (ENUM) hacia otro modulo.
 void enviar_codOp(int fd_cliente , uint8_t codOp);
-uint8_t quehacesaca(int fd);
+
 
 #endif /* UTILS_H_ */

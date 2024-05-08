@@ -34,9 +34,3 @@ int conectarse(char* IP, int puerto, char* nombreConexion, t_log* logger){
 void enviar_codOp(int fd_servidor , uint8_t codOp){
 	send(fd_servidor, &codOp , sizeof(uint8_t) , 0);
 }
-
-uint8_t quehacesaca(int fd){
-	uint8_t codigo;
-	recv(fd , &codigo , sizeof(uint8_t), MSG_WAITALL);
-	return codigo;
-}

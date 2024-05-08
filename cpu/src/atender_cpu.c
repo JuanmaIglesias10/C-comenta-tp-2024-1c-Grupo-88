@@ -24,7 +24,7 @@ void* atender_kernel_dis()
 	while (1) {
 		uint8_t cod_op = recibir_codOp(fd_kernel_dis);
 		switch (cod_op) {
-            case MENSAJE:
+            case EJECUTAR_PROCESO:
                 //
                 break;
             case PAQUETE:

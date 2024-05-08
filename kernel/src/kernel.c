@@ -84,19 +84,21 @@ t_list* ejecutar_script(char* pathScript){
 }
 
 void iniciar_proceso(char* path) {
-	t_pcb* pcb_nuevo = crear_PCB(path);
+	t_pcb* pcb_nuevo = crear_PCB();
 	enviar_codOp(fd_memoria , INICIAR_PROCESO_SOLICITUD);
 	
 	t_buffer* bufferKernel = crear_buffer();
 	//Agrego el path del pid y el path del .txt
-	agregar_buffer_uint32(bufferKernel,pcb_nuevo->pid);
-	agregar_buffer_string(bufferKernel, pcb_nuevo->path);
+	log_info(logger_kernel, "hola negri");
+
+	agregar_buffer_uint32(bufferKernel,pcb_nuevo->cde->pid);
+	agregar_buffer_string(bufferKernel, path);
 	//Envio el buffer a memoria
 	enviar_buffer(bufferKernel, fd_memoria);
 	destruir_buffer(bufferKernel);
 
 	// Recibo codigo de MEMORIA
-	mensajeKernelMem codigo_operacion =  recibir_codigo(fd_memoria);
+	// mensajeKernelMem codigo_operacion =  recibir_codigo(fd_memoria);
 
 	
 
@@ -104,29 +106,31 @@ void iniciar_proceso(char* path) {
 }
 
 // Crear PCB
-t_pcb* crear_PCB(char* path){
+t_pcb* crear_PCB(){
 
 	t_pcb* PCB_creado = malloc(sizeof(t_pcb));
-	PCB_creado->registros = malloc(sizeof(registros_cpu));
+	PCB_creado->cde = malloc(sizeof(t_cde));
+	PCB_creado->cde->registros = malloc(sizeof(t_registros));
 
-	PCB_creado->pid = pid_a_asignar;
-	PCB_creado->registros->ax=0;
-	PCB_creado->registros->bx=0;
-	PCB_creado->registros->cx=0;
-	PCB_creado->registros->dx=0;
-	PCB_creado->registros->eax=0;
-	PCB_creado->registros->ebx=0;
-	PCB_creado->registros->ecx=0;
-	PCB_creado->registros->edx=0;
-	PCB_creado->registros->si=0;
-	PCB_creado->registros->di=0;
 
-	PCB_creado->path = path;
+	// PCB_creado->path = path; //Path del .txt
+	PCB_creado->cde->pid = pid_a_asignar; 
+	PCB_creado->cde->program_counter= 0;
+	// PCB_creado->quantum=0;
+	PCB_creado->cde->registros->AX=0;
+	PCB_creado->cde->registros->BX=0;
+	PCB_creado->cde->registros->CX=0;
+	PCB_creado->cde->registros->DX=0;
+	PCB_creado->cde->registros->EAX=0;
+	PCB_creado->cde->registros->EBX=0;
+	PCB_creado->cde->registros->ECX=0;
+	PCB_creado->cde->registros->EDX=0;
+	PCB_creado->cde->registros->SI=0;
+	PCB_creado->cde->registros->DI=0;
 	PCB_creado->estado = NULO;
-	PCB_creado->program_counter= 0;
-	PCB_creado->quantum=0;
 
-	pid_a_asignar++;
+	pid_a_asignar++; //Aumento en 1 el PID
+
 	return PCB_creado;
 }
 
