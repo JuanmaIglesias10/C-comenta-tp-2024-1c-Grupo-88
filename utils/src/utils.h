@@ -5,15 +5,18 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <unistd.h> // close
+#include <string.h>
 #include <sys/socket.h>
 #include <netdb.h>
+#include <stdint.h> // para uint8 y uint32
+#include <pthread.h>
+#include <semaphore.h>
+
+//Commons
 #include <commons/log.h>
 #include <commons/config.h>
 #include <commons/collections/list.h>
 #include <commons/string.h>
-#include <string.h>
-#include <pthread.h>
-#include <stdint.h> // para uint8 y uint32
 
 
 typedef enum{

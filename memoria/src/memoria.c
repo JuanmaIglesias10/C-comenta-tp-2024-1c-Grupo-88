@@ -9,6 +9,8 @@ void inicializar_memoria(){
 	logger_memoria = iniciar_logger("logMemoria.log", "MEMORIA", LOG_LEVEL_INFO);
 	inicializar_config();
 	listaProcesos = list_create();
+
+	// iniciar_semaforos();
 	pthread_mutex_init(&mutex_lista_procesos, NULL);
 	
 	
@@ -77,11 +79,7 @@ void iniciar_proceso(){
 	pthread_mutex_unlock(&mutex_lista_procesos);
 	
 	//Todo ok -> Mando confirmacion a kernel 
-<<<<<<< HEAD
-	// enviar_codigo(fd_kernel,INICIAR_PROCESO_OK);
-=======
 	enviar_codOp(fd_kernel,INICIAR_PROCESO_OK);
->>>>>>> bc0622d8746bce68cefbdf752b73053b7097895f
 	
 	list_destroy_and_destroy_elements(listaInstrucciones, (void*)instrucciones_destroy);
 	free(rutaArchivoInstrucciones);

@@ -21,3 +21,10 @@ t_queue* colaBLOCKED;
 t_queue* colaFINISHED;
 
 int pid_a_asignar;
+
+//Semaforos
+pthread_mutex_t mutex_new;
+pthread_mutex_t mutex_procesos_globales;
+
+
+sem_t procesos_NEW;

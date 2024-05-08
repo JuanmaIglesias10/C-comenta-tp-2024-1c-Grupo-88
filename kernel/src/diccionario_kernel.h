@@ -87,12 +87,13 @@ extern t_queue* colaREADY;
 extern t_queue* colaBLOCKED;
 extern t_queue* colaFINISHED;
 
+//Semaforos
+
+extern pthread_mutex_t mutex_new;
+extern pthread_mutex_t mutex_procesos_globales;
+
+
+extern sem_t procesos_NEW;
+
 #endif 
 
-// typedef struct {
-// 	char* path;
-// 	uint32_t pid;
-// 	uint32_t quantum;
-// 	t_registros* registros;
-// 	t_estado_proceso estado;	
-// } t_pcb;

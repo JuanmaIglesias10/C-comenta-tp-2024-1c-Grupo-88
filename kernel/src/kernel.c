@@ -14,6 +14,7 @@ void inicializar_kernel(){
 	iniciar_config_kernel();
 	inicializar_conexiones();
 	inicializar_listas_colas();
+	inicializar_semaforos();
 
 
 	
@@ -60,9 +61,6 @@ void inicializar_conexiones(){
 	pthread_create(&hilo_cpu_int, NULL, (void*)atender_cpu_int, NULL);
 	pthread_detach(hilo_cpu_int);
 
-	// liberar_conexion(fd_memoria);
-	// liberar_conexion(fd_cpu_dis);
-	// liberar_conexion(fd_cpu_int);
 }
 
 void inicializar_listas_colas(){
@@ -75,6 +73,15 @@ void inicializar_listas_colas(){
 	colaREADY = queue_create();
 	colaBLOCKED = queue_create();
 	colaFINISHED = queue_create();
+}
+
+void inicializar_semaforos(){
+	pthread_mutex_init(&mutex_new, NULL);
+	pthread_mutex_init(&mutex_procesos_globales, NULL);
+
+
+	sem_init(&procesos_NEW, 0, 0);
+
 }
 
 t_list* ejecutar_script(char* pathScript){
@@ -97,14 +104,27 @@ void iniciar_proceso(char* path) {
 	enviar_buffer(bufferKernel, fd_memoria);
 	destruir_buffer(bufferKernel);
 
-	// Recibo codigo de MEMORIA
-	// mensajeKernelMem codigo_operacion =  recibir_codigo(fd_memoria);
+    mensajeKernelMem cod_op = recibir_codOp(fd_memoria);
 
-	
-	// TO DO lo demas
+	if(cod_op == INICIAR_PROCESO_OK){
+        // Poner en new
+        agregar_pcb_a(colaNEW, pcb_nuevo, &mutex_new);
+
+        pthread_mutex_lock(&mutex_procesos_globales);
+        list_add(procesos_globales, pcb_nuevo); // agrego a lista global de pcbs
+        pthread_mutex_unlock(&mutex_procesos_globales);
+
+        pcb_nuevo->estado = NEW;
+
+        log_info(logger_kernel, "Se crea el proceso %d en NEW", pcb_nuevo->cde->pid);
+        sem_post(&procesos_NEW);
+    }
+    else if(cod_op == INICIAR_PROCESO_ERROR)
+        log_info(logger_kernel, "No se pudo crear el proceso %d", pcb_nuevo->cde->pid);
+    
 }
 
-// Crear PCB
+
 t_pcb* crear_PCB(){
 
 	t_pcb* PCB_creado = malloc(sizeof(t_pcb));
@@ -133,7 +153,6 @@ t_pcb* crear_PCB(){
 	return PCB_creado;
 }
 
-
 t_list* obtener_lista_script(char* pathScript){
 	t_list* listaScript = list_create();
 	FILE* archivo = fopen(pathScript ,"r");
@@ -161,6 +180,7 @@ t_list* obtener_lista_script(char* pathScript){
 }
 
 t_codigo_operacion obtener_codigo_operacion(char* parametro) {
+
 	if(strcmp(parametro,"EJECUTAR_SCRIPT") == 0)
 		return EJECUTAR_SCRIPT;
 	if(strcmp(parametro,"INICIAR_PROCESO") == 0)
@@ -176,4 +196,65 @@ t_codigo_operacion obtener_codigo_operacion(char* parametro) {
 	if(strcmp(parametro,"PROCESO_ESTADO") == 0)
 		return PROCESO_ESTADO;
 	return EXIT_FAILURE;
+}
+
+// void planificador_largo_plazo{
+// 	pthread_t new_ready;
+// 	pthread_create(&new_ready, NULL, (void*)new_a_ready, NULL);
+
+
+// }
+
+// void new_a_ready(){
+// 	while(1){
+// 		sem_wait(&procesos_NEW);
+        
+//         // sem_wait(&grado_de_multiprogramacion);
+
+//         // if(planificacion_detenida == 1){ 
+//         //     sem_wait(&pausar_new_a_ready);
+//         // }
+
+//         t_pcb* pcb_a_ready = retirar_pcb_de(colaNEW, &mutex_new);
+        
+//         agregar_pcb_a(colaNEW, pcb_a_ready, &mutex_ready);
+//         pcb_a_ready->estado = READY;
+
+//         // Pedir a memoria incializar estructuras
+
+//         log_info(logger_kernel, "PID: %d - Estado anterior: %s - Estado actual: %s", pcb_a_ready->cde->pid, obtener_nombre_estado(NEW), obtener_nombre_estado(READY)); //OBLIGATORIO
+        
+//         if(strcmp(config_kernel.algoritmo, "PRIORIDADES") == 0 && pcb_en_ejecucion != NULL){
+//             t_pcb* posible_a_ejecutar = pcb_con_mayor_prioridad_en_ready();
+
+//             if(pcb_en_ejecucion->prioridad > posible_a_ejecutar->prioridad){
+//                 enviar_codigo(socket_cpu_interrupt, DESALOJO);
+
+//                 t_buffer* buffer = crear_buffer_nuestro();
+//                 buffer_write_uint32(buffer, posible_a_ejecutar->cde->pid); // lo enviamos porque interrupt recibe un buffer, pero no hacemos nada con esto
+//                 enviar_buffer(buffer, socket_cpu_interrupt);
+//                 destruir_buffer_nuestro(buffer);
+//             }
+//         }
+        
+//         sem_post(&procesos_en_ready);
+// 	}
+// }
+
+
+void agregar_pcb_a(t_queue* cola, t_pcb* pcb_a_agregar, pthread_mutex_t* mutex){
+    
+    pthread_mutex_lock(mutex);
+    queue_push(cola, (void*) pcb_a_agregar);
+	pthread_mutex_unlock(mutex);
+
+}
+
+t_pcb* retirar_pcb_de(t_queue* cola, pthread_mutex_t* mutex){
+    
+	pthread_mutex_lock(mutex);
+	t_pcb* pcb = queue_pop(cola);
+	pthread_mutex_unlock(mutex);
+    
+	return pcb;
 }
