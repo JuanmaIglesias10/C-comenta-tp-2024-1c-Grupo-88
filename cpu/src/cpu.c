@@ -55,15 +55,15 @@ void inicializar_conexiones(){
 	// close(fd_kernel_dis);
 	// close(fd_kernel_int);
 
-
-
-
 	// log_destroy(logger_cpu);
 }
 
 
+/*
+	TO DO -> Creo que conviene hacerla despues de codear el ciclo basico de instruccion
+			 y las operaciones para este check. Tambien despues de tener en claro como 
+			 funcionan las interrupciones
 
-//void ejecutar_proceso(){
-//
-//
-//} 
+void ejecutar_proceso(){
+
+} */

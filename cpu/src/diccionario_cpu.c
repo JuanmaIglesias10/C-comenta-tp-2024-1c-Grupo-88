@@ -12,4 +12,7 @@ int fd_cpu_int;
 int fd_kernel_dis;
 int fd_kernel_int;
 
+// Registro
+t_registros* registros_cpu;
+
 // fin variables globales CPU
