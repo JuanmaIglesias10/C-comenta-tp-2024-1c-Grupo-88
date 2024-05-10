@@ -93,6 +93,12 @@ void ejecutar_set(char* registro, void* valor_recibido) {
     else if (strcmp(registro, "EDX") == 0) {
         registros_cpu->EDX = *((uint32_t*)valor_recibido);
     }
+    else if (strcmp(registro, "SI") == 0) {
+        registros_cpu->SI = *((uint32_t*)valor_recibido);
+    }
+    else if (strcmp(registro, "DI") == 0) {
+        registros_cpu->DI = *((uint32_t*)valor_recibido);
+    }
     else {
         log_error(logger_cpu, "No se reconoce el registro %s", registro);
     }
