@@ -9,6 +9,6 @@ void inicializar_cpu();
 void inicializar_config();
 void inicializar_conexiones();
 
-void ejecutar_proceso();
+//void ejecutar_proceso();
 
 #endif /* CPU_H */

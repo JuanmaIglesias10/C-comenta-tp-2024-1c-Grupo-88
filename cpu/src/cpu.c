@@ -63,7 +63,7 @@ void inicializar_conexiones(){
 
 
 
-void ejecutar_proceso(){
-
-
-} 
+//void ejecutar_proceso(){
+//
+//
+//} 

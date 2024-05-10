@@ -34,20 +34,20 @@ int conectarse(char* IP, int puerto, char* nombreConexion, t_log* logger){
 void enviar_codOp(int fd_servidor , uint8_t codOp){
 	send(fd_servidor, &codOp , sizeof(uint8_t) , 0);
 }
-
-t_registro* buffer_read_registros(t_buffer* buffer){
-	t_registro* registros = malloc(sizeof(t_registro));
-
-	registros->AX = buffer_read_uint8(buffer);
-	registros->BX = buffer_read_uint8(buffer);
-	registros->CX = buffer_read_uint8(buffer);
-	registros->DX = buffer_read_uint8(buffer);
- 	registros->EAX = buffer_read_uint32(buffer);
- 	registros->EBX = buffer_read_uint32(buffer);
-	registros->ECX = buffer_read_uint32(buffer);
-	registros->EDX = buffer_read_uint32(buffer);
-	registros->SI = buffer_read_uint32(buffer);
-	registros->DI = buffer_read_uint32(buffer);
-
-	return registros;
-}
+//
+//t_registros* buffer_read_registros(t_buffer* buffer){
+//	t_registros* registros = malloc(sizeof(t_registros));
+//
+//	registros->AX = leer_buffer_uint8(buffer);
+//	registros->BX = leer_buffer_uint8(buffer);
+//	registros->CX = leer_buffer_uint8(buffer);
+//	registros->DX = leer_buffer_uint8(buffer);
+// 	registros->EAX = leer_buffer_uint32(buffer);
+// 	registros->EBX = leer_buffer_uint32(buffer);
+//	registros->ECX = leer_buffer_uint32(buffer);
+//	registros->EDX = leer_buffer_uint32(buffer);
+//	registros->SI = leer_buffer_uint32(buffer);
+//	registros->DI = leer_buffer_uint32(buffer);
+//
+//	return registros;
+//}
