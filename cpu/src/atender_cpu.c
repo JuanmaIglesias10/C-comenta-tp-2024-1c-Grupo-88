@@ -25,7 +25,7 @@ void* atender_kernel_dis()
 	while (1) {
 		mensajeKernelCpu cod_op = recibir_codOp(fd_kernel_dis);
 		switch (cod_op) {
-            case EJECUTAR_PROCESO:
+            case MENSAJE:
                 //t_cde* cde = malloc(sizeof(t_cde));
                 //cde->pid = leer_buffer_uint32(buffer);
                 //cde->program_counter = leer_buffer_uint32(buffer);
