@@ -104,7 +104,6 @@ void iniciar_proceso(char* path) {
 	destruir_buffer(bufferKernel);
 
     mensajeKernelMem cod_op = recibir_codOp(fd_memoria);
-	log_info(logger_kernel, "hola negri");
 
 	if(cod_op == INICIAR_PROCESO_OK){
         // Poner en new

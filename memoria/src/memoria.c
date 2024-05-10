@@ -67,12 +67,11 @@ void iniciar_proceso(){
 	char* rutaArchivoInstrucciones = string_new();
 	string_append(&rutaArchivoInstrucciones, config_memoria.path_instrucciones); 
 	string_append(&rutaArchivoInstrucciones, nombreArchivoInstrucciones);
-	log_info(logger_memoria, "hola negri");
 	t_list* listaInstrucciones = obtener_instrucciones(rutaArchivoInstrucciones);
 					
 	t_proceso* procesoNuevo = crear_proceso(listaInstrucciones, pid, 0);
 
-	log_info(logger_memoria, "Creación: PID: %d - Tamaño: 0", pid); //LOG OBLIGATORIO, NO QUITAR!!!!!!
+	log_info(logger_memoria, "PID: %d - Tamaño: 0", pid); //LOG OBLIGATORIO, NO QUITAR!!!!!!
 
 	pthread_mutex_lock(&mutex_lista_procesos);
 	list_add(listaProcesos, procesoNuevo);
