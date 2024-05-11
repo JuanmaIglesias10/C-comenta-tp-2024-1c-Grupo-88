@@ -16,6 +16,7 @@ void inicializar_kernel(){
 	inicializar_listas_colas();
 	inicializar_semaforos();
 
+	inicializarPlanificadores();
 
 	
 
@@ -78,8 +79,9 @@ void inicializar_listas_colas(){
 void inicializar_semaforos(){
 	pthread_mutex_init(&mutex_new, NULL);
 	pthread_mutex_init(&mutex_procesos_globales, NULL);
-
-
+	pthread_mutex_init(&mutex_exec, NULL);
+	sem_init(&cpu_libre, 0, 1);
+	sem_init(&procesos_en_ready, 0, 0);
 	sem_init(&procesos_NEW, 0, 0);
 
 }
@@ -133,8 +135,8 @@ t_pcb* crear_PCB(){
 
 	// PCB_creado->path = path; //Path del .txt
 	PCB_creado->cde->pid = pid_a_asignar; 
-	PCB_creado->cde->program_counter= 0;
 	// PCB_creado->quantum=0;
+	PCB_creado->cde->registros->PC= 0;
 	PCB_creado->cde->registros->AX=0;
 	PCB_creado->cde->registros->BX=0;
 	PCB_creado->cde->registros->CX=0;
@@ -197,48 +199,114 @@ t_codigo_operacion obtener_codigo_operacion(char* parametro) {
 	return EXIT_FAILURE;
 }
 
-// void planificador_largo_plazo{
-// 	pthread_t new_ready;
-// 	pthread_create(&new_ready, NULL, (void*)new_a_ready, NULL);
-
-
-// }
-
-// void new_a_ready(){
-// 	while(1){
-// 		sem_wait(&procesos_NEW);
+/* void planificador_largo_plazo{
+	pthread_t new_ready;
+	pthread_create(&new_ready, NULL, (void*)new_a_ready, NULL);
+} 
+*/
+/*
+void new_a_ready(){
+	while(1){
+		sem_wait(&procesos_NEW);
         
-//         // sem_wait(&grado_de_multiprogramacion);
+        // sem_wait(&grado_de_multiprogramacion);
 
-//         // if(planificacion_detenida == 1){ 
-//         //     sem_wait(&pausar_new_a_ready);
-//         // }
+        // if(planificacion_detenida == 1){ 
+        //     sem_wait(&pausar_new_a_ready);
+        // }
 
-//         t_pcb* pcb_a_ready = retirar_pcb_de(colaNEW, &mutex_new);
+        t_pcb* pcb_a_ready = retirar_pcb_de(colaNEW, &mutex_new);
         
-//         agregar_pcb_a(colaNEW, pcb_a_ready, &mutex_ready);
-//         pcb_a_ready->estado = READY;
+        agregar_pcb_a(colaNEW, pcb_a_ready, &mutex_ready);
+        pcb_a_ready->estado = READY;
 
-//         // Pedir a memoria incializar estructuras
+        // Pedir a memoria incializar estructuras
 
-//         log_info(logger_kernel, "PID: %d - Estado anterior: %s - Estado actual: %s", pcb_a_ready->cde->pid, obtener_nombre_estado(NEW), obtener_nombre_estado(READY)); //OBLIGATORIO
+        log_info(logger_kernel, "PID: %d - Estado anterior: %s - Estado actual: %s", pcb_a_ready->cde->pid, obtener_nombre_estado(NEW), obtener_nombre_estado(READY)); //OBLIGATORIO
         
-//         if(strcmp(config_kernel.algoritmo, "PRIORIDADES") == 0 && pcb_en_ejecucion != NULL){
-//             t_pcb* posible_a_ejecutar = pcb_con_mayor_prioridad_en_ready();
+        if(strcmp(config_kernel.algoritmo, "PRIORIDADES") == 0 && pcb_en_ejecucion != NULL){
+            t_pcb* posible_a_ejecutar = pcb_con_mayor_prioridad_en_ready();
 
-//             if(pcb_en_ejecucion->prioridad > posible_a_ejecutar->prioridad){
-//                 enviar_codigo(socket_cpu_interrupt, DESALOJO);
+            if(pcb_en_ejecucion->prioridad > posible_a_ejecutar->prioridad){
+                enviar_codigo(socket_cpu_interrupt, DESALOJO);
 
-//                 t_buffer* buffer = crear_buffer_nuestro();
-//                 buffer_write_uint32(buffer, posible_a_ejecutar->cde->pid); // lo enviamos porque interrupt recibe un buffer, pero no hacemos nada con esto
-//                 enviar_buffer(buffer, socket_cpu_interrupt);
-//                 destruir_buffer_nuestro(buffer);
-//             }
-//         }
+                t_buffer* buffer = crear_buffer_nuestro();
+                buffer_write_uint32(buffer, posible_a_ejecutar->cde->pid); // lo enviamos porque interrupt recibe un buffer, pero no hacemos nada con esto
+                enviar_buffer(buffer, socket_cpu_interrupt);
+                destruir_buffer_nuestro(buffer);
+            }
+        }
         
-//         sem_post(&procesos_en_ready);
-// 	}
-// }
+        sem_post(&procesos_en_ready);
+	}
+}
+*/
+
+void inicializarPlanificadores(){
+	inicializarLargoPlazo();
+	inicializarCortoPlazo();
+}
+
+void inicializarCortoPlazo(){
+	pthread_t planificadorCortoPlazo;
+	pthread_create(&planificadorCortoPlazo, NULL, (void *) ready_a_exec(), NULL);
+	pthread_detach(planificadorCortoPlazo);
+}
+
+void ready_a_exec(){
+	while(1){
+		//
+        sem_wait(&cpu_libre);
+		// Espera a que new_a_ready se ejecute
+		sem_wait(&procesos_en_ready);
+
+        // Log obligatorio
+        char* lista_pcbs_en_ready = obtener_elementos_cargados_en(colaREADY);
+        // log_info(logger_kernel, "Cola Ready %s: %s", ¿<COLA>?, lista_pcbs_en_ready); //VER ESTE LOG
+        free(lista_pcbs_en_ready);
+
+        // if(planificacion_detenida == 1){
+        //     sem_wait(&pausar_ready_a_exec);
+        // }
+
+		pthread_mutex_lock(&mutex_exec);
+		pcb_en_ejecucion = retirar_pcb_de_ready_segun_algoritmo();
+		pthread_mutex_unlock(&mutex_exec);
+
+		log_info(logger_kernel, "PID: %d - Estado anterior: %s - Estado actual: %s", pcb_en_ejecucion->cde->pid, obtener_nombre_estado(READY), obtener_nombre_estado(EXEC)); //OBLIGATORIO
+        pcb_en_ejecucion->estado = EXEC;
+
+		// Primer post de ese semaforo ya que se envia por primera vez
+		sem_post(&cont_exec); // dsps se hace el wait cuando quiero sacar de exec (x block, etc)
+        
+        if(strcmp(config_kernel.algoritmo, "RR") == 0){
+            pcb_en_ejecucion->fin_q = false;
+            sem_wait(&sem_reloj_destruido);
+            sem_post(&sem_iniciar_quantum);
+        }
+        enviar_cde_a_cpu();
+	}
+}
+
+char* obtener_elementos_cargados_en(t_queue* cola){ //Hace un string de los pid en ready, de esta manera [1,2,3]
+    char* aux = string_new();
+    string_append(&aux,"[");
+    int pid_aux;
+    char* aux_2;
+    for(int i = 0 ; i < list_size(cola->elements); i++){
+        t_pcb* pcb = list_get(cola->elements,i);
+        pid_aux = pcb->cde->pid;
+        aux_2 = string_itoa(pid_aux);
+        string_append(&aux, aux_2);
+        free(aux_2);
+        if(i != list_size(cola->elements)-1)
+            string_append(&aux,", ");
+    }
+    string_append(&aux,"]");
+    return aux;
+}
+
+
 
 
 void agregar_pcb_a(t_queue* cola, t_pcb* pcb_a_agregar, pthread_mutex_t* mutex){
@@ -257,3 +325,4 @@ t_pcb* retirar_pcb_de(t_queue* cola, pthread_mutex_t* mutex){
     
 	return pcb;
 }
+

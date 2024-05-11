@@ -25,6 +25,8 @@ int pid_a_asignar;
 //Semaforos
 pthread_mutex_t mutex_new;
 pthread_mutex_t mutex_procesos_globales;
-
+pthread_mutex_t mutex_exec;
 
 sem_t procesos_NEW;
+sem_t cpu_libre;
+sem_t procesos_en_ready;

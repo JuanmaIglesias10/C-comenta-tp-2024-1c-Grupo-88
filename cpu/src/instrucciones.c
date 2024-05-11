@@ -69,6 +69,9 @@ char* obtener_nombre_instruccion(t_instruccion* instruccion){
 // FUNCIONALIDAD DE LAS INSTRUCCIONES
 
 void ejecutar_set(char* registro, void* valor_recibido) {
+     if (strcmp(registro, "PC") == 0) {
+        registros_cpu->PC = *((uint32_t*)valor_recibido);
+    }
     if (strcmp(registro, "AX") == 0) {
         registros_cpu->AX = *((uint8_t*)valor_recibido);
     }
@@ -103,3 +106,5 @@ void ejecutar_set(char* registro, void* valor_recibido) {
         log_error(logger_cpu, "No se reconoce el registro %s", registro);
     }
 }
+
+

@@ -29,4 +29,9 @@ t_pcb* crear_PCB();
 t_pcb* retirar_pcb_de(t_queue* cola, pthread_mutex_t* mutex);
 void agregar_pcb_a(t_queue* cola, t_pcb* pcb_a_agregar, pthread_mutex_t* mutex);
 
+// Planificacion a corto plazo
+
+char* obtener_elementos_cargados_en(t_queue* );
+void ready_a_exec();
+
 #endif

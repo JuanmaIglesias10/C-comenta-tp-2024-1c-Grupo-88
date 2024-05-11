@@ -45,6 +45,7 @@ typedef enum{
 #include "sockets.h"
 
 typedef struct{
+	uint32_t PC; ////indica la próxima instrucción a ejecutar
     uint8_t AX;
     uint8_t BX;
     uint8_t CX;
@@ -59,7 +60,6 @@ typedef struct{
 
 typedef struct{
 	uint32_t pid;
-	uint32_t program_counter; ////indica la próxima instrucción a ejecutar
 	t_registros* registros;
 }t_cde;
 

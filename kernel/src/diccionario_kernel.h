@@ -91,9 +91,12 @@ extern t_queue* colaFINISHED;
 
 extern pthread_mutex_t mutex_new;
 extern pthread_mutex_t mutex_procesos_globales;
+extern pthread_mutex_t mutex_exec;
 
 
 extern sem_t procesos_NEW;
+extern sem_t cpu_libre;
+extern sem_t procesos_en_ready;
 
 #endif 
 
