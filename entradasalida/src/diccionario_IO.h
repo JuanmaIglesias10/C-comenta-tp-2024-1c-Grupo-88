@@ -1,12 +1,8 @@
 #ifndef DICCIONARIO_IO_H_
 #define DICCIONARIO_IO_H_
 
-#include <commons/log.h>
-#include <commons/config.h> 
-
 #include "utils.h"
 
-//cine
 typedef struct{
     char* tipo_interfaz;
     int tiempo_unidad_trabajo;
@@ -19,6 +15,7 @@ typedef struct{
     int block_count;
     int retraso_compactacion;
 }t_config_IO;
+
 
 // Logger Y Config
 extern t_config_IO config_IO;

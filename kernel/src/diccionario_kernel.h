@@ -1,10 +1,11 @@
 #ifndef DICCIONARIO_KERNEL_H_
 #define DICCIONARIO_KERNEL_H_
 
-#include <commons/log.h>
-#include <commons/config.h> 
 #include <utils.h>
 #include <commons/collections/queue.h>
+#include <readline/history.h>
+#include <readline/readline.h>
+
 
 //STRUCT'S && ENUM
 typedef struct{
@@ -22,22 +23,48 @@ typedef struct{
 } t_config_kernel;
 
 typedef enum {
+	NULO,
 	NEW,
 	READY,
 	EXEC,
 	BLOCKED,
-	EXIT
-} estado_proceso;
+	FINISHED
+} t_estado_proceso;
+
+typedef struct{
+	t_cde* cde;
+	t_estado_proceso estado;
+	// char* path;
+	// int prioridad;
+	// t_list* archivos_abiertos;
+	// t_list* archivos_solicitados;
+	// t_list* recursos_asignados;
+	// t_list* recursos_solicitados;
+	// bool flag_clock;
+	// bool fin_q;
+}t_pcb;
+
+typedef enum{
+    EJECUTAR_SCRIPT,
+	INICIAR_PROCESO,
+	FINALIZAR_PROCESO,
+	INICIAR_PLANIFICACION,
+	DETENER_PLANIFICACION,
+	MULTIPROGRAMACION,
+	PROCESO_ESTADO,
+	E_PARAMETROS,
+	MENSAJE_VACIO,
+	BASURA
+} t_codigo_operacion;
 
 typedef struct {
-	uint32_t pid;
-	uint32_t program_counter;
-	uint32_t quantum;
-	registros_cpu registros;
-	estado_proceso estado;	
-} t_pcb;
+	t_codigo_operacion codigo_operacion;
+	char* par1;
+} t_script;
+
 
 /* VARIABLES GLOBALES */
+extern int pid_a_asignar;
 
 // Logger Y Config
 extern t_log* logger_kernel;
@@ -49,11 +76,24 @@ extern int fd_memoria;
 extern int fd_cpu_dis;
 extern int fd_cpu_int;
 extern int fd_kernel;
+extern int fd_IO;
+
+//Listas
+extern t_list* procesos_globales;
 
 // Colas
-extern t_queue* colaNew;
-extern t_queue* colaReady;
-extern t_queue* colaBloqueados;
-extern t_queue* colaFinalizados;
+extern t_queue* colaNEW;
+extern t_queue* colaREADY;
+extern t_queue* colaBLOCKED;
+extern t_queue* colaFINISHED;
+
+//Semaforos
+
+extern pthread_mutex_t mutex_new;
+extern pthread_mutex_t mutex_procesos_globales;
+
+
+extern sem_t procesos_NEW;
 
 #endif 
+

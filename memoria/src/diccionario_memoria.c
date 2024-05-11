@@ -11,7 +11,9 @@ int fd_cpu;
 int fd_kernel;
 int fd_IO;
 
-extern int fd_memoria;
-extern int fd_cpu;
-extern int fd_kernel;
-extern int fd_IO;
+//Listas
+t_list* listaProcesos;
+
+//Semaforos
+pthread_mutex_t mutex_lista_procesos;
+

@@ -28,20 +28,20 @@ void inicializar_config_IO(){
 
 
 void inicializar_conexiones(){
-	fd_kernel = conectarse(config_IO.ip_kernel,config_IO.puerto_kernel, "KERNEL", logger_IO);
 	fd_memoria = conectarse(config_IO.ip_memoria,config_IO.puerto_memoria, "MEMORIA", logger_IO);
-
-	pthread_t hilo_kernel;
-	pthread_create(&hilo_kernel, NULL, (void*)atender_kernel(fd_kernel), NULL);
-	pthread_detach(hilo_kernel);
+	fd_kernel = conectarse(config_IO.ip_kernel,config_IO.puerto_kernel, "KERNEL", logger_IO);
 
 	pthread_t hilo_memoria;
-	pthread_create(&hilo_memoria, NULL, (void*)atender_memoria(fd_memoria), NULL);
+	pthread_create(&hilo_memoria, NULL, (void*)atender_memoria, NULL);
 	pthread_detach(hilo_memoria);
 
+	pthread_t hilo_kernel;
+	pthread_create(&hilo_kernel, NULL, (void*)atender_kernel, NULL);
+	pthread_join(hilo_kernel, NULL);
 
-	liberar_conexion(fd_kernel);
-	liberar_conexion(fd_memoria);
 
-	log_destroy(logger_IO);
+	// liberar_conexion(fd_kernel);
+	// liberar_conexion(fd_memoria);
+
+	// log_destroy(logger_IO);
 }

@@ -29,6 +29,9 @@ extern int fd_cpu_int;
 extern int fd_kernel_dis;
 extern int fd_kernel_int;
 
+// Registro
+extern t_registros* registros_cpu;
+
 // Fin variables globales CPU
 
 #endif /* DICCIONARIO_CPU_H_ */

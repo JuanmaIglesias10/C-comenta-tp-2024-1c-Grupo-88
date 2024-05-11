@@ -2,11 +2,11 @@
 
 int main(void) {
 
-	inicializarCpu();
+	inicializar_cpu();
 
 }
 
-void inicializarCpu() {
+void inicializar_cpu() {
 
 	logger_cpu = iniciar_logger("logCPU.log","CPU",LOG_LEVEL_INFO);
 	inicializar_config();
@@ -36,20 +36,34 @@ void inicializar_conexiones(){
 	fd_kernel_int = esperar_cliente(fd_cpu_int, logger_cpu,"KERNEL(INTERRUPT)"); 
 	
 
+	pthread_t hilo_cpu_memoria;
+	pthread_create(&hilo_cpu_memoria, NULL, (void*)atender_memoria, NULL);
+	pthread_detach(hilo_cpu_memoria);
 
 	pthread_t hilo_kernel_dis;
-	pthread_create(&hilo_kernel_dis, NULL, (void*)atender_kernel_dis(fd_kernel_dis), NULL);
+	pthread_create(&hilo_kernel_dis, NULL, (void*)atender_kernel_dis, NULL);
 	pthread_detach(hilo_kernel_dis);
 
 	pthread_t hilo_kernel_int;
-	pthread_create(&hilo_kernel_int, NULL, (void*)atender_kernel_int(fd_kernel_int), NULL);
-	pthread_detach(hilo_kernel_int);
+	pthread_create(&hilo_kernel_int, NULL, (void*)atender_kernel_int, NULL);
+	pthread_join(hilo_kernel_int, NULL);
 
-	pthread_t hilo_cpu_memoria;
-	pthread_create(&hilo_cpu_memoria, NULL, (void*)atender_memoria(fd_memoria), NULL);
-	pthread_detach(hilo_cpu_memoria);
 
-	liberar_conexion(fd_memoria);
+	// close(fd_memoria);
+	// close(fd_cpu_dis);
+	// close(fd_cpu_int);
+	// close(fd_kernel_dis);
+	// close(fd_kernel_int);
 
-	log_destroy(logger_cpu);
+	// log_destroy(logger_cpu);
 }
+
+
+/*
+	TO DO -> Creo que conviene hacerla despues de codear el ciclo basico de instruccion
+			 y las operaciones para este check. Tambien despues de tener en claro como 
+			 funcionan las interrupciones
+
+void ejecutar_proceso(){
+
+} */

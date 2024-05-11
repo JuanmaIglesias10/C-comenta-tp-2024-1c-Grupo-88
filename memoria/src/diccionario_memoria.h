@@ -1,17 +1,7 @@
 #ifndef DICCIONARIO_MEMORIA_H_
 #define DICCIONARIO_MEMORIA_H_
 
-#include <commons/log.h>
-#include <commons/config.h> 
 #include <utils.h>
-
-
-	/*PUERTO_ESCUCHA=8002
-		TAM_MEMORIA=4096
-		TAM_PAGINA=32
-		PATH_INSTRUCCIONES=/home/utnso/scripts-pruebas
-		RETARDO_RESPUESTA=1000
-*/
 
 typedef struct{
     int puerto_escucha;
@@ -20,6 +10,12 @@ typedef struct{
     char* path_instrucciones;
     int retardo_respuesta;
  }t_config_memoria;
+
+typedef struct{
+	uint32_t pid;
+	t_list* instrucciones;
+	uint32_t cantMaxMarcos;
+}t_proceso;
 
 // variables globales Memoria
 
@@ -34,6 +30,17 @@ extern int fd_cpu;
 extern int fd_kernel;
 extern int fd_IO;
 
+//Listas
+extern t_list* listaProcesos;
+
+
+// Semaforos
+extern pthread_mutex_t mutex_lista_procesos;
+
+
 // fin variables globales Memoria
+
+
+
 
 #endif

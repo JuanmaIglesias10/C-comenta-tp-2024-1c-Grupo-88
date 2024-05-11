@@ -9,3 +9,17 @@
 	printf("%u",valor1);
 	printf("%s",valor2);
 	destruir_buffer(bufferMemoria);
+
+
+
+	// t_link_element *actual = listaInstrucciones->head;                    
+					// 	while(actual != NULL){
+					// 		t_instruccion* comando = (t_instruccion *)(actual->data);
+					// 		printf("%u ",comando->codigo);
+					// 		printf("%s ",comando->par1);
+					// 		printf("%s ",comando->par2); 
+					// 		printf("%s ",comando->par3); 
+					// 		printf("%s ",comando->par4); 
+					// 		printf("%s \n",comando->par5); 
+					// 		actual = actual->next;
+					// 	}

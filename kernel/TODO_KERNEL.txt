@@ -1,0 +1,2 @@
+TODO
+Despues de terminar de mostrar el menu, hay un problema con la consola
