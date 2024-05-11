@@ -71,6 +71,9 @@ extern t_log* logger_kernel;
 extern t_config* config;
 extern t_config_kernel config_kernel;
 
+// PCB
+extern t_pcb* pcb_ejecutando;
+
 // Files Descriptors 
 extern int fd_memoria;
 extern int fd_cpu_dis;
@@ -91,12 +94,15 @@ extern t_queue* colaFINISHED;
 
 extern pthread_mutex_t mutex_new;
 extern pthread_mutex_t mutex_procesos_globales;
+extern pthread_mutex_t mutex_ready;
 extern pthread_mutex_t mutex_exec;
+extern pthread_mutex_t mutex_pcb_en_ejecucion;
 
 
 extern sem_t procesos_NEW;
 extern sem_t cpu_libre;
 extern sem_t procesos_en_ready;
+extern sem_t aviso_exec;
 
 #endif 
 

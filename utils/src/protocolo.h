@@ -69,6 +69,8 @@ uint8_t leer_buffer_uint8(t_buffer* buffer);
 void agregar_buffer_string(t_buffer* buffer, char* string);
 // Lee un string y su longitud del buffer y avanza el offset
 char* leer_buffer_string(t_buffer* buffer);
-
-
+// Leer los registros del buffer
+t_registros* leer_buffer_registros(t_buffer* buffer);
+// Agregar los registros al buffer
+void agregar_buffer_registros(t_buffer* buffer, t_registros* registros);
 #endif /* PROTOCOLO_H_ */

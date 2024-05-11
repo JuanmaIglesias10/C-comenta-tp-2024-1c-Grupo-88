@@ -35,7 +35,7 @@ void inicializar_conexiones(){
 
 	fd_kernel_int = esperar_cliente(fd_cpu_int, logger_cpu,"KERNEL(INTERRUPT)"); 
 	
-
+	//Esto posiblemente haya que quitarlo
 	pthread_t hilo_cpu_memoria;
 	pthread_create(&hilo_cpu_memoria, NULL, (void*)atender_memoria, NULL);
 	pthread_detach(hilo_cpu_memoria);
@@ -63,7 +63,8 @@ void inicializar_conexiones(){
 	TO DO -> Creo que conviene hacerla despues de codear el ciclo basico de instruccion
 			 y las operaciones para este check. Tambien despues de tener en claro como 
 			 funcionan las interrupciones
+*/
 
-void ejecutar_proceso(){
 
-} */
+void ejecutar_proceso(t_cde* cde){
+} 

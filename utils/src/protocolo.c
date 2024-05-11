@@ -201,6 +201,35 @@ void agregar_buffer_string(t_buffer* buffer, char* string) {
     agregar_a_buffer(buffer, string, length); 
 } // OK
 
+void agregar_buffer_registros(t_buffer* buffer, t_registros* registros){
+	agregar_buffer_uint8(buffer, registros->AX);
+	agregar_buffer_uint8(buffer, registros->BX);
+	agregar_buffer_uint8(buffer, registros->CX);
+	agregar_buffer_uint8(buffer, registros->DX);
+	agregar_buffer_uint8(buffer, registros->AX);
+	agregar_buffer_uint8(buffer, registros->BX);
+	agregar_buffer_uint8(buffer, registros->CX);
+	agregar_buffer_uint8(buffer, registros->DX);
+}
+
+t_registros* leer_buffer_registros(t_buffer* buffer){
+	t_registros* registro = malloc(sizeof(t_registros));
+
+	registro->PC = leer_buffer_uint32(buffer);
+	registro->AX = leer_buffer_uint8(buffer);
+	registro->BX = leer_buffer_uint8(buffer);
+	registro->CX = leer_buffer_uint8(buffer);
+	registro->DX = leer_buffer_uint8(buffer);
+	registro->EAX = leer_buffer_uint32(buffer);
+	registro->EBX = leer_buffer_uint32(buffer);
+	registro->ECX = leer_buffer_uint32(buffer);
+	registro->EDX = leer_buffer_uint32(buffer);
+	registro->SI = leer_buffer_uint32(buffer);
+	registro->DI = leer_buffer_uint32(buffer);
+
+	return registro;
+}
+
 // Lee un string y su longitud del buffer y avanza el offset
 char* leer_buffer_string(t_buffer* buffer) {
     uint32_t length = leer_buffer_uint32(buffer); 

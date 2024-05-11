@@ -40,9 +40,7 @@ typedef enum{
 }mensajeKernelCpu;
 
 
-// nuestros headers
-#include "protocolo.h"
-#include "sockets.h"
+
 
 typedef struct{
 	uint32_t PC; ////indica la próxima instrucción a ejecutar
@@ -94,6 +92,10 @@ typedef struct{
 	char* par5;
 }t_instruccion;
 
+// nuestros headers
+#include "protocolo.h"
+#include "sockets.h"
+
 // conexiones
 void* server_escuchar(t_log* logger, int fd_cliente, char* nombreCliente); 
 int conectarse(char* IP, int puerto, char* nombreConexion, t_log* logger);
@@ -104,8 +106,5 @@ t_log* iniciar_logger(char* rutaLog, char* nombreProceso , t_log_level level);
 
 // Nos sirve para enviar un codigo de operacion (ENUM) hacia otro modulo.
 void enviar_codOp(int fd_cliente , uint8_t codOp);
-
-// Leer los registros del buffer
-//t_registros* buffer_read_registros(t_buffer* buffer);
 
 #endif /* UTILS_H_ */

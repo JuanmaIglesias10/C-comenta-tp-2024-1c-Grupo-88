@@ -13,6 +13,8 @@ void inicializar_listas_colas();
 void inicializar_conexiones();
 void iniciar_config_kernel();
 void inicializar_semaforos();
+void inicializarPlanificadores();
+void inicializarCortoPlazo();
 
 // CONSOLA
 void iniciar_consola();
@@ -25,13 +27,18 @@ t_list* obtener_lista_script(char* pathScript);
 t_codigo_operacion obtener_codigo_operacion(char* parametro);
 void iniciar_proceso(char* path);
 t_pcb* crear_PCB();
-
+t_pcb* retirar_pcb_de_ready_segun_algoritmo();
 t_pcb* retirar_pcb_de(t_queue* cola, pthread_mutex_t* mutex);
 void agregar_pcb_a(t_queue* cola, t_pcb* pcb_a_agregar, pthread_mutex_t* mutex);
 
 // Planificacion a corto plazo
 
+void* ready_a_exec();
 char* obtener_elementos_cargados_en(t_queue* );
-void ready_a_exec();
+void enviar_cde_a_cpu();
+
+
+
+
 
 #endif

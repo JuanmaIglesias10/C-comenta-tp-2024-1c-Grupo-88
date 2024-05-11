@@ -21,17 +21,16 @@ void* atender_memoria()
 
 void* atender_kernel_dis()
 {
-    //t_buffer* buffer = recibir_buffer(fd_kernel_dis);
+    t_buffer* buffer = recibir_buffer(fd_kernel_dis);
 	while (1) {
 		mensajeKernelCpu cod_op = recibir_codOp(fd_kernel_dis);
 		switch (cod_op) {
-            case MENSAJE:
-                //t_cde* cde = malloc(sizeof(t_cde));
-                //cde->pid = leer_buffer_uint32(buffer);
-                //cde->program_counter = leer_buffer_uint32(buffer);
-                //cde->registros = buffer_read_registros(buffer);	
-                //destruir_buffer(buffer);
-                //ejecutar_proceso(cde);
+            case EJECUTAR_PROCESO:
+                t_cde* cde = malloc(sizeof(t_cde));
+                cde->pid = leer_buffer_uint32(buffer);
+                cde->registros = leer_buffer_registros(buffer);	
+                destruir_buffer(buffer);
+                ejecutar_proceso(cde);
                 break;
             case PAQUETE:
                 //

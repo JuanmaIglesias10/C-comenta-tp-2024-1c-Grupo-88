@@ -80,9 +80,11 @@ void inicializar_semaforos(){
 	pthread_mutex_init(&mutex_new, NULL);
 	pthread_mutex_init(&mutex_procesos_globales, NULL);
 	pthread_mutex_init(&mutex_exec, NULL);
+	pthread_mutex_init(&mutex_pcb_en_ejecucion, NULL);
 	sem_init(&cpu_libre, 0, 1);
-	sem_init(&procesos_en_ready, 0, 0);
+	sem_init(&procesos_en_ready, 0, 1);
 	sem_init(&procesos_NEW, 0, 0);
+	sem_init(&aviso_exec, 0, 0); //Inicia en 0, posteado por ready_a_exec
 
 }
 
@@ -243,49 +245,57 @@ void new_a_ready(){
 */
 
 void inicializarPlanificadores(){
-	inicializarLargoPlazo();
+	// inicializarLargoPlazo();
 	inicializarCortoPlazo();
 }
 
 void inicializarCortoPlazo(){
 	pthread_t planificadorCortoPlazo;
-	pthread_create(&planificadorCortoPlazo, NULL, (void *) ready_a_exec(), NULL);
+	pthread_create(&planificadorCortoPlazo, NULL,ready_a_exec(), NULL);
 	pthread_detach(planificadorCortoPlazo);
 }
 
-void ready_a_exec(){
+void* ready_a_exec(){
 	while(1){
-		//
+		// 
         sem_wait(&cpu_libre);
 		// Espera a que new_a_ready se ejecute
 		sem_wait(&procesos_en_ready);
-
-        // Log obligatorio
+		/*
+		Log Obligatorio
+		Actualizar para cuando utilicemos VRR y tengamos dos colas de Ready
+		*/
         char* lista_pcbs_en_ready = obtener_elementos_cargados_en(colaREADY);
-        // log_info(logger_kernel, "Cola Ready %s: %s", ¿<COLA>?, lista_pcbs_en_ready); //VER ESTE LOG
-        free(lista_pcbs_en_ready);
+        log_info(logger_kernel, "Cola Ready de algoritmo %s: %s", config_kernel.algoritmo_planificacion, lista_pcbs_en_ready); 
+        free(lista_pcbs_en_ready);	
 
-        // if(planificacion_detenida == 1){
-        //     sem_wait(&pausar_ready_a_exec);
-        // }
+        /* 
+		Añadir esto cuando tengamos desalojos por quantum
+		if(planificacion_detenida == 1){
+            sem_wait(&pausar_ready_a_exec);
+        } 
+		*/
 
 		pthread_mutex_lock(&mutex_exec);
-		pcb_en_ejecucion = retirar_pcb_de_ready_segun_algoritmo();
+		log_info(logger_kernel,"XD");
+		pcb_ejecutando = retirar_pcb_de_ready_segun_algoritmo();
 		pthread_mutex_unlock(&mutex_exec);
+		
 
-		log_info(logger_kernel, "PID: %d - Estado anterior: %s - Estado actual: %s", pcb_en_ejecucion->cde->pid, obtener_nombre_estado(READY), obtener_nombre_estado(EXEC)); //OBLIGATORIO
-        pcb_en_ejecucion->estado = EXEC;
+		log_info(logger_kernel, "PID: %d - Estado anterior: READY - Estado actual: EXEC", pcb_ejecutando->cde->pid); //OBLIGATORIO
+        pcb_ejecutando->estado = EXEC;
 
-		// Primer post de ese semaforo ya que se envia por primera vez
-		sem_post(&cont_exec); // dsps se hace el wait cuando quiero sacar de exec (x block, etc)
+		sem_post(&aviso_exec); 
         
-        if(strcmp(config_kernel.algoritmo, "RR") == 0){
-            pcb_en_ejecucion->fin_q = false;
+       /*  if(strcmp(config_kernel.algoritmo, "RR") == 0){
+            pcb_ejecutando->fin_q = false;
             sem_wait(&sem_reloj_destruido);
             sem_post(&sem_iniciar_quantum);
         }
+		 */
         enviar_cde_a_cpu();
 	}
+	return NULL;
 }
 
 char* obtener_elementos_cargados_en(t_queue* cola){ //Hace un string de los pid en ready, de esta manera [1,2,3]
@@ -306,8 +316,16 @@ char* obtener_elementos_cargados_en(t_queue* cola){ //Hace un string de los pid 
     return aux;
 }
 
-
-
+t_pcb* retirar_pcb_de_ready_segun_algoritmo(){
+    if(strcmp(config_kernel.algoritmo_planificacion, "FIFO") == 0 || strcmp(config_kernel.algoritmo_planificacion, "RR") == 0){
+        t_pcb* pcb = retirar_pcb_de(colaREADY, &mutex_ready);
+        return pcb;
+    }
+    else{
+        log_info(logger_kernel, "No se reconoce el algoritmo definido en el config_kernel");
+    }
+    exit(1); 
+}
 
 void agregar_pcb_a(t_queue* cola, t_pcb* pcb_a_agregar, pthread_mutex_t* mutex){
     
@@ -326,3 +344,48 @@ t_pcb* retirar_pcb_de(t_queue* cola, pthread_mutex_t* mutex){
 	return pcb;
 }
 
+
+char* obtener_nombre_estado(t_estado_proceso estado){
+    switch(estado){
+		case NULO:
+            return "NULO";
+        case NEW:
+            return "NEW";
+            break;
+        case READY:
+            return "READY";
+            break;
+        case EXEC:
+            return "EXEC";
+            break;
+        case BLOCKED:
+            return "BLOCKED";
+            break;
+        case FINISHED:
+            return "FINISHED";
+            break;
+        default:
+			return "Proceso no reconocido";
+            break;
+    }
+}
+
+void enviar_cde_a_cpu(){
+    
+	enviar_codOp(fd_cpu_dis, EJECUTAR_PROCESO);
+
+    t_buffer* buffer = crear_buffer();
+    pthread_mutex_lock(&mutex_pcb_en_ejecucion); //ESTE SEMAFORO NI IDEA DONDE MAS ESTÁ
+	agregar_buffer_uint32(buffer, pcb_ejecutando->cde->pid);
+	agregar_buffer_registros(buffer, pcb_ejecutando->cde->registros);
+    pthread_mutex_unlock(&mutex_pcb_en_ejecucion);
+
+    // if(strcmp(config_kernel.algoritmo, "RR") == 0){
+    //     pcb_en_ejecucion->flag_clock = false;
+    // }
+
+    enviar_buffer(buffer, fd_cpu_dis);
+    destruir_buffer(buffer);
+
+    // sem_post(&bin_recibir_cde); //ESTE SEMAFORO NI IDEA DONDE MAS ESTÁ
+}

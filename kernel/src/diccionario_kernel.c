@@ -5,6 +5,8 @@ t_log* logger_kernel;
 t_config* config;
 t_config_kernel config_kernel;
 
+t_pcb* pcb_ejecutando;
+
 int fd_memoria;
 int fd_cpu_dis;
 int fd_cpu_int;
@@ -25,8 +27,11 @@ int pid_a_asignar;
 //Semaforos
 pthread_mutex_t mutex_new;
 pthread_mutex_t mutex_procesos_globales;
+pthread_mutex_t mutex_ready;
 pthread_mutex_t mutex_exec;
+pthread_mutex_t mutex_pcb_en_ejecucion;
 
 sem_t procesos_NEW;
 sem_t cpu_libre;
 sem_t procesos_en_ready;
+sem_t aviso_exec;

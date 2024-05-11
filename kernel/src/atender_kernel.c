@@ -39,6 +39,8 @@ void* atender_IO()
     return NULL;
 }
 
+
+//Este hace falta para recibir el cde
 void* atender_cpu_dis()
 {
 	while (1) {
