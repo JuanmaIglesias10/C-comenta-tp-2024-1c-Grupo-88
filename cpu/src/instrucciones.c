@@ -107,4 +107,9 @@ void ejecutar_set(char* registro, void* valor_recibido) {
     }
 }
 
+void ejecutar_dormirIO(int nombreInterfaz, int unidadesDeTiempo) {
+
+    //decirle a kernell que le pida a IO que duerma -> meter parametros en un buffer 
+
+}
 
