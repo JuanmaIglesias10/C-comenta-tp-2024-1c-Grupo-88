@@ -184,6 +184,15 @@ uint32_t leer_buffer_uint32(t_buffer* buffer){
     return *data;
 } // OK
 
+void agregar_buffer_int(t_buffer* buffer, uint8_t data){
+	agregar_a_buffer(buffer,&data,sizeof(int));
+}
+
+int leer_buffer_int(t_buffer* buffer){
+	int* data = leer_buffer(buffer, sizeof(int));
+	return *data;
+}
+
 // Agrega un uint8_t al buffer
 void agregar_buffer_uint8(t_buffer* buffer, uint8_t data) {
     agregar_a_buffer(buffer, &data, sizeof(uint8_t));
