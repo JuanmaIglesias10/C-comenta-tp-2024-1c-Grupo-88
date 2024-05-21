@@ -1,8 +1,8 @@
 #include "instrucciones.h"
 
 
-char* obtener_nombre_instruccion(t_instruccion* instruccion){
-    switch(instruccion->codigo){
+char* obtener_nombre_instruccion(t_instruccion* instruccion) {
+    switch(instruccion->codigo) {
         case SET:
             return "SET";
             break;
@@ -107,82 +107,122 @@ void ejecutar_set(char* registro, void* valor_recibido) {
     }
 }
 
-uint8_t  buscar_valor_registro(void* registro){
-	uint8_t  valorLeido;
+void*  buscar_valor_registro(void* registro) {
+	uint8_t  valorLeido8;
+    uint32_t valorLeido32;
 
-	if(strcmp(registro, "AX") == 0)
-		valorLeido = registros_cpu->AX;
-	else if(strcmp(registro, "BX") == 0)
-		valorLeido = registros_cpu->BX;
-
-	else if(strcmp(registro, "CX") == 0)
-		valorLeido = registros_cpu->CX;
-
-	else if(strcmp(registro, "DX") == 0)
-		valorLeido = registros_cpu->DX;
-
-	return valorLeido;
-}
-
-void ejecutar_sum(char* reg_dest, char* reg_origen){
-    uint8_t valor_reg_origen = buscar_valor_registro(reg_origen);
-
-    if(strcmp(reg_dest, "AX") == 0)
-        registros_cpu->AX += valor_reg_origen;
-
-    else if(strcmp(reg_dest, "BX") == 0)
-        registros_cpu->BX += valor_reg_origen;
-
-    else if(strcmp(reg_dest, "CX") == 0)
-        registros_cpu->CX += valor_reg_origen;
-
-    else if(strcmp(reg_dest, "DX") == 0)
-        registros_cpu->DX += valor_reg_origen;
-
-    else
-        log_warning(logger_cpu, "Registro no valido");
-}
-
-void ejecutar_sub(char* reg_dest, char* reg_origen){
-
-
-    uint8_t  valor_reg_origen = buscar_valor_registro(reg_origen);
-
-    if(strcmp(reg_dest, "AX") == 0)
-        registros_cpu->AX -= valor_reg_origen;
-
-    else if(strcmp(reg_dest, "BX") == 0)
-        registros_cpu->BX -= valor_reg_origen;
-
-    else if(strcmp(reg_dest, "CX") == 0)
-        registros_cpu->CX -= valor_reg_origen;
-
-    else if(strcmp(reg_dest, "DX") == 0)
-        registros_cpu->DX -= valor_reg_origen;
-
-    else
-        log_warning(logger_cpu, "Registro no valido");
-}
-
-void ejecutar_jnz(void* registro, uint32_t nro_instruccion, t_cde* cde){
-    if(strcmp(registro, "AX") == 0){
-        if(registros_cpu->AX != 0)
-            cde->registros->PC= nro_instruccion;
-    }
-
+	if(strcmp(registro, "AX") == 0){
+		valorLeido8 = registros_cpu->AX;
+        return valorLeido8;
+	}
     else if(strcmp(registro, "BX") == 0){
-        if(registros_cpu->BX != 0)
-            cde->registros->PC = nro_instruccion;
-    }
-
+		valorLeido8 = registros_cpu->BX;
+        return valorLeido8;
+	}
     else if(strcmp(registro, "CX") == 0){
-        if(registros_cpu->CX != 0)
-            cde->registros->PC= nro_instruccion;
+		valorLeido8 = registros_cpu->CX;
+        return valorLeido8;
+	}
+    else if(strcmp(registro, "DX") == 0){
+		valorLeido8 = registros_cpu->DX;
+        return valorLeido8;
+	}
+    else if(strcmp(registro, "EAX") == 0){
+		valorLeido32 = registros_cpu->EAX;
+        return valorLeido32;
+    }
+    else if(strcmp(registro, "EBX") == 0){
+		valorLeido32 = registros_cpu->EBX;
+        return valorLeido32;
+    }
+    else if(strcmp(registro, "ECX") == 0){
+		valorLeido32 = registros_cpu->ECX;
+        return valorLeido32;
+    }
+    else if(strcmp(registro, "EDX") == 0){
+		valorLeido32 = registros_cpu->EDX;
+        return valorLeido32;
     }
 
-    else if(strcmp(registro, "DX") == 0){
+}
+
+void ejecutar_sum(char* reg_dest, char* reg_origen) {
+    
+    if(strcmp(reg_dest, "AX") == 0){
+        uint8_t  valor_reg_origen = buscar_valor_registro(reg_origen);
+        registros_cpu->AX += valor_reg_origen;
+    }    
+    else if(strcmp(reg_dest, "BX") == 0){
+        uint8_t valor_reg_origen = buscar_valor_registro(reg_origen);
+        registros_cpu->BX += valor_reg_origen;
+    }
+    else if(strcmp(reg_dest, "CX") == 0){
+        uint8_t valor_reg_origen = buscar_valor_registro(reg_origen);
+        registros_cpu->CX += valor_reg_origen;
+    }
+    else if(strcmp(reg_dest, "DX") == 0){
+        uint8_t valor_reg_origen = buscar_valor_registro(reg_origen);
+        registros_cpu->DX += valor_reg_origen;
+    }
+    else if(strcmp(reg_dest, "EAX") == 0){
+        uint32_t valor_reg_origen = buscar_valor_registro(reg_origen);
+        registros_cpu->EAX += valor_reg_origen;
+    }
+    else if(strcmp(reg_dest, "EBX") == 0){
+        uint32_t valor_reg_origen = buscar_valor_registro(reg_origen);
+        registros_cpu->EBX += valor_reg_origen;
+    }
+    else if(strcmp(reg_dest, "ECX") == 0){
+        uint32_t valor_reg_origen = buscar_valor_registro(reg_origen);
+        registros_cpu->ECX += valor_reg_origen;
+    }
+    else if(strcmp(reg_dest, "EDX") == 0){
+        uint32_t valor_reg_origen = buscar_valor_registro(reg_origen);
+        registros_cpu->EDX += valor_reg_origen;
+    }
+    else
+        log_warning(logger_cpu, "Registro no valido");
+}
+void ejecutar_jnz(void* registro, uint32_t char_nro_instruccion) {
+    uint32_t nro_instruccion = atoi(char_nro_instruccion);
+
+    if(strcmp(registro, "AX") == 0) {
+        if(registros_cpu->AX != 0)
+            registros_cpu->PC = nro_instruccion;
+    }
+
+    else if(strcmp(registro, "BX") == 0) {
+        if(registros_cpu->BX != 0)
+            registros_cpu->PC = nro_instruccion;
+    }
+
+    else if(strcmp(registro, "CX") == 0) {
+        if(registros_cpu->CX != 0)
+            registros_cpu->PC= nro_instruccion;
+    }
+
+    else if(strcmp(registro, "DX") == 0) {
         if(registros_cpu->DX != 0)
-            cde->registros->PC= nro_instruccion;
+            registros_cpu->PC= nro_instruccion;
+    }
+
+    else if(strcmp(registro, "EAX") == 0) {
+        if(registros_cpu->EAX != 0)
+            registros_cpu->PC= nro_instruccion;
+    }
+    else if(strcmp(registro, "EBX") == 0) {
+        if(registros_cpu->EBX != 0)
+            registros_cpu->PC= nro_instruccion;
+    }
+
+    else if(strcmp(registro, "ECX") == 0) {
+        if(registros_cpu->ECX != 0)
+            registros_cpu->PC= nro_instruccion;
+    }
+
+    else if(strcmp(registro,"EDX") == 0) {
+        if(registros_cpu->DX != 0)
+            registros_cpu->PC = nro_instruccion;
     }
 
     else
@@ -190,18 +230,38 @@ void ejecutar_jnz(void* registro, uint32_t nro_instruccion, t_cde* cde){
 }
 
 
-
-
-void ejecutar_dormirIO(int nombreInterfaz, uint8_t unidadesDeTiempo) {
-    enviar_codOp(fd_kernel_int, INTERRUPT);
-    t_buffer* buffer_a_enviar = crear_buffer();
-    agregar_buffer_uint8(buffer_a_enviar,unidadesDeTiempo);
-    agregar_buffer_int(buffer_a_enviar,nombreInterfaz);
-    enviar_buffer(buffer_a_enviar,fd_cpu_int);
-    destruir_buffer(buffer_a_enviar);
-
+void ejecutar_dormirIO(char* nombreInterfaz, uint8_t unidadesDeTiempo) {
+    uint8_t numeroInterfaz = obtener_numero_interfaz(nombreInterfaz);
+    if (numeroInterfaz == 1) {
+        enviar_codOp(fd_kernel_int, INTERRUPT);
+        t_buffer* buffer_a_enviar = crear_buffer();
+        agregar_buffer_uint8(buffer_a_enviar,unidadesDeTiempo);
+        agregar_buffer_uint8(buffer_a_enviar,numeroInterfaz);
+        enviar_buffer(buffer_a_enviar,fd_kernel_int);
+        destruir_buffer(buffer_a_enviar);
+    }
+    else {
+        log_error(logger_cpu, "La interfaz %d no entiende esta instruccion", numeroInterfaz);
+    }
     /* ACA HABRIA QUE INTERRUMPIR LA EJECUCION DEL PROCESO QUE EJECUTO ESTA INSTRUCCION,
        NO LO HAGO TODAVIA PORQUE NO TENEMOS MODELADOS COMO VAMOS A HACER LAS INTERRUPCIONES.
     */
 }
 
+uint8_t obtener_numero_interfaz(char* nombreInterfaz) {
+    if(strcmp(nombreInterfaz, "Int1") == 0) { //Generica
+        return 1;
+    }
+    if(strcmp(nombreInterfaz, "Int2") == 0) { //StdIn
+        return 2;
+    }
+    if(strcmp(nombreInterfaz, "Int3") == 0) { //StdOut
+        return 3;
+    }
+    if(strcmp(nombreInterfaz, "Int4") == 0) { //DialFS
+        return 4;
+    }
+    else {
+        return 100;
+    }
+}

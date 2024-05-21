@@ -47,15 +47,8 @@ void inicializar_conexiones(){
 }
 
 void IO_Generica() {
-
-	mensajeKernelIO codOP = recibir_codOp(fd_kernel);
-	
-	if (codOP == SLEEP){
-		t_buffer* buffer_recibido = recibir_buffer(fd_kernel);
-		uint8_t unidadesDeTiempo = leer_buffer_uint8(buffer_recibido);
-		sleep(unidadesDeTiempo);
-
+	t_buffer* buffer_recibido = recibir_buffer(fd_kernel);
+	uint8_t unidadesDeTiempo = leer_buffer_uint8(buffer_recibido);
+	usleep(unidadesDeTiempo * 1000);
 		// 	CUANDO LA IO HACE SLEEP EL PROCESO DEBERIA BLOQUEARSE, NO OLVIDARSE DE CODEAR ESO!!!
-	}
-
 }

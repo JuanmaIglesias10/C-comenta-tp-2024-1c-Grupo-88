@@ -40,6 +40,17 @@ typedef enum{
 }mensajeKernelCpu;
 
 typedef enum{
+	// MOV_IN_SOLICITUD,
+	// MOV_IN_OK, // Cuando no hay pageFault
+	// MOV_OUT_SOLICITUD,
+	// MOV_OUT_OK, // Cuando no hay pageFault
+	// PAGE_FAULT,
+	// NUMERO_MARCO_SOLICITUD,
+	// NUMERO_MARCO_OK,
+	PEDIDO_INSTRUCCION
+}mensajeCpuMemeoria;
+
+typedef enum{
 	SLEEP
 } mensajeKernelIO;
 

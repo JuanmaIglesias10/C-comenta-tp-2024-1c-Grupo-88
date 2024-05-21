@@ -397,7 +397,7 @@ void recibir_dormirIO() {
 		// Recibir buffer y extraer lo recibido
 		t_buffer* buffer_recibido = recibir_buffer(fd_cpu_int);
 		uint8_t unidadesDeTiempo  = leer_buffer_uint8(buffer_recibido);
-		int interfaz = leer_buffer_int(buffer_recibido);
+		uint8_t interfaz = leer_buffer_uint8(buffer_recibido);
 		destruir_buffer(buffer_recibido);
 
 		//Mandarlo a IO GENERICA
