@@ -109,7 +109,6 @@ void ejecutar_set(char* registro, void* valor_recibido) {
 
 void ejecutar_dormirIO(int nombreInterfaz, uint8_t unidadesDeTiempo) {
     enviar_codOp(fd_kernel_int, INTERRUPT);
-    
     t_buffer* buffer_a_enviar = crear_buffer();
     agregar_buffer_uint8(buffer_a_enviar,unidadesDeTiempo);
     agregar_buffer_int(buffer_a_enviar,nombreInterfaz);
