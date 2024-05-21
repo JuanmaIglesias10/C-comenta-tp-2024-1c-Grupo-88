@@ -248,3 +248,48 @@ char* leer_buffer_string(t_buffer* buffer) {
     string[length] = '\0'; // Null-terminate the string
     return string;
 } // OK
+
+t_instruccion* leer_buffer_instruccion(t_buffer* buffer){
+	t_instruccion* instr = malloc(sizeof(t_instruccion));
+	instr->par1 = NULL;
+	instr->par2 = NULL;
+	instr->par3 = NULL;
+	instr->par4 = NULL;
+	instr->par5 = NULL;
+
+	instr->codigo = leer_buffer_uint8(buffer);
+	
+	instr->par1 = leer_buffer_string(buffer);
+	instr->par2 = leer_buffer_string(buffer);
+	instr->par3 = leer_buffer_string(buffer);
+	instr->par4 = leer_buffer_string(buffer);
+	instr->par5 = leer_buffer_string(buffer);
+
+	return instr;
+}
+
+
+void agregar_buffer_instruccion(t_buffer* buffer, t_instruccion* instruccion){
+	agregar_buffer_uint8(buffer, instruccion->codigo);
+	if (instruccion->par1 != NULL)
+		agregar_buffer_string(buffer, instruccion->par1);
+	else
+		agregar_buffer_string(buffer, "");
+	if (instruccion->par2 != NULL)
+		agregar_buffer_string(buffer, instruccion->par2);
+	else
+		agregar_buffer_string(buffer, "");
+	
+	if (instruccion->par3 != NULL)
+		agregar_buffer_string(buffer, instruccion->par3);
+	else
+		agregar_buffer_string(buffer, "");
+	if (instruccion->par4 != NULL)
+		agregar_buffer_string(buffer, instruccion->par4);
+	else
+		agregar_buffer_string(buffer, "");
+	if (instruccion->par5 != NULL)
+		agregar_buffer_string(buffer, instruccion->par5);
+	else
+		agregar_buffer_string(buffer, "");
+}

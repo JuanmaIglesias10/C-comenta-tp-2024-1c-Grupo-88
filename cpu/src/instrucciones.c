@@ -107,9 +107,8 @@ void ejecutar_set(char* registro, void* valor_recibido) {
     }
 }
 
-void*  buscar_valor_registro(void* registro) {
+uint8_t  buscar_valor_registro8(void* registro) {
 	uint8_t  valorLeido8;
-    uint32_t valorLeido32;
 
 	if(strcmp(registro, "AX") == 0){
 		valorLeido8 = registros_cpu->AX;
@@ -126,64 +125,112 @@ void*  buscar_valor_registro(void* registro) {
     else if(strcmp(registro, "DX") == 0){
 		valorLeido8 = registros_cpu->DX;
         return valorLeido8;
-	}
-    else if(strcmp(registro, "EAX") == 0){
-		valorLeido32 = registros_cpu->EAX;
-        return valorLeido32;
-    }
-    else if(strcmp(registro, "EBX") == 0){
-		valorLeido32 = registros_cpu->EBX;
-        return valorLeido32;
-    }
-    else if(strcmp(registro, "ECX") == 0){
-		valorLeido32 = registros_cpu->ECX;
-        return valorLeido32;
-    }
-    else if(strcmp(registro, "EDX") == 0){
-		valorLeido32 = registros_cpu->EDX;
-        return valorLeido32;
+	} else{
+        return 100;
     }
 
 }
 
+uint32_t  buscar_valor_registro32(void* registro){
+    uint32_t valorLeido32;
+     if(strcmp(registro, "EAX") == 0){
+            valorLeido32 = registros_cpu->EAX;
+            return valorLeido32;
+        }
+    else if(strcmp(registro, "EBX") == 0){
+        valorLeido32 = registros_cpu->EBX;
+        return valorLeido32;
+    }
+    else if(strcmp(registro, "ECX") == 0){
+        valorLeido32 = registros_cpu->ECX;
+        return valorLeido32;
+    }
+    else if(strcmp(registro, "EDX") == 0){
+        valorLeido32 = registros_cpu->EDX;
+        return valorLeido32;
+    } else{
+        return 1000;
+    }
+
+
+}
 void ejecutar_sum(char* reg_dest, char* reg_origen) {
     
     if(strcmp(reg_dest, "AX") == 0){
-        uint8_t  valor_reg_origen = buscar_valor_registro(reg_origen);
+        uint8_t  valor_reg_origen = buscar_valor_registro8(reg_origen);
         registros_cpu->AX += valor_reg_origen;
     }    
     else if(strcmp(reg_dest, "BX") == 0){
-        uint8_t valor_reg_origen = buscar_valor_registro(reg_origen);
+        uint8_t valor_reg_origen = buscar_valor_registro8(reg_origen);
         registros_cpu->BX += valor_reg_origen;
     }
     else if(strcmp(reg_dest, "CX") == 0){
-        uint8_t valor_reg_origen = buscar_valor_registro(reg_origen);
+        uint8_t valor_reg_origen = buscar_valor_registro8(reg_origen);
         registros_cpu->CX += valor_reg_origen;
     }
     else if(strcmp(reg_dest, "DX") == 0){
-        uint8_t valor_reg_origen = buscar_valor_registro(reg_origen);
+        uint8_t valor_reg_origen = buscar_valor_registro8(reg_origen);
         registros_cpu->DX += valor_reg_origen;
     }
     else if(strcmp(reg_dest, "EAX") == 0){
-        uint32_t valor_reg_origen = buscar_valor_registro(reg_origen);
+        uint32_t valor_reg_origen = buscar_valor_registro32(reg_origen);
         registros_cpu->EAX += valor_reg_origen;
     }
     else if(strcmp(reg_dest, "EBX") == 0){
-        uint32_t valor_reg_origen = buscar_valor_registro(reg_origen);
+        uint32_t valor_reg_origen = buscar_valor_registro32(reg_origen);
         registros_cpu->EBX += valor_reg_origen;
     }
     else if(strcmp(reg_dest, "ECX") == 0){
-        uint32_t valor_reg_origen = buscar_valor_registro(reg_origen);
+        uint32_t valor_reg_origen = buscar_valor_registro32(reg_origen);
         registros_cpu->ECX += valor_reg_origen;
     }
     else if(strcmp(reg_dest, "EDX") == 0){
-        uint32_t valor_reg_origen = buscar_valor_registro(reg_origen);
+        uint32_t valor_reg_origen = buscar_valor_registro32(reg_origen);
         registros_cpu->EDX += valor_reg_origen;
     }
     else
         log_warning(logger_cpu, "Registro no valido");
 }
-void ejecutar_jnz(void* registro, uint32_t char_nro_instruccion) {
+
+void ejecutar_sub(char* reg_dest, char* reg_origen) {
+    
+    if(strcmp(reg_dest, "AX") == 0){
+        uint8_t  valor_reg_origen = buscar_valor_registro8(reg_origen);
+        registros_cpu->AX -= valor_reg_origen;
+    }    
+    else if(strcmp(reg_dest, "BX") == 0){
+        uint8_t valor_reg_origen = buscar_valor_registro8(reg_origen);
+        registros_cpu->BX -= valor_reg_origen;
+    }
+    else if(strcmp(reg_dest, "CX") == 0){
+        uint8_t valor_reg_origen = buscar_valor_registro8(reg_origen);
+        registros_cpu->CX -= valor_reg_origen;
+    }
+    else if(strcmp(reg_dest, "DX") == 0){
+        uint8_t valor_reg_origen = buscar_valor_registro8(reg_origen);
+        registros_cpu->DX -= valor_reg_origen;
+    }
+    else if(strcmp(reg_dest, "EAX") == 0){
+        uint32_t valor_reg_origen = buscar_valor_registro32(reg_origen);
+        registros_cpu->EAX -= valor_reg_origen;
+    }
+    else if(strcmp(reg_dest, "EBX") == 0){
+        uint32_t valor_reg_origen = buscar_valor_registro32(reg_origen);
+        registros_cpu->EBX -= valor_reg_origen;
+    }
+    else if(strcmp(reg_dest, "ECX") == 0){
+        uint32_t valor_reg_origen = buscar_valor_registro32(reg_origen);
+        registros_cpu->ECX -= valor_reg_origen;
+    }
+    else if(strcmp(reg_dest, "EDX") == 0){
+        uint32_t valor_reg_origen = buscar_valor_registro32(reg_origen);
+        registros_cpu->EDX -= valor_reg_origen;
+    }
+    else
+        log_warning(logger_cpu, "Registro no valido");
+}
+
+void ejecutar_jnz(void* registro, char* char_nro_instruccion) {
     uint32_t nro_instruccion = atoi(char_nro_instruccion);
 
     if(strcmp(registro, "AX") == 0) {

@@ -86,18 +86,18 @@ void ejecutar_proceso(t_cde* cde){
         //Pedir a memoria la instruccion pasandole el pid y el pc
         log_info(logger_cpu, "PID: %d - FETCH - Program Counter: %d", cde->pid, registros_cpu->PC); //Obligatorio, si lo quitas te pega facu
 
-        enviar_codigo(fd_memoria, PEDIDO_INSTRUCCION);
-        t_buffer* buffer = crear_buffer_nuestro();
-        buffer_write_uint32(buffer, cde->pid);
-        buffer_write_uint32(buffer, registros_cpu->PC); //En la siguiente iteracion, el pc es + 1
+        enviar_codOp(fd_memoria, PEDIDO_INSTRUCCION);
+        t_buffer* buffer = crear_buffer();
+        agregar_buffer_uint32(buffer, cde->pid);
+        agregar_buffer_uint32(buffer, registros_cpu->PC); //En la siguiente iteracion, el pc es + 1
         enviar_buffer(buffer, fd_memoria);
-        destruir_buffer_nuestro(buffer);
+        destruir_buffer(buffer);
         
         registros_cpu->PC++;
 
         t_buffer* buffer_recibido = recibir_buffer(fd_memoria);
-        instruccion_a_ejecutar = buffer_read_instruccion(buffer_recibido);
-        destruir_buffer_nuestro(buffer_recibido);
+        instruccion_a_ejecutar = leer_buffer_instruccion(buffer_recibido);
+        destruir_buffer(buffer_recibido);
         
         // pthread_mutex_lock(&mutex_instruccion_actualizada); Mirar luego esto, por ahora que la chupe
         // instruccion_actualizada = instruccion_a_ejecutar->codigo;

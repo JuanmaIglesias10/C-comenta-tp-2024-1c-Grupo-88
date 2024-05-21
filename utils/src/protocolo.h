@@ -77,5 +77,9 @@ void agregar_buffer_registros(t_buffer* buffer, t_registros* registros);
 void agregar_buffer_int(t_buffer* buffer, uint8_t data);
 // Leer un int 
 int leer_buffer_int(t_buffer* buffer);
+// Leer buffer instruccion
+t_instruccion* leer_buffer_instruccion(t_buffer* buffer);
+// Agregar instruccion al buffer
+void agregar_buffer_instruccion(t_buffer* buffer, t_instruccion* instruccion);
 
 #endif /* PROTOCOLO_H_ */
