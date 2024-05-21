@@ -107,6 +107,86 @@ void ejecutar_set(char* registro, void* valor_recibido) {
     }
 }
 
+uint8_t  buscar_valor_registro(void* registro){
+	uint8_t  valorLeido;
+
+	if(strcmp(registro, "AX") == 0)
+		valorLeido = registros_cpu->AX;
+	else if(strcmp(registro, "BX") == 0)
+		valorLeido = registros_cpu->BX;
+
+	else if(strcmp(registro, "CX") == 0)
+		valorLeido = registros_cpu->CX;
+
+	else if(strcmp(registro, "DX") == 0)
+		valorLeido = registros_cpu->DX;
+
+	return valorLeido;
+}
+void ejecutar_sum(char* reg_dest, char* reg_origen){
+    uint8_t valor_reg_origen = buscar_valor_registro(reg_origen);
+    
+    if(strcmp(reg_dest, "AX") == 0)
+        registros_cpu->AX += valor_reg_origen;
+
+    else if(strcmp(reg_dest, "BX") == 0)
+        registros_cpu->BX += valor_reg_origen;
+
+    else if(strcmp(reg_dest, "CX") == 0)
+        registros_cpu->CX += valor_reg_origen;
+
+    else if(strcmp(reg_dest, "DX") == 0)
+        registros_cpu->DX += valor_reg_origen;
+
+    else
+        log_warning(logger_cpu, "Registro no valido");
+}
+void ejecutar_sub(char* reg_dest, char* reg_origen){
+
+
+    uint8_t  valor_reg_origen = buscar_valor_registro(reg_origen);
+
+    if(strcmp(reg_dest, "AX") == 0)
+        registros_cpu->AX -= valor_reg_origen;
+
+    else if(strcmp(reg_dest, "BX") == 0)
+        registros_cpu->BX -= valor_reg_origen;
+    
+    else if(strcmp(reg_dest, "CX") == 0)
+        registros_cpu->CX -= valor_reg_origen;
+    
+    else if(strcmp(reg_dest, "DX") == 0)
+        registros_cpu->DX -= valor_reg_origen;
+    
+    else
+        log_warning(logger_cpu, "Registro no valido");
+}
+
+void ejecutar_jnz(void* registro, uint32_t nro_instruccion, t_cde* cde){
+    if(strcmp(registro, "AX") == 0){
+        if(registros_cpu->AX != 0)
+            cde->registros->PC= nro_instruccion;
+    }
+
+    else if(strcmp(registro, "BX") == 0){
+        if(registros_cpu->BX != 0)
+            cde->registros->PC = nro_instruccion;
+    }
+
+    else if(strcmp(registro, "CX") == 0){
+        if(registros_cpu->CX != 0)
+            cde->registros->PC= nro_instruccion;
+    }
+
+    else if(strcmp(registro, "DX") == 0){
+        if(registros_cpu->DX != 0)
+            cde->registros->PC= nro_instruccion;
+    }
+
+    else
+        log_warning(logger_cpu, "Registro no valido");
+}
+
 void ejecutar_dormirIO(int nombreInterfaz, int unidadesDeTiempo) {
 
     //decirle a kernell que le pida a IO que duerma -> meter parametros en un buffer 
