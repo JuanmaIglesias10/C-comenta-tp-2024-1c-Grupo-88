@@ -39,6 +39,9 @@ typedef enum{
 	DIRECCION_FISICA_OK
 }mensajeKernelCpu;
 
+typedef enum{
+	SLEEP
+} mensajeKernelIO;
 
 
 

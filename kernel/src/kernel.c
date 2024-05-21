@@ -389,3 +389,24 @@ void enviar_cde_a_cpu(){
 
     // sem_post(&bin_recibir_cde); //ESTE SEMAFORO NI IDEA DONDE MAS ESTÁ
 }
+
+void recibir_dormirIO() {
+	mensajeKernelCpu codOp = recibir_codOp(fd_cpu_int);
+
+	if (codOp == INTERRUPT) {
+		// Recibir buffer y extraer lo recibido
+		t_buffer* buffer_recibido = recibir_buffer(fd_cpu_int);
+		uint8_t unidadesDeTiempo  = leer_buffer_uint8(buffer_recibido);
+		int interfaz = leer_buffer_int(buffer_recibido);
+		destruir_buffer(buffer_recibido);
+
+		//Mandarlo a IO GENERICA
+		enviar_codOp(fd_IO,SLEEP);
+		t_buffer* buffer_a_enviar = crear_buffer();
+		agregar_buffer_uint8(buffer_a_enviar,unidadesDeTiempo);
+		enviar_buffer(buffer_a_enviar,fd_IO);
+		destruir_buffer(buffer_a_enviar);
+
+		// ¿¿Algo mas??
+	}
+}
