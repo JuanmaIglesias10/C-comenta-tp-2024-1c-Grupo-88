@@ -133,7 +133,12 @@ void ejecutar_instruccion(t_cde* cde, t_instruccion* instruccion_a_ejecutar){
         case SET:
             log_info(logger_cpu, "PID: %d - Ejecutando: %s - %s %s", cde->pid, obtener_nombre_instruccion(instruccion_a_ejecutar), instruccion_a_ejecutar->par1, instruccion_a_ejecutar->par2);
             // par2 = leerEnteroParametroInstruccion(2, instruccion_a_ejecutar);
-            ejecutar_set(instruccion_a_ejecutar->par1, instruccion_a_ejecutar->par2);
+            int prueba = atoi(instruccion_a_ejecutar->par2);
+            if (prueba < 255){
+                ejecutar_set8(instruccion_a_ejecutar->par1, instruccion_a_ejecutar->par2);
+            } else {
+                ejecutar_set32(instruccion_a_ejecutar->par1, instruccion_a_ejecutar->par2);
+            }
             // if (interruption == 0 && realizar_desalojo == 0 && interrupcion_consola == 0)
             destruir_instruccion(instruccion_a_ejecutar);
             break;

@@ -68,44 +68,53 @@ char* obtener_nombre_instruccion(t_instruccion* instruccion) {
 
 // FUNCIONALIDAD DE LAS INSTRUCCIONES
 
-void ejecutar_set(char* registro, void* valor_recibido) {
-     if (strcmp(registro, "PC") == 0) { //Esto no se si hace falta
-        registros_cpu->PC = *((uint32_t*)valor_recibido);
-    }
+void ejecutar_set8(char* registro, char* char_valor_recibido) {
+    uint8_t valor_recibido = atoi(char_valor_recibido);
     if (strcmp(registro, "AX") == 0) {
-        registros_cpu->AX = *((uint8_t*)valor_recibido);
+        registros_cpu->AX = valor_recibido;
     }
     else if (strcmp(registro, "BX") == 0) {
-        registros_cpu->BX = *((uint8_t*)valor_recibido);
+        registros_cpu->BX = valor_recibido;
     }
     else if (strcmp(registro, "CX") == 0) {
-        registros_cpu->CX = *((uint8_t*)valor_recibido);
+        registros_cpu->CX = valor_recibido;
     }
     else if (strcmp(registro, "DX") == 0) {
-        registros_cpu->DX = *((uint8_t*)valor_recibido);
-    }
-    else if (strcmp(registro, "EAX") == 0) {
-        registros_cpu->EAX = *((uint32_t*)valor_recibido);
-    }
-    else if (strcmp(registro, "EBX") == 0) {
-        registros_cpu->EBX = *((uint32_t*)valor_recibido);
-    }
-    else if (strcmp(registro, "ECX") == 0) {
-        registros_cpu->ECX = *((uint32_t*)valor_recibido);
-    }
-    else if (strcmp(registro, "EDX") == 0) {
-        registros_cpu->EDX = *((uint32_t*)valor_recibido);
-    }
-    else if (strcmp(registro, "SI") == 0) {
-        registros_cpu->SI = *((uint32_t*)valor_recibido);
-    }
-    else if (strcmp(registro, "DI") == 0) {
-        registros_cpu->DI = *((uint32_t*)valor_recibido);
+        registros_cpu->DX = valor_recibido;
     }
     else {
         log_error(logger_cpu, "No se reconoce el registro %s", registro);
     }
 }
+
+void ejecutar_set32(char* registro, char* char_valor_recibido){
+    uint32_t valor_recibido = atoi(char_valor_recibido);
+     if (strcmp(registro, "PC") == 0) { 
+        registros_cpu->PC = valor_recibido;
+    }
+    else if (strcmp(registro, "EAX") == 0) {
+        registros_cpu->EAX = valor_recibido;
+    }
+    else if (strcmp(registro, "EBX") == 0) {
+        registros_cpu->EBX = valor_recibido;
+    }
+    else if (strcmp(registro, "ECX") == 0) {
+        registros_cpu->ECX = valor_recibido;
+    }
+    else if (strcmp(registro, "EDX") == 0) {
+        registros_cpu->EDX = valor_recibido;
+    }
+    else if (strcmp(registro, "SI") == 0) {
+        registros_cpu->SI = valor_recibido;
+    }
+    else if (strcmp(registro, "DI") == 0) {
+        registros_cpu->DI = valor_recibido;
+    }
+    else {
+        log_error(logger_cpu, "No se reconoce el registro %s", registro);
+    }
+}
+
 
 uint8_t  buscar_valor_registro8(void* registro) {
 	uint8_t  valorLeido8;
@@ -193,10 +202,10 @@ void ejecutar_sum(char* reg_dest, char* reg_origen) {
 }
 
 void ejecutar_sub(char* reg_dest, char* reg_origen) {
-    
     if(strcmp(reg_dest, "AX") == 0){
         uint8_t  valor_reg_origen = buscar_valor_registro8(reg_origen);
         registros_cpu->AX -= valor_reg_origen;
+        log_info(logger_cpu, "%d", registros_cpu->AX);
     }    
     else if(strcmp(reg_dest, "BX") == 0){
         uint8_t valor_reg_origen = buscar_valor_registro8(reg_origen);
