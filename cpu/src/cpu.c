@@ -105,7 +105,6 @@ void ejecutar_proceso(t_cde* cde){
 
         ejecutar_instruccion(cde, instruccion_a_ejecutar);
     }
-
 } 
 
 

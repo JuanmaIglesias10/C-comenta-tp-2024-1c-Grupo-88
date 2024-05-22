@@ -48,7 +48,7 @@ typedef enum{
 	// NUMERO_MARCO_SOLICITUD,
 	// NUMERO_MARCO_OK,
 	PEDIDO_INSTRUCCION
-}mensajeCpuMemeoria;
+}mensajeCpuMemoria;
 
 typedef enum{
 	SLEEP

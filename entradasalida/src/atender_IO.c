@@ -27,9 +27,6 @@ void* atender_kernel()
                 case SLEEP:
                     IO_Generica();
                     break;
-                case PAQUETE:
-                    //
-                    break;
                 default:
                     log_info(logger_IO, "Se desconectó KERNEL");
                     break;

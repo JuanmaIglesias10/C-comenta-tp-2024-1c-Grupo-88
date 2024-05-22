@@ -19,7 +19,6 @@ void inicializar_memoria(){
 	inicializar_conexiones();
 }
 
-
 void inicializar_config(){
 	config = config_create("./memoria.config");
 	config_memoria.puerto_escucha = config_get_int_value(config, "PUERTO_ESCUCHA");
@@ -29,6 +28,7 @@ void inicializar_config(){
 	config_memoria.retardo_respuesta = config_get_int_value(config, "RETARDO_RESPUESTA");
 
 }
+
 void inicializar_conexiones() {
 	fd_memoria = iniciar_servidor(config_memoria.puerto_escucha, logger_memoria);
 
@@ -54,7 +54,6 @@ void inicializar_conexiones() {
 	
 	// liberar_conexion(fd_memoria);
 }
-
 
 void iniciar_proceso(){
 	//Recibo el buffer 
@@ -218,4 +217,34 @@ void instrucciones_destroy(t_instruccion* instrucciones_a_destruir){
 	free(instrucciones_a_destruir->par5);
 	free(instrucciones_a_destruir);
 	return;
+}
+
+void enviar_instruccion(){
+	t_buffer* buffer = recibir_buffer(fd_cpu);
+
+	uint32_t pid = leer_buffer_uint32(buffer);
+	uint32_t pc = leer_buffer_uint32(buffer);
+
+	destruir_buffer(buffer);
+
+	// Suponemos que si se consulta por un proceso es porque ya existe
+	pthread_mutex_lock(&mutex_lista_procesos);
+	t_proceso* proceso = buscarProcesoPorPid(pid);
+	pthread_mutex_unlock(&mutex_lista_procesos);
+
+	t_instruccion* instruccion = list_get(proceso->instrucciones, pc);
+	
+	buffer = crear_buffer();
+	agregar_buffer_instruccion(buffer, instruccion);
+	enviar_buffer(buffer, fd_cpu);
+	destruir_buffer(buffer);
+}
+
+t_proceso* buscarProcesoPorPid(uint32_t pid){
+	for(int i = 0; i < list_size(listaProcesos); i++){
+		t_proceso* proceso = list_get(listaProcesos, i);
+		if(proceso->pid == pid)
+			return proceso;
+	}
+	return NULL; 
 }

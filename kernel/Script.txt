@@ -1,2 +1,2 @@
 INICIAR_PROCESO Instrucciones.txt
-INICIAR_PROCESO Instrucciones.txT
+INICIAR_PROCESO Instrucciones.txt

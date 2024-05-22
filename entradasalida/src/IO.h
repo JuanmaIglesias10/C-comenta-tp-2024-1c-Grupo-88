@@ -8,5 +8,5 @@
 void inicializar_IO();
 void inicializar_config_IO();
 void inicializar_conexiones();
-
+void IO_Generica();
 #endif /* IO_H_ */

@@ -3,13 +3,12 @@
 void* atender_cpu()
 {	
 	while (1) {
-		uint8_t cod_op = recibir_codOp(fd_cpu);
+		mensajeCpuMemoria cod_op = recibir_codOp(fd_cpu);
+		
 		switch (cod_op) {
-		case MENSAJE:
-			//
-			break;
-		case PAQUETE:
-			//
+		case PEDIDO_INSTRUCCION:
+			usleep(config_memoria.retardo_respuesta * 1000);
+			enviar_instruccion();
 			break;
 		default:
 			log_info(logger_memoria,"Se desconectó CPU");

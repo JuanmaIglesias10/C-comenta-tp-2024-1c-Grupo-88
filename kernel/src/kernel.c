@@ -15,8 +15,7 @@ void inicializar_kernel(){
 	inicializar_conexiones();
 	inicializar_listas_colas();
 	inicializar_semaforos();
-
-	inicializarPlanificadores();
+	inicializar_planificadores();
 
 	
 
@@ -82,7 +81,7 @@ void inicializar_semaforos(){
 	pthread_mutex_init(&mutex_exec, NULL);
 	pthread_mutex_init(&mutex_pcb_en_ejecucion, NULL);
 	sem_init(&cpu_libre, 0, 1);
-	sem_init(&procesos_en_ready, 0, 1);
+	sem_init(&procesos_en_ready, 0, 0);
 	sem_init(&procesos_NEW, 0, 0);
 	sem_init(&aviso_exec, 0, 0); //Inicia en 0, posteado por ready_a_exec
 
@@ -201,12 +200,24 @@ t_codigo_operacion obtener_codigo_operacion(char* parametro) {
 	return EXIT_FAILURE;
 }
 
-/* void planificador_largo_plazo{
-	pthread_t new_ready;
-	pthread_create(&new_ready, NULL, (void*)new_a_ready, NULL);
+void inicializar_planificadores(){
+	inicializar_largo_plazo();
+	inicializar_corto_plazo();
+}
+
+void inicializar_largo_plazo(){
+	pthread_t planificadorLargoPlazo;
+	pthread_create(&planificadorLargoPlazo, NULL, (void*)new_a_ready, NULL);
+	pthread_detach(planificadorLargoPlazo);
+	
 } 
-*/
-/*
+
+void inicializar_corto_plazo(){
+	pthread_t planificadorCortoPlazo;
+	pthread_create(&planificadorCortoPlazo, NULL,(void*)ready_a_exec, NULL);
+	pthread_detach(planificadorCortoPlazo);
+}
+
 void new_a_ready(){
 	while(1){
 		sem_wait(&procesos_NEW);
@@ -224,38 +235,16 @@ void new_a_ready(){
 
         // Pedir a memoria incializar estructuras
 
-        log_info(logger_kernel, "PID: %d - Estado anterior: %s - Estado actual: %s", pcb_a_ready->cde->pid, obtener_nombre_estado(NEW), obtener_nombre_estado(READY)); //OBLIGATORIO
+        log_info(logger_kernel, "PID: %d - Estado anterior: %s - Estado actual: %s", pcb_a_ready->cde->pid, "NEW", "READY"); //OBLIGATORIO
         
-        if(strcmp(config_kernel.algoritmo, "PRIORIDADES") == 0 && pcb_en_ejecucion != NULL){
-            t_pcb* posible_a_ejecutar = pcb_con_mayor_prioridad_en_ready();
-
-            if(pcb_en_ejecucion->prioridad > posible_a_ejecutar->prioridad){
-                enviar_codigo(socket_cpu_interrupt, DESALOJO);
-
-                t_buffer* buffer = crear_buffer_nuestro();
-                buffer_write_uint32(buffer, posible_a_ejecutar->cde->pid); // lo enviamos porque interrupt recibe un buffer, pero no hacemos nada con esto
-                enviar_buffer(buffer, socket_cpu_interrupt);
-                destruir_buffer_nuestro(buffer);
-            }
-        }
         
         sem_post(&procesos_en_ready);
 	}
 }
-*/
 
-void inicializarPlanificadores(){
-	// inicializarLargoPlazo();
-	inicializarCortoPlazo();
-}
 
-void inicializarCortoPlazo(){
-	pthread_t planificadorCortoPlazo;
-	pthread_create(&planificadorCortoPlazo, NULL,ready_a_exec(), NULL);
-	pthread_detach(planificadorCortoPlazo);
-}
 
-void* ready_a_exec(){
+void ready_a_exec(){
 	while(1){
 		// 
         sem_wait(&cpu_libre);
@@ -277,7 +266,6 @@ void* ready_a_exec(){
 		*/
 
 		pthread_mutex_lock(&mutex_exec);
-		log_info(logger_kernel,"XD");
 		pcb_ejecutando = retirar_pcb_de_ready_segun_algoritmo();
 		pthread_mutex_unlock(&mutex_exec);
 		
@@ -295,7 +283,6 @@ void* ready_a_exec(){
 		 */
         enviar_cde_a_cpu();
 	}
-	return NULL;
 }
 
 char* obtener_elementos_cargados_en(t_queue* cola){ //Hace un string de los pid en ready, de esta manera [1,2,3]
