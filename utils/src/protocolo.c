@@ -243,8 +243,8 @@ t_registros* leer_buffer_registros(t_buffer* buffer){
 char* leer_buffer_string(t_buffer* buffer) {
     uint32_t length = leer_buffer_uint32(buffer); 
     char* string = malloc(length + 1); 
-    if (string == NULL) return NULL;
     string = leer_buffer(buffer, length);
+    if (string == NULL || strcmp(string,"") == 0) return NULL;
     string[length] = '\0'; // Null-terminate the string
     return string;
 } // OK

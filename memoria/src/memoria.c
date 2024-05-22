@@ -67,7 +67,7 @@ void iniciar_proceso(){
 	string_append(&rutaArchivoInstrucciones, config_memoria.path_instrucciones); 
 	string_append(&rutaArchivoInstrucciones, nombreArchivoInstrucciones);
 	t_list* listaInstrucciones = obtener_instrucciones(rutaArchivoInstrucciones);
-					
+	
 	t_proceso* procesoNuevo = crear_proceso(listaInstrucciones, pid, 0);
 
 	log_info(logger_memoria, "PID: %d - Tamaño: 0", pid); //LOG OBLIGATORIO, NO QUITAR!!!!!!
@@ -79,7 +79,8 @@ void iniciar_proceso(){
 	//Todo ok -> Mando confirmacion a kernel 
 	enviar_codOp(fd_kernel,INICIAR_PROCESO_OK);
 	
-	list_destroy_and_destroy_elements(listaInstrucciones, (void*)instrucciones_destroy);
+	// list_destroy_and_destroy_elements(listaInstrucciones, (void*)instrucciones_destroy);  
+	//Al hacer esto, libero las instrucciones en proceso, aunque ya las pasé en la linea 90 ,1 hora debuggeando para encontrar esta mrd :D
 	free(rutaArchivoInstrucciones);
 }
 
@@ -208,6 +209,7 @@ void obtener_parametros_instruccion(int numParametro, t_instruccion* instruccion
 		}
 }
 
+//Esto caga todo :D lpm
 void instrucciones_destroy(t_instruccion* instrucciones_a_destruir){
 	// free(script_a_destruir->codigo_operacion);
 	free(instrucciones_a_destruir->par1);
@@ -226,17 +228,17 @@ void enviar_instruccion(){
 	uint32_t pc = leer_buffer_uint32(buffer);
 
 	destruir_buffer(buffer);
-
 	// Suponemos que si se consulta por un proceso es porque ya existe
+
 	pthread_mutex_lock(&mutex_lista_procesos);
 	t_proceso* proceso = buscarProcesoPorPid(pid);
 	pthread_mutex_unlock(&mutex_lista_procesos);
 
 	t_instruccion* instruccion = list_get(proceso->instrucciones, pc);
-	
 	buffer = crear_buffer();
 	agregar_buffer_instruccion(buffer, instruccion);
 	enviar_buffer(buffer, fd_cpu);
+    log_info(logger_memoria,"%d %s %s %s %s %s",instruccion->codigo,instruccion->par1,instruccion->par2,instruccion->par4,instruccion->par4,instruccion->par5);
 	destruir_buffer(buffer);
 }
 

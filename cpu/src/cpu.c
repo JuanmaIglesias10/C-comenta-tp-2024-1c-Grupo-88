@@ -10,6 +10,7 @@ void inicializar_cpu() {
 
 	logger_cpu = iniciar_logger("logCPU.log","CPU",LOG_LEVEL_INFO);
 	inicializar_config();
+    inicializar_registros();
 	inicializar_conexiones();
 
 }
@@ -58,12 +59,28 @@ void inicializar_conexiones(){
 	// log_destroy(logger_cpu);
 }
 
-
 /*
 	TO DO -> Creo que conviene hacerla despues de codear el ciclo basico de instruccion
 			 y las operaciones para este check. Tambien despues de tener en claro como 
 			 funcionan las interrupciones
 */
+void inicializar_registros(){
+    registros_cpu = malloc(sizeof(t_registros));
+    
+    registros_cpu->PC = 0;
+    registros_cpu->AX = 0;
+    registros_cpu->BX = 0;
+    registros_cpu->CX = 0;
+    registros_cpu->DX = 0;
+    registros_cpu->EAX = 0;
+    registros_cpu->EBX = 0;
+    registros_cpu->ECX = 0;
+    registros_cpu->EDX = 0;
+    registros_cpu->SI = 0;
+    registros_cpu->DI = 0;
+}
+
+
 void cargar_registros(t_cde* cde){
     registros_cpu->PC = cde->registros->PC;
     registros_cpu->AX = cde->registros->AX;
@@ -74,13 +91,13 @@ void cargar_registros(t_cde* cde){
     registros_cpu->EBX = cde->registros->EBX;
     registros_cpu->ECX = cde->registros->ECX;
     registros_cpu->EDX = cde->registros->EDX;
+    registros_cpu->EDX = cde->registros->SI;
+    registros_cpu->EDX = cde->registros->DI;
 }
-
 
 void ejecutar_proceso(t_cde* cde){
 	cargar_registros(cde);
     t_instruccion* instruccion_a_ejecutar;
-    
     while(1){ //Por ahora no tenemos interrupciones, interrupciones por consola ni desalojo
 
         //Pedir a memoria la instruccion pasandole el pid y el pc
@@ -94,20 +111,20 @@ void ejecutar_proceso(t_cde* cde){
         destruir_buffer(buffer);
         
         registros_cpu->PC++;
-
         t_buffer* buffer_recibido = recibir_buffer(fd_memoria);
         instruccion_a_ejecutar = leer_buffer_instruccion(buffer_recibido);
+        if (!instruccion_a_ejecutar) {
+            log_error(logger_cpu, "Error al leer la instrucción del buffer recibido.");
+            continue;
+        }
         destruir_buffer(buffer_recibido);
-        
+        log_info(logger_cpu,"%d %s %s %s %s %s",instruccion_a_ejecutar->codigo,instruccion_a_ejecutar->par1,instruccion_a_ejecutar->par2,instruccion_a_ejecutar->par4,instruccion_a_ejecutar->par4,instruccion_a_ejecutar->par5	);
         // pthread_mutex_lock(&mutex_instruccion_actualizada); Mirar luego esto, por ahora que la chupe
         // instruccion_actualizada = instruccion_a_ejecutar->codigo;
         // pthread_mutex_unlock(&mutex_instruccion_actualizada);
-
         ejecutar_instruccion(cde, instruccion_a_ejecutar);
     }
 } 
-
-
 
 void ejecutar_instruccion(t_cde* cde, t_instruccion* instruccion_a_ejecutar){
     // uint32_t par1;
@@ -200,7 +217,6 @@ void ejecutar_instruccion(t_cde* cde, t_instruccion* instruccion_a_ejecutar){
             break;
     }
 }
-
 
 void destruir_instruccion(t_instruccion* instruccion){
 	free(instruccion->par1);

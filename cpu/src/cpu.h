@@ -12,4 +12,5 @@ void inicializar_conexiones();
 
 void ejecutar_proceso(t_cde* cde);
 void destruir_instruccion(t_instruccion* instruccion);
+void inicializar_registros();
 #endif /* CPU_H */

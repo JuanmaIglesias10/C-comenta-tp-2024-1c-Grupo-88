@@ -69,7 +69,7 @@ char* obtener_nombre_instruccion(t_instruccion* instruccion) {
 // FUNCIONALIDAD DE LAS INSTRUCCIONES
 
 void ejecutar_set(char* registro, void* valor_recibido) {
-     if (strcmp(registro, "PC") == 0) {
+     if (strcmp(registro, "PC") == 0) { //Esto no se si hace falta
         registros_cpu->PC = *((uint32_t*)valor_recibido);
     }
     if (strcmp(registro, "AX") == 0) {

@@ -126,7 +126,6 @@ void iniciar_proceso(char* path) {
     
 }
 
-
 t_pcb* crear_PCB(){
 
 	t_pcb* PCB_creado = malloc(sizeof(t_pcb));
@@ -228,9 +227,9 @@ void new_a_ready(){
         //     sem_wait(&pausar_new_a_ready);
         // }
 
+
         t_pcb* pcb_a_ready = retirar_pcb_de(colaNEW, &mutex_new);
-        
-        agregar_pcb_a(colaNEW, pcb_a_ready, &mutex_ready);
+        agregar_pcb_a(colaREADY, pcb_a_ready, &mutex_ready);
         pcb_a_ready->estado = READY;
 
         // Pedir a memoria incializar estructuras
@@ -242,29 +241,23 @@ void new_a_ready(){
 	}
 }
 
-
-
 void ready_a_exec(){
 	while(1){
 		// 
         sem_wait(&cpu_libre);
 		// Espera a que new_a_ready se ejecute
 		sem_wait(&procesos_en_ready);
-		/*
-		Log Obligatorio
-		Actualizar para cuando utilicemos VRR y tengamos dos colas de Ready
-		*/
+		//Actualizar cuando tengamos VRR
         char* lista_pcbs_en_ready = obtener_elementos_cargados_en(colaREADY);
-        log_info(logger_kernel, "Cola Ready de algoritmo %s: %s", config_kernel.algoritmo_planificacion, lista_pcbs_en_ready); 
+        log_info(logger_kernel, "Cola Ready de algoritmo %s: %s", config_kernel.algoritmo_planificacion, lista_pcbs_en_ready); //OBLIGATORIO
         free(lista_pcbs_en_ready);	
 
         /* 
-		Añadir esto cuando tengamos desalojos por quantum
 		if(planificacion_detenida == 1){
             sem_wait(&pausar_ready_a_exec);
         } 
 		*/
-
+		
 		pthread_mutex_lock(&mutex_exec);
 		pcb_ejecutando = retirar_pcb_de_ready_segun_algoritmo();
 		pthread_mutex_unlock(&mutex_exec);
@@ -330,7 +323,6 @@ t_pcb* retirar_pcb_de(t_queue* cola, pthread_mutex_t* mutex){
     
 	return pcb;
 }
-
 
 char* obtener_nombre_estado(t_estado_proceso estado){
     switch(estado){
