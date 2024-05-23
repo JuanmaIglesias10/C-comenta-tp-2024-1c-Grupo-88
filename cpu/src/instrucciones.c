@@ -118,7 +118,6 @@ void ejecutar_set32(char* registro, char* char_valor_recibido){
 
 uint8_t  buscar_valor_registro8(void* registro) {
 	uint8_t  valorLeido8;
-
 	if(strcmp(registro, "AX") == 0){
 		valorLeido8 = registros_cpu->AX;
         return valorLeido8;
@@ -164,7 +163,6 @@ uint32_t  buscar_valor_registro32(void* registro){
 
 }
 void ejecutar_sum(char* reg_dest, char* reg_origen) {
-    
     if(strcmp(reg_dest, "AX") == 0){
         uint8_t  valor_reg_origen = buscar_valor_registro8(reg_origen);
         registros_cpu->AX += valor_reg_origen;
@@ -205,7 +203,6 @@ void ejecutar_sub(char* reg_dest, char* reg_origen) {
     if(strcmp(reg_dest, "AX") == 0){
         uint8_t  valor_reg_origen = buscar_valor_registro8(reg_origen);
         registros_cpu->AX -= valor_reg_origen;
-        log_info(logger_cpu, "%d", registros_cpu->AX);
     }    
     else if(strcmp(reg_dest, "BX") == 0){
         uint8_t valor_reg_origen = buscar_valor_registro8(reg_origen);

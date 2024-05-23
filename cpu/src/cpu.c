@@ -113,6 +113,7 @@ void ejecutar_proceso(t_cde* cde){
         registros_cpu->PC++;
         t_buffer* buffer_recibido = recibir_buffer(fd_memoria);
         instruccion_a_ejecutar = leer_buffer_instruccion(buffer_recibido);
+        
         if (!instruccion_a_ejecutar) {
             log_error(logger_cpu, "Error al leer la instrucción del buffer recibido.");
             continue;
@@ -133,8 +134,7 @@ void ejecutar_instruccion(t_cde* cde, t_instruccion* instruccion_a_ejecutar){
         case SET:
             log_info(logger_cpu, "PID: %d - Ejecutando: %s - %s %s", cde->pid, obtener_nombre_instruccion(instruccion_a_ejecutar), instruccion_a_ejecutar->par1, instruccion_a_ejecutar->par2);
             // par2 = leerEnteroParametroInstruccion(2, instruccion_a_ejecutar);
-            int prueba = atoi(instruccion_a_ejecutar->par2);
-            if (prueba < 255){
+            if ( strcmp(instruccion_a_ejecutar->par1,"AX") == 0 || strcmp(instruccion_a_ejecutar->par1,"BX") == 0 || strcmp(instruccion_a_ejecutar->par1,"CX") == 0 || strcmp(instruccion_a_ejecutar->par1,"DX") == 0 ){
                 ejecutar_set8(instruccion_a_ejecutar->par1, instruccion_a_ejecutar->par2);
             } else {
                 ejecutar_set32(instruccion_a_ejecutar->par1, instruccion_a_ejecutar->par2);
