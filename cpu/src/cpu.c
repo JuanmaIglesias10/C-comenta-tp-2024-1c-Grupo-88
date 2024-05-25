@@ -154,7 +154,6 @@ void ejecutar_proceso(t_cde* cde){
         log_info(logger_cpu, "PID: %d - Volviendo a kernel por instruccion %s", cde->pid, obtener_nombre_instruccion(instruccion_a_ejecutar));
         desalojar_cde(cde, instruccion_a_ejecutar);
     }
-
 } 
 
 void ejecutar_instruccion(t_cde* cde, t_instruccion* instruccion_a_ejecutar){
@@ -306,6 +305,6 @@ void devolver_cde_a_kernel(t_cde* cde, t_instruccion* instruccion_a_ejecutar){
     }
 */
 
-    enviar_buffer(buffer, fd_cpu_dis);
+    enviar_buffer(buffer, fd_kernel_dis);
     destruir_buffer(buffer);
 }

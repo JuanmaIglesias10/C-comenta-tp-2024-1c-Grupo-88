@@ -238,7 +238,9 @@ void enviar_instruccion(){
 	buffer = crear_buffer();
 	agregar_buffer_instruccion(buffer, instruccion);
 	enviar_buffer(buffer, fd_cpu);
+	/* Para probar que se manden las instrucciones, NO BORRAR!
     log_info(logger_memoria,"%d %s %s %s %s %s",instruccion->codigo,instruccion->par1,instruccion->par2,instruccion->par4,instruccion->par4,instruccion->par5);
+	*/
 	destruir_buffer(buffer);
 }
 

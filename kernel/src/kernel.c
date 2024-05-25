@@ -294,7 +294,6 @@ void exec_a_finished(){
         pthread_mutex_lock(&mutex_procesos_globales);
 	    list_remove_element(procesos_globales, pcb);
 	    pthread_mutex_unlock(&mutex_procesos_globales);
-		log_info(logger_kernel, "soy un pijudo");
         // liberar_recursos_pcb(pcb);
         // liberar_archivos_pcb(pcb);
 
@@ -316,19 +315,8 @@ void exec_a_finished(){
         //     log_error(logger_kernel, "Memoria no logró liberar correctamente las estructuras");
         //     exit(1);
         // }
-        
     }
 }
-
-
-/*
-Para poder pasar procesos a finished, necesito tenerlos en la cola de finished
-Para tenerlos en la cola de finished, necesito agregarlos a la cola con un MOTIVO
-Como tenemos FIFO, el unico motivo para tenerlos en la cola de finished es tener, en la ultima instruccion, EXIT
-
-
-*/
-
 
 
 char* obtener_elementos_cargados_en(t_queue* cola){ //Hace un string de los pid en ready, de esta manera [1,2,3]
@@ -420,7 +408,7 @@ void enviar_cde_a_cpu(){
     enviar_buffer(buffer, fd_cpu_dis);
     destruir_buffer(buffer);
 
-    sem_post(&bin_recibir_cde); //ESTE SEMAFORO NI IDEA DONDE MAS ESTÁ
+    sem_post(&bin_recibir_cde); 
 }
 
 void recibir_cde_de_cpu(){
