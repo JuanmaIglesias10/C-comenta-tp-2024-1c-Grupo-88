@@ -81,5 +81,8 @@ int leer_buffer_int(t_buffer* buffer);
 t_instruccion* leer_buffer_instruccion(t_buffer* buffer);
 // Agregar instruccion al buffer
 void agregar_buffer_instruccion(t_buffer* buffer, t_instruccion* instruccion);
-
+//Agregar cde al buffer
+void agregar_buffer_cde(t_buffer* buffer, t_cde* cde);
+//Leer cde del buffer
+t_cde* leer_buffer_cde(t_buffer* buffer);
 #endif /* PROTOCOLO_H_ */

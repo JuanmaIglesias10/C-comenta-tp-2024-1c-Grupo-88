@@ -15,4 +15,8 @@ int fd_kernel_int;
 // Registro
 t_registros* registros_cpu;
 
+//Interrupciones
+int interrupcion = 0;
+
+
 // fin variables globales CPU

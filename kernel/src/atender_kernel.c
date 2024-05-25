@@ -41,25 +41,25 @@ void* atender_IO()
 
 
 //Este hace falta para recibir el cde
-void* atender_cpu_dis()
-{
-	while (1) {
-		mensajeKernelCpu cod_op = recibir_codOp(fd_cpu_dis);
-		switch (cod_op) {
-            case MENSAJE:
-            // t_buffer* buffer = buffer_create();
+// void* atender_cpu_dis()
+// {
+// 	while (1) {
+// 		mensajeKernelCpu cod_op = recibir_codOp(fd_cpu_dis);
+// 		switch (cod_op) {
+//             case MENSAJE:
+//             // t_buffer* buffer = buffer_create();
             
-            break;
-            case PAQUETE:
-                //
-                break;
-            default:
-                log_info(logger_kernel, "Se desconectó CPU (DISPATCH)");
-                break;
-            }
-	}
-    return NULL;
-}
+//             break;
+//             case PAQUETE:
+//                 //
+//                 break;
+//             default:
+//                 log_info(logger_kernel, "Se desconectó CPU (DISPATCH)");
+//                 break;
+//             }
+// 	}
+//     return NULL;
+// }
 
 void* atender_cpu_int()
 {

@@ -6,7 +6,7 @@
 void* atender_memoria();
 void* atender_IO();
 void* atender_cpu_int();
-void* atender_cpu_dis();
+// void* atender_cpu_dis();
 
 
 #endif

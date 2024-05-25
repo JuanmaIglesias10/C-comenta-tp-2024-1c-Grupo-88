@@ -238,7 +238,6 @@ void ejecutar_sub(char* reg_dest, char* reg_origen) {
 
 void ejecutar_jnz(void* registro, char* char_nro_instruccion) {
     uint32_t nro_instruccion = atoi(char_nro_instruccion);
-
     if(strcmp(registro, "AX") == 0) {
         if(registros_cpu->AX != 0)
             registros_cpu->PC = nro_instruccion;
@@ -300,6 +299,11 @@ void ejecutar_dormirIO(char* nombreInterfaz, uint8_t unidadesDeTiempo) {
        NO LO HAGO TODAVIA PORQUE NO TENEMOS MODELADOS COMO VAMOS A HACER LAS INTERRUPCIONES.
     */
 }
+
+void ejecutar_exit(){
+    interrupcion = 1;
+}
+
 
 uint8_t obtener_numero_interfaz(char* nombreInterfaz) {
     if(strcmp(nombreInterfaz, "Int1") == 0) { //Generica

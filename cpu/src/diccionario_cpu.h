@@ -32,6 +32,9 @@ extern int fd_kernel_int;
 // Registro
 extern t_registros* registros_cpu;
 
+//Interrupciones
+extern int interrupcion;
+
 // Fin variables globales CPU
 
 #endif /* DICCIONARIO_CPU_H_ */

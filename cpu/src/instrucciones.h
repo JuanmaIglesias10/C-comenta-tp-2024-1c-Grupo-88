@@ -14,6 +14,5 @@ uint32_t buscar_valor_registro32(void* registro);
 void* buscar_valor_registro(void* registro);
 void ejecutar_jnz(void* registro, char* char_nro_instruccion);
 void ejecutar_dormirIO(char* nombreInterfaz, uint8_t unidadesDeTiempo);
+void ejecutar_exit();
 uint8_t obtener_numero_interfaz(char* nombreInterfaz);
-
-void ejecutar_instruccion(t_cde* cde, t_instruccion* instruccion_a_ejecutar);

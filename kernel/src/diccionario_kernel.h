@@ -97,12 +97,15 @@ extern pthread_mutex_t mutex_procesos_globales;
 extern pthread_mutex_t mutex_ready;
 extern pthread_mutex_t mutex_exec;
 extern pthread_mutex_t mutex_pcb_en_ejecucion;
+extern pthread_mutex_t mutex_finalizados;
 
 
 extern sem_t procesos_NEW;
 extern sem_t cpu_libre;
 extern sem_t procesos_en_ready;
 extern sem_t aviso_exec;
+extern sem_t bin_recibir_cde;
+extern sem_t procesos_en_exit;
 
 #endif 
 

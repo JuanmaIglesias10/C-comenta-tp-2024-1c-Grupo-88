@@ -211,14 +211,17 @@ void agregar_buffer_string(t_buffer* buffer, char* string) {
 } // OK
 
 void agregar_buffer_registros(t_buffer* buffer, t_registros* registros){
+	agregar_buffer_uint32(buffer, registros->PC);
 	agregar_buffer_uint8(buffer, registros->AX);
 	agregar_buffer_uint8(buffer, registros->BX);
 	agregar_buffer_uint8(buffer, registros->CX);
 	agregar_buffer_uint8(buffer, registros->DX);
-	agregar_buffer_uint8(buffer, registros->AX);
-	agregar_buffer_uint8(buffer, registros->BX);
-	agregar_buffer_uint8(buffer, registros->CX);
-	agregar_buffer_uint8(buffer, registros->DX);
+	agregar_buffer_uint32(buffer, registros->EAX);
+	agregar_buffer_uint32(buffer, registros->EBX);
+	agregar_buffer_uint32(buffer, registros->ECX);
+	agregar_buffer_uint32(buffer, registros->EDX);
+	agregar_buffer_uint32(buffer, registros->SI);
+	agregar_buffer_uint32(buffer, registros->DI);
 }
 
 t_registros* leer_buffer_registros(t_buffer* buffer){
@@ -292,4 +295,16 @@ void agregar_buffer_instruccion(t_buffer* buffer, t_instruccion* instruccion){
 		agregar_buffer_string(buffer, instruccion->par5);
 	else
 		agregar_buffer_string(buffer, "");
+}
+
+void agregar_buffer_cde(t_buffer* buffer, t_cde* cde){
+	agregar_buffer_uint32(buffer, cde->pid);
+	agregar_buffer_registros(buffer, cde->registros);
+}
+
+t_cde* leer_buffer_cde(t_buffer* buffer){
+	t_cde* cde = malloc(sizeof(t_cde));
+	cde->pid = leer_buffer_uint32(buffer);
+	cde->registros = leer_buffer_registros(buffer);
+	return cde;
 }

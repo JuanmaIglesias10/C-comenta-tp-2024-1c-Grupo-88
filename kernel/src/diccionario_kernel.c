@@ -30,8 +30,12 @@ pthread_mutex_t mutex_procesos_globales;
 pthread_mutex_t mutex_ready;
 pthread_mutex_t mutex_exec;
 pthread_mutex_t mutex_pcb_en_ejecucion;
+pthread_mutex_t mutex_finalizados;
 
 sem_t procesos_NEW;
 sem_t cpu_libre;
 sem_t procesos_en_ready;
 sem_t aviso_exec;
+sem_t bin_recibir_cde;
+sem_t procesos_en_exit;
+

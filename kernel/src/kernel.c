@@ -54,7 +54,7 @@ void inicializar_conexiones(){
 	pthread_detach(hilo_IO);
 
 	pthread_t hilo_cpu_dis;
-	pthread_create(&hilo_cpu_dis, NULL, (void*)atender_cpu_dis, NULL);
+	pthread_create(&hilo_cpu_dis, NULL, (void*)recibir_cde_de_cpu, NULL);
 	pthread_detach(hilo_cpu_dis);
 
 	pthread_t hilo_cpu_int;
@@ -80,10 +80,13 @@ void inicializar_semaforos(){
 	pthread_mutex_init(&mutex_procesos_globales, NULL);
 	pthread_mutex_init(&mutex_exec, NULL);
 	pthread_mutex_init(&mutex_pcb_en_ejecucion, NULL);
+	pthread_mutex_init(&mutex_finalizados, NULL);
 	sem_init(&cpu_libre, 0, 1);
 	sem_init(&procesos_en_ready, 0, 0);
 	sem_init(&procesos_NEW, 0, 0);
 	sem_init(&aviso_exec, 0, 0); //Inicia en 0, posteado por ready_a_exec
+	sem_init(&bin_recibir_cde, 0, 0); //Inicia en 0, posteado por ready_a_exec
+	sem_init(&procesos_en_exit, 0, 0); //Inicia en 0, posteado por ready_a_exec
 
 }
 
@@ -205,10 +208,14 @@ void inicializar_planificadores(){
 }
 
 void inicializar_largo_plazo(){
-	pthread_t planificadorLargoPlazo;
-	pthread_create(&planificadorLargoPlazo, NULL, (void*)new_a_ready, NULL);
-	pthread_detach(planificadorLargoPlazo);
+	pthread_t hiloNew;
+	pthread_t hiloFinished;
+
+	pthread_create(&hiloNew, NULL, (void*)new_a_ready, NULL);
+	pthread_detach(hiloNew);
 	
+	pthread_create(&hiloFinished, NULL, (void*)exec_a_finished, NULL);
+	pthread_detach(hiloFinished);
 } 
 
 void inicializar_corto_plazo(){
@@ -277,6 +284,52 @@ void ready_a_exec(){
         enviar_cde_a_cpu();
 	}
 }
+
+void exec_a_finished(){
+	while(1){
+        sem_wait(&procesos_en_exit);
+
+        t_pcb* pcb = retirar_pcb_de(colaFINISHED, &mutex_finalizados); //ok
+
+        pthread_mutex_lock(&mutex_procesos_globales);
+	    list_remove_element(procesos_globales, pcb);
+	    pthread_mutex_unlock(&mutex_procesos_globales);
+		log_info(logger_kernel, "soy un pijudo");
+        // liberar_recursos_pcb(pcb);
+        // liberar_archivos_pcb(pcb);
+
+        // // Solicitar a memoria liberar estructuras
+        // enviar_codigo(socket_memoria, FINALIZAR_PROCESO_SOLICITUD);
+
+        // t_buffer* buffer = crear_buffer_nuestro();
+        // buffer_write_uint32(buffer, pcb->cde->pid);
+        // enviar_buffer(buffer, socket_memoria);
+        // destruir_buffer_nuestro(buffer);
+
+        // mensajeKernelMem rta_memoria = recibir_codigo(socket_memoria);
+
+        // if(rta_memoria == FINALIZAR_PROCESO_OK){
+        //     log_info(logger_kernel, "PID: %d - Destruir PCB", pcb->cde->pid);
+        //     destruir_pcb(pcb);
+        // }
+        // else{
+        //     log_error(logger_kernel, "Memoria no logró liberar correctamente las estructuras");
+        //     exit(1);
+        // }
+        
+    }
+}
+
+
+/*
+Para poder pasar procesos a finished, necesito tenerlos en la cola de finished
+Para tenerlos en la cola de finished, necesito agregarlos a la cola con un MOTIVO
+Como tenemos FIFO, el unico motivo para tenerlos en la cola de finished es tener, en la ultima instruccion, EXIT
+
+
+*/
+
+
 
 char* obtener_elementos_cargados_en(t_queue* cola){ //Hace un string de los pid en ready, de esta manera [1,2,3]
     char* aux = string_new();
@@ -355,8 +408,9 @@ void enviar_cde_a_cpu(){
 
     t_buffer* buffer = crear_buffer();
     pthread_mutex_lock(&mutex_pcb_en_ejecucion); //ESTE SEMAFORO NI IDEA DONDE MAS ESTÁ
-	agregar_buffer_uint32(buffer, pcb_ejecutando->cde->pid);
-	agregar_buffer_registros(buffer, pcb_ejecutando->cde->registros);
+	agregar_buffer_cde(buffer, pcb_ejecutando->cde);
+	// agregar_buffer_uint32(buffer, pcb_ejecutando->cde->pid);
+	// agregar_buffer_registros(buffer, pcb_ejecutando->cde->registros);
     pthread_mutex_unlock(&mutex_pcb_en_ejecucion);
 
     // if(strcmp(config_kernel.algoritmo, "RR") == 0){
@@ -366,7 +420,57 @@ void enviar_cde_a_cpu(){
     enviar_buffer(buffer, fd_cpu_dis);
     destruir_buffer(buffer);
 
-    // sem_post(&bin_recibir_cde); //ESTE SEMAFORO NI IDEA DONDE MAS ESTÁ
+    sem_post(&bin_recibir_cde); //ESTE SEMAFORO NI IDEA DONDE MAS ESTÁ
+}
+
+void recibir_cde_de_cpu(){
+	while(1){
+        sem_wait(&bin_recibir_cde);
+        t_buffer* buffer = recibir_buffer(fd_cpu_dis);
+        pthread_mutex_lock(&mutex_exec);
+        destruir_cde(pcb_ejecutando->cde);        
+        pcb_ejecutando->cde = leer_buffer_cde(buffer);
+        pthread_mutex_unlock(&mutex_exec);
+
+        t_instruccion* instruccion_actual = leer_buffer_instruccion(buffer);
+        /*
+        if(strcmp(config_kernel.algoritmo, "RR") == 0 && pcb_en_ejecucion->fin_q && (instruccion_actual->codigo == MOV_IN || instruccion_actual->codigo == MOV_OUT)){
+            log_info(logger_kernel, "PID: %d - Desalojado por fin de Quantum", pcb_en_ejecucion->cde->pid);
+            enviar_de_exec_a_ready();
+            destruir_instruccion(instruccion_actual);
+        }
+
+        else if(instruccion_actual->codigo == MOV_IN || instruccion_actual->codigo == MOV_OUT){
+            uint32_t nro_pagina = buffer_read_uint32(buffer);
+            pthread_t hilo_page_fault;
+            pthread_create(&hilo_page_fault, NULL, (void *) recibir_page_fault, (void *) &nro_pagina);
+            pthread_detach(hilo_page_fault);
+            destruir_instruccion(instruccion_actual);
+        }
+        else if(instruccion_actual->codigo == F_READ || instruccion_actual->codigo == F_WRITE){
+            uint8_t motivo = buffer_read_uint8(buffer);
+            if(motivo == HAY_PAGE_FAULT){
+                uint32_t nro_pagina = buffer_read_uint32(buffer);          
+                pthread_t hilo_page_fault;
+                pthread_create(&hilo_page_fault, NULL, (void *) recibir_page_fault, (void *) &nro_pagina);
+                pthread_detach(hilo_page_fault);
+                destruir_instruccion(instruccion_actual);
+                }
+            else if(motivo == DIRECCION_FISICA_OK){
+                uint32_t dir_fisica = buffer_read_uint32(buffer);
+                uint32_t nro_pagina = buffer_read_uint32(buffer);
+                instruccion_actual->par2 = string_itoa(dir_fisica);
+                instruccion_actual->par3 = string_itoa(nro_pagina);
+                evaluar_instruccion(instruccion_actual);
+            }
+        }
+        else{
+		}*/
+        evaluar_instruccion(instruccion_actual);
+        
+        
+        destruir_buffer(buffer);
+    }
 }
 
 void recibir_dormirIO() {
@@ -388,4 +492,48 @@ void recibir_dormirIO() {
 
 		// ¿¿Algo mas??
 	}
+}
+
+
+void evaluar_instruccion(t_instruccion* instruccion_actual){
+    switch(instruccion_actual->codigo){    
+        case EXIT:
+            // if(strcmp(config_kernel.algoritmo, "RR") == 0){
+            //     pcb_en_ejecucion->flag_clock = true;
+            // }
+            agregar_a_cola_finished("SUCCESS");
+            destruir_instruccion(instruccion_actual);
+            break;
+        default: // es por fin de quantum
+            // if(strcmp(config_kernel.algoritmo, "RR") == 0)
+            //     log_info(logger_kernel, "PID: %d - Desalojado por fin de Quantum", pcb_en_ejecucion->cde->pid);
+            // else if(strcmp(config_kernel.algoritmo, "PRIORIDADES") == 0)
+            //     log_info(logger_kernel, "PID: %d - Desalojado por un proceso de mayor prioridad", pcb_en_ejecucion->cde->pid);
+            // enviar_de_exec_a_ready();
+            // destruir_instruccion(instruccion_actual);
+            break;
+    }
+}
+
+
+void agregar_a_cola_finished(char* razon){
+    // sem_wait(&cont_exec);
+    
+    // if(planificacion_detenida == 1){
+    //     sem_wait(&pausar_exec_a_finalizado);
+    // }
+
+	agregar_pcb_a(colaFINISHED, pcb_ejecutando, &mutex_finalizados);
+    pcb_ejecutando->estado = EXIT;
+
+	log_info(logger_kernel, "PID: %d - Estado anterior: %s - Estado actual: %s", pcb_ejecutando->cde->pid, "EXEC", "FINISHED"); //OBLIGATORIO
+	log_info(logger_kernel, "Finaliza el proceso %d - Motivo: %s", pcb_ejecutando->cde->pid, razon); // OBLIGATORIO
+	
+    pthread_mutex_lock(&mutex_pcb_en_ejecucion);
+    pcb_ejecutando = NULL;
+    pthread_mutex_unlock(&mutex_pcb_en_ejecucion);
+
+    sem_post(&cpu_libre); // se libera el procesador
+	sem_post(&procesos_en_exit); // se agrega uno a procesosExit
+    // sem_post(&grado_de_multiprogramacion); // Se libera 1 grado de multiprog
 }

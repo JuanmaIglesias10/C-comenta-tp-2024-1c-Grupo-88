@@ -34,6 +34,7 @@ void agregar_pcb_a(t_queue* cola, t_pcb* pcb_a_agregar, pthread_mutex_t* mutex);
 
 // Planificacion a largo plazo
 void new_a_ready();
+void exec_a_finished();
 
 
 // Planificacion a corto plazo
@@ -41,8 +42,10 @@ void new_a_ready();
 void ready_a_exec();
 char* obtener_elementos_cargados_en(t_queue* );
 void enviar_cde_a_cpu();
+void recibir_cde_de_cpu();
+void evaluar_instruccion(t_instruccion* instruccion_actual);
 
-
+void agregar_a_cola_finished(char* razon);
 
 
 

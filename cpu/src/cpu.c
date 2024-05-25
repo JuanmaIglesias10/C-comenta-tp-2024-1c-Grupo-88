@@ -80,7 +80,6 @@ void inicializar_registros(){
     registros_cpu->DI = 0;
 }
 
-
 void cargar_registros(t_cde* cde){
     registros_cpu->PC = cde->registros->PC;
     registros_cpu->AX = cde->registros->AX;
@@ -91,14 +90,28 @@ void cargar_registros(t_cde* cde){
     registros_cpu->EBX = cde->registros->EBX;
     registros_cpu->ECX = cde->registros->ECX;
     registros_cpu->EDX = cde->registros->EDX;
-    registros_cpu->EDX = cde->registros->SI;
-    registros_cpu->EDX = cde->registros->DI;
+    registros_cpu->SI = cde->registros->SI;
+    registros_cpu->DI = cde->registros->DI;
+}
+
+void guardar_cde(t_cde* cde){
+    cde->registros->PC = registros_cpu->PC;
+    cde->registros->AX = registros_cpu->AX;
+    cde->registros->BX = registros_cpu->BX;
+    cde->registros->CX = registros_cpu->CX;
+    cde->registros->DX = registros_cpu->DX;
+    cde->registros->EAX = registros_cpu->EAX;
+    cde->registros->EBX = registros_cpu->EBX;
+    cde->registros->ECX = registros_cpu->ECX;
+    cde->registros->EDX = registros_cpu->EDX;
+    cde->registros->SI = registros_cpu->SI;
+    cde->registros->DI = registros_cpu->DI;
 }
 
 void ejecutar_proceso(t_cde* cde){
 	cargar_registros(cde);
     t_instruccion* instruccion_a_ejecutar;
-    while(1){ //Por ahora no tenemos interrupciones, interrupciones por consola ni desalojo
+    while(interrupcion != 1){
 
         //Pedir a memoria la instruccion pasandole el pid y el pc
         log_info(logger_cpu, "PID: %d - FETCH - Program Counter: %d", cde->pid, registros_cpu->PC); //Obligatorio, si lo quitas te pega facu
@@ -119,12 +132,29 @@ void ejecutar_proceso(t_cde* cde){
             continue;
         }
         destruir_buffer(buffer_recibido);
+        /*
+        PARA CHEQUEAR QUE ESTOY RECIBIENDO LA INSTRUCCIONES, NO QUITAR!!
         log_info(logger_cpu,"%d %s %s %s %s %s",instruccion_a_ejecutar->codigo,instruccion_a_ejecutar->par1,instruccion_a_ejecutar->par2,instruccion_a_ejecutar->par4,instruccion_a_ejecutar->par4,instruccion_a_ejecutar->par5	);
+        */
+        
+
         // pthread_mutex_lock(&mutex_instruccion_actualizada); Mirar luego esto, por ahora que la chupe
         // instruccion_actualizada = instruccion_a_ejecutar->codigo;
         // pthread_mutex_unlock(&mutex_instruccion_actualizada);
         ejecutar_instruccion(cde, instruccion_a_ejecutar);
     }
+    if(interrupcion){
+        interrupcion = 0;
+        // pthread_mutex_lock(&mutex_interrupcion_consola);
+        // interrupcion_consola = 0;
+        // pthread_mutex_unlock(&mutex_interrupcion_consola);
+        // pthread_mutex_lock(&mutex_realizar_desalojo);
+        // realizar_desalojo = 0;
+        // pthread_mutex_unlock(&mutex_realizar_desalojo);
+        log_info(logger_cpu, "PID: %d - Volviendo a kernel por instruccion %s", cde->pid, obtener_nombre_instruccion(instruccion_a_ejecutar));
+        desalojar_cde(cde, instruccion_a_ejecutar);
+    }
+
 } 
 
 void ejecutar_instruccion(t_cde* cde, t_instruccion* instruccion_a_ejecutar){
@@ -214,8 +244,8 @@ void ejecutar_instruccion(t_cde* cde, t_instruccion* instruccion_a_ejecutar){
         case IO_FS_READ:
             //
         case EXIT:
-            //log_info(logger_cpu, "PID: %d - Ejecutando: %s", cde->pid, obtener_nombre_instruccion(instruccion_a_ejecutar));
-            //ejecutar_exit();
+            log_info(logger_cpu, "PID: %d - Ejecutando: %s", cde->pid, obtener_nombre_instruccion(instruccion_a_ejecutar));
+            ejecutar_exit();
             break;
         default:
             log_warning(logger_cpu, "Instruccion no reconocida");
@@ -223,11 +253,59 @@ void ejecutar_instruccion(t_cde* cde, t_instruccion* instruccion_a_ejecutar){
     }
 }
 
-void destruir_instruccion(t_instruccion* instruccion){
-	free(instruccion->par1);
-	free(instruccion->par2);
-	free(instruccion->par3);
-	free(instruccion->par4);
-	free(instruccion->par5);
-	free(instruccion);
+void desalojar_cde(t_cde* cde, t_instruccion* instruccion_a_ejecutar){
+    
+    guardar_cde(cde); //cargar registros de cpu en el cde
+    devolver_cde_a_kernel(cde, instruccion_a_ejecutar);
+    destruir_cde(cde);
+    
+    // pthread_mutex_lock(&mutex_cde_ejecutando);
+    // pid_de_cde_ejecutando = UINT32_MAX;
+    // pthread_mutex_unlock(&mutex_cde_ejecutando);
+
+    // pthread_mutex_lock(&mutex_instruccion_actualizada);
+    // instruccion_actualizada = NULO_INST;
+    // pthread_mutex_unlock(&mutex_instruccion_actualizada);
+
+    destruir_instruccion(instruccion_a_ejecutar);
+}
+
+void devolver_cde_a_kernel(t_cde* cde, t_instruccion* instruccion_a_ejecutar){
+
+    t_buffer* buffer = crear_buffer();
+    agregar_buffer_cde(buffer, cde);
+    agregar_buffer_instruccion(buffer, instruccion_a_ejecutar);
+/*
+    // caso de page fault, tiene que volver a kernel con el nroPagina que genero el page fault
+    if(instruccion_a_ejecutar->codigo == MOV_IN){
+        uint32_t dirLogica = leerEnteroParametroInstruccion(2, instruccion_a_ejecutar);
+        uint32_t nroPagina = obtener_numero_pagina(dirLogica);
+        buffer_write_uint32(buffer, nroPagina);
+    }
+    else if(instruccion_a_ejecutar->codigo == MOV_OUT){
+        uint32_t dirLogica = leerEnteroParametroInstruccion(1, instruccion_a_ejecutar);
+        uint32_t nroPagina = obtener_numero_pagina(dirLogica);
+        buffer_write_uint32(buffer, nroPagina);
+    }
+    // caso de F_WRITE y F_READ, devuelve a kernel la direccion fisica
+    else if(instruccion_a_ejecutar->codigo == F_READ || instruccion_a_ejecutar->codigo == F_WRITE){
+        uint32_t dirLogica = leerEnteroParametroInstruccion(2, instruccion_a_ejecutar);
+        if(pf_con_funcion_fs){
+            uint32_t nroPagina = obtener_numero_pagina(dirLogica);
+            buffer_write_uint8(buffer, HAY_PAGE_FAULT);
+            buffer_write_uint32(buffer, nroPagina);
+            pf_con_funcion_fs = 0;
+        }
+        else{
+            uint32_t nroPagina = obtener_numero_pagina(dirLogica);
+            uint32_t dirFisica = calcular_direccion_fisica(dirLogica, cde);
+            buffer_write_uint8(buffer, DIRECCION_FISICA_OK);
+            buffer_write_uint32(buffer, dirFisica);
+            buffer_write_uint32(buffer, nroPagina);
+        }
+    }
+*/
+
+    enviar_buffer(buffer, fd_cpu_dis);
+    destruir_buffer(buffer);
 }

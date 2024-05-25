@@ -26,9 +26,10 @@ void* atender_kernel_dis()
 		switch (cod_op) {
             case EJECUTAR_PROCESO:
                 t_buffer* buffer = recibir_buffer(fd_kernel_dis);
-                t_cde* cde = malloc(sizeof(t_cde));
-                cde->pid = leer_buffer_uint32(buffer);
-                cde->registros = leer_buffer_registros(buffer);	
+                t_cde* cde = leer_buffer_cde(buffer);
+                // t_cde* cde = malloc(sizeof(t_cde));
+                // cde->pid = leer_buffer_uint32(buffer);
+                // cde->registros = leer_buffer_registros(buffer);	
                 destruir_buffer(buffer);
                 ejecutar_proceso(cde);
                 break;

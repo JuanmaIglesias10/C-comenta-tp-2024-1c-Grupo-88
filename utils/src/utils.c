@@ -35,3 +35,18 @@ void enviar_codOp(int fd_servidor , uint8_t codOp){
 	send(fd_servidor, &codOp , sizeof(uint8_t) , 0);
 }
 
+
+
+void destruir_cde(t_cde* cde){
+    free(cde->registros);
+    free(cde);
+}
+
+void destruir_instruccion(t_instruccion* instruccion){
+	free(instruccion->par1);
+	free(instruccion->par2);
+	free(instruccion->par3);
+	free(instruccion->par4);
+	free(instruccion->par5);
+	free(instruccion);
+}
