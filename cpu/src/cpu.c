@@ -167,7 +167,7 @@ void ejecutar_proceso(t_cde* cde){
         pthread_mutex_lock(&mutex_realizar_desalojo);
         realizar_desalojo = 0;
         pthread_mutex_unlock(&mutex_realizar_desalojo);
-        if(algoritmo_planificacion == 1) // significa que es PRIORIDADES
+        if(algoritmo_planificacion == 1) // significa que es RR
             log_info(logger_cpu, "PID: %d - Desalojado por fin de Quantum", cde->pid); 
         else if(algoritmo_planificacion == 2) // significa que es VRR
             log_info(logger_cpu, "PID: %d - Desalojado por fin de Quantum VRR", cde->pid);
@@ -187,16 +187,17 @@ void ejecutar_instruccion(t_cde* cde, t_instruccion* instruccion_a_ejecutar){
             } else {
                 ejecutar_set32(instruccion_a_ejecutar->par1, instruccion_a_ejecutar->par2);
             }
-            // if (interruption == 0 && realizar_desalojo == 0 && interrupcion_consola == 0)
-            destruir_instruccion(instruccion_a_ejecutar);
+            if (interrupcion == 0 && realizar_desalojo == 0)
+                destruir_instruccion(instruccion_a_ejecutar);
             break;
         case MOV_IN:
             // log_info(logger_cpu, "PID: %d - Ejecutando: %s - %s %s", cde->pid, obtener_nombre_instruccion(instruccion_a_ejecutar), instruccion_a_ejecutar->par1, instruccion_a_ejecutar->par2);
             // par2 = leerEnteroParametroInstruccion(2, instruccion_a_ejecutar);
             // ejecutar_mov_in(instruccion_a_ejecutar->par1, par2, cde);
-            // if (interruption == 0 && realizar_desalojo == 0 && interrupcion_consola == 0)
-            //     destruir_instruccion(instruccion_a_ejecutar);
-            // break;
+                        if (interrupcion == 0 && realizar_desalojo == 0)
+
+                destruir_instruccion(instruccion_a_ejecutar);
+            break;
         case MOV_OUT:
             // log_info(logger_cpu, "PID: %d - Ejecutando: %s - %s %s", cde->pid, obtener_nombre_instruccion(instruccion_a_ejecutar), instruccion_a_ejecutar->par1, instruccion_a_ejecutar->par2);
             // par1 = leerEnteroParametroInstruccion(1, instruccion_a_ejecutar);
@@ -207,20 +208,20 @@ void ejecutar_instruccion(t_cde* cde, t_instruccion* instruccion_a_ejecutar){
         case SUM:
             log_info(logger_cpu, "PID: %d - Ejecutando: %s - %s %s", cde->pid, obtener_nombre_instruccion(instruccion_a_ejecutar), instruccion_a_ejecutar->par1, instruccion_a_ejecutar->par2);
             ejecutar_sum(instruccion_a_ejecutar->par1, instruccion_a_ejecutar->par2);
-            // if (interruption == 0 && realizar_desalojo == 0 && interrupcion_consola == 0)
-                destruir_instruccion(instruccion_a_ejecutar);
+            if (interrupcion == 0 && realizar_desalojo == 0)
+                 destruir_instruccion(instruccion_a_ejecutar);
             break;
         case SUB:
             log_info(logger_cpu, "PID: %d - Ejecutando: %s - %s %s", cde->pid, obtener_nombre_instruccion(instruccion_a_ejecutar), instruccion_a_ejecutar->par1, instruccion_a_ejecutar->par2);
             ejecutar_sub(instruccion_a_ejecutar->par1, instruccion_a_ejecutar->par2);
-            //if (interruption == 0 && realizar_desalojo == 0 && interrupcion_consola == 0)
+              if (interrupcion == 0 && realizar_desalojo == 0)
                 destruir_instruccion(instruccion_a_ejecutar);
             break;
         case JNZ:
             log_info(logger_cpu, "PID: %d - Ejecutando: %s - %s %s", cde->pid, obtener_nombre_instruccion(instruccion_a_ejecutar), instruccion_a_ejecutar->par1, instruccion_a_ejecutar->par2);
             // par2 = leerEnteroParametroInstruccion(2, instruccion_a_ejecutar);
             ejecutar_jnz(instruccion_a_ejecutar->par1, instruccion_a_ejecutar->par2);
-            // if (interruption == 0 && realizar_desalojo == 0 && interrupcion_consola == 0)
+            if (interrupcion == 0 && realizar_desalojo == 0)
                 destruir_instruccion(instruccion_a_ejecutar);
             break;
         case RESIZE:
@@ -292,6 +293,18 @@ void devolver_cde_a_kernel(t_cde* cde, t_instruccion* instruccion_a_ejecutar){
 
     t_buffer* buffer = crear_buffer();
     agregar_buffer_cde(buffer, cde);
+    // if(strcmp(instruccion_a_ejecutar->par1, "") == 0 ){
+    //     instruccion_a_ejecutar->par1 = NULL;
+    // } else if (strcmp(instruccion_a_ejecutar->par2, "") == 0){
+    //     instruccion_a_ejecutar->par2 = NULL;
+    // } else if (strcmp(instruccion_a_ejecutar->par3, "") == 0){
+    //     instruccion_a_ejecutar->par3 = NULL;
+    // } else if (strcmp(instruccion_a_ejecutar->par4, "") == 0){
+    //     instruccion_a_ejecutar->par4 = NULL;
+    // }
+    //  else if (strcmp(instruccion_a_ejecutar->par5, "") == 0){
+    //     instruccion_a_ejecutar->par5 = NULL;
+    // }
     agregar_buffer_instruccion(buffer, instruccion_a_ejecutar);
 /*
     // caso de page fault, tiene que volver a kernel con el nroPagina que genero el page fault

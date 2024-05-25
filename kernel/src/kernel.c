@@ -582,8 +582,6 @@ void controlar_tiempo_de_ejecucion(){
 
 }
 
-
-
 void enviar_de_exec_a_ready(){
     // sem_wait(&cont_exec);
     // if(planificacion_detenida == 1){
