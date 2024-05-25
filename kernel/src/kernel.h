@@ -47,6 +47,10 @@ void evaluar_instruccion(t_instruccion* instruccion_actual);
 
 void agregar_a_cola_finished(char* razon);
 
+void prender_quantum();
+
+void controlar_tiempo_de_ejecucion();
+void enviar_de_exec_a_ready();
 
 
 #endif

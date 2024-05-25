@@ -10,6 +10,8 @@ void inicializar_cpu();
 
 void inicializar_config();
 
+void inicializar_semaforos();
+
 void inicializar_conexiones();
 
 void inicializar_registros();

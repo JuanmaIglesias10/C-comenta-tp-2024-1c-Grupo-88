@@ -12,6 +12,7 @@ void inicializar_cpu() {
 	inicializar_config();
     inicializar_registros();
 	inicializar_conexiones();
+    inicializar_semaforos();
 
 }
 
@@ -23,6 +24,11 @@ void inicializar_config(){
 	config_cpu.puerto_escucha_interrupt = config_get_int_value(config, "PUERTO_ESCUCHA_INTERRUPT");
 	config_cpu.cantidad_entradas_tlb = config_get_int_value(config, "CANTIDAD_ENTRADAS_TLB");
 	config_cpu.algoritmo_tlb = config_get_string_value(config, "ALGORITMO_TLB");
+}
+
+void inicializar_semaforos(){
+    pthread_mutex_init(&mutex_realizar_desalojo, NULL);
+    pthread_mutex_init(&mutex_cde_ejecutando,NULL);
 }
 
 void inicializar_conexiones(){
@@ -111,7 +117,7 @@ void guardar_cde(t_cde* cde){
 void ejecutar_proceso(t_cde* cde){
 	cargar_registros(cde);
     t_instruccion* instruccion_a_ejecutar;
-    while(interrupcion != 1){
+    while(interrupcion != 1 && realizar_desalojo != 1){
 
         //Pedir a memoria la instruccion pasandole el pid y el pc
         log_info(logger_cpu, "PID: %d - FETCH - Program Counter: %d", cde->pid, registros_cpu->PC); //Obligatorio, si lo quitas te pega facu
@@ -148,10 +154,23 @@ void ejecutar_proceso(t_cde* cde){
         // pthread_mutex_lock(&mutex_interrupcion_consola);
         // interrupcion_consola = 0;
         // pthread_mutex_unlock(&mutex_interrupcion_consola);
-        // pthread_mutex_lock(&mutex_realizar_desalojo);
-        // realizar_desalojo = 0;
-        // pthread_mutex_unlock(&mutex_realizar_desalojo);
+        pthread_mutex_lock(&mutex_realizar_desalojo);
+        realizar_desalojo = 0;
+        pthread_mutex_unlock(&mutex_realizar_desalojo);
         log_info(logger_cpu, "PID: %d - Volviendo a kernel por instruccion %s", cde->pid, obtener_nombre_instruccion(instruccion_a_ejecutar));
+        desalojar_cde(cde, instruccion_a_ejecutar);
+    } else if (realizar_desalojo){
+        interrupcion = 0;
+        // pthread_mutex_lock(&mutex_interrupcion_consola);
+        // interrupcion_consola = 0;
+        // pthread_mutex_unlock(&mutex_interrupcion_consola);
+        pthread_mutex_lock(&mutex_realizar_desalojo);
+        realizar_desalojo = 0;
+        pthread_mutex_unlock(&mutex_realizar_desalojo);
+        if(algoritmo_planificacion == 1) // significa que es PRIORIDADES
+            log_info(logger_cpu, "PID: %d - Desalojado por fin de Quantum", cde->pid); 
+        else if(algoritmo_planificacion == 2) // significa que es VRR
+            log_info(logger_cpu, "PID: %d - Desalojado por fin de Quantum VRR", cde->pid);
         desalojar_cde(cde, instruccion_a_ejecutar);
     }
 } 

@@ -41,7 +41,7 @@ typedef struct{
 	// t_list* recursos_asignados;
 	// t_list* recursos_solicitados;
 	// bool flag_clock;
-	// bool fin_q;
+	bool fin_q;
 }t_pcb;
 
 typedef enum{
@@ -106,6 +106,8 @@ extern sem_t procesos_en_ready;
 extern sem_t aviso_exec;
 extern sem_t bin_recibir_cde;
 extern sem_t procesos_en_exit;
+extern sem_t sem_iniciar_quantum;
+extern sem_t sem_reiniciar_quantum;
 
 #endif 
 

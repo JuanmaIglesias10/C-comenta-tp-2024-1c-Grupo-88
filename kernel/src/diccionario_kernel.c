@@ -38,4 +38,6 @@ sem_t procesos_en_ready;
 sem_t aviso_exec;
 sem_t bin_recibir_cde;
 sem_t procesos_en_exit;
+sem_t sem_iniciar_quantum;
+sem_t sem_reiniciar_quantum;
 
