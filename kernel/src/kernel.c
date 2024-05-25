@@ -15,6 +15,28 @@ void inicializar_kernel(){
 	inicializar_conexiones();
 	inicializar_listas_colas();
 	inicializar_semaforos();
+
+    enviar_codOp(fd_cpu_dis, ALGORITMO_PLANIFICACION);
+    t_buffer* buffer = crear_buffer();
+    // si el algoritmo es FIFO envia 0
+    // si el algoritmo es ROUND ROBIN envia un 1
+    // si el algoritmo es VIRTUAL ROUND ROBBIN envia un 2
+    if(strcmp(config_kernel.algoritmo_planificacion, "FIFO") == 0) {
+        agregar_buffer_uint32(buffer, 0);
+        }
+    else if(strcmp(config_kernel.algoritmo_planificacion, "RR") == 0){
+        agregar_buffer_uint32(buffer, 1);
+    }
+    else{
+        agregar_buffer_uint32(buffer, 2);
+        }
+    enviar_buffer(buffer, fd_cpu_dis);
+    destruir_buffer(buffer);
+
+    if(strcmp(config_kernel.algoritmo_planificacion, "RR") == 0 || strcmp(config_kernel.algoritmo_planificacion, "VRR") == 0){
+        prender_quantum();
+    }
+
 	inicializar_planificadores();
 
 	
@@ -87,7 +109,8 @@ void inicializar_semaforos(){
 	sem_init(&aviso_exec, 0, 0); //Inicia en 0, posteado por ready_a_exec
 	sem_init(&bin_recibir_cde, 0, 0); //Inicia en 0, posteado por ready_a_exec
 	sem_init(&procesos_en_exit, 0, 0); //Inicia en 0, posteado por ready_a_exec
-
+    sem_init(&sem_iniciar_quantum, 0, 0);
+    sem_init(&sem_reiniciar_quantum, 0, 1);
 }
 
 t_list* ejecutar_script(char* pathScript){
@@ -153,7 +176,7 @@ t_pcb* crear_PCB(){
 	PCB_creado->estado = NULO;
 
 	pid_a_asignar++; //Aumento en 1 el PID
-
+    PCB_creado->fin_q = false;
 	return PCB_creado;
 }
 
@@ -275,12 +298,12 @@ void ready_a_exec(){
 
 		sem_post(&aviso_exec); 
         
-       /*  if(strcmp(config_kernel.algoritmo, "RR") == 0){
+        if(strcmp(config_kernel.algoritmo_planificacion, "RR") == 0){
             pcb_ejecutando->fin_q = false;
-            sem_wait(&sem_reloj_destruido);
+            sem_wait(&sem_reiniciar_quantum);
             sem_post(&sem_iniciar_quantum);
         }
-		 */
+		 
         enviar_cde_a_cpu();
 	}
 }
@@ -493,12 +516,12 @@ void evaluar_instruccion(t_instruccion* instruccion_actual){
             destruir_instruccion(instruccion_actual);
             break;
         default: // es por fin de quantum
-            // if(strcmp(config_kernel.algoritmo, "RR") == 0)
-            //     log_info(logger_kernel, "PID: %d - Desalojado por fin de Quantum", pcb_en_ejecucion->cde->pid);
-            // else if(strcmp(config_kernel.algoritmo, "PRIORIDADES") == 0)
-            //     log_info(logger_kernel, "PID: %d - Desalojado por un proceso de mayor prioridad", pcb_en_ejecucion->cde->pid);
-            // enviar_de_exec_a_ready();
-            // destruir_instruccion(instruccion_actual);
+            if(strcmp(config_kernel.algoritmo_planificacion, "RR") == 0)
+                log_info(logger_kernel, "PID: %d - Desalojado por fin de Quantum", pcb_ejecutando->cde->pid);
+            else if(strcmp(config_kernel.algoritmo_planificacion, "PRIORIDADES") == 0)
+                log_info(logger_kernel, "PID: %d - Desalojado por un proceso de mayor prioridad", pcb_ejecutando->cde->pid);
+            enviar_de_exec_a_ready();
+            destruir_instruccion(instruccion_actual);
             break;
     }
 }
@@ -524,4 +547,55 @@ void agregar_a_cola_finished(char* razon){
     sem_post(&cpu_libre); // se libera el procesador
 	sem_post(&procesos_en_exit); // se agrega uno a procesosExit
     // sem_post(&grado_de_multiprogramacion); // Se libera 1 grado de multiprog
+}
+
+// Round Robin
+
+void prender_quantum(){
+    pthread_t reloj_rr;
+    pthread_create(&reloj_rr, NULL, (void*) controlar_tiempo_de_ejecucion, NULL);
+    pthread_detach(reloj_rr);
+}
+
+void controlar_tiempo_de_ejecucion(){
+    while(1){
+        sem_wait(&sem_iniciar_quantum);
+
+        // uint32_t pid_pcb_before_start_clock = pcb_en_ejecucion->cde->pid;
+        // bool flag_clock_pcb_before_start_clock = pcb_en_ejecucion->flag_clock; //aranca en false
+
+        usleep(config_kernel.quantum * 1000);
+
+        // if(pcb_en_ejecucion != NULL)
+        //     pcb_en_ejecucion->fin_q = true;
+
+        // if(pcb_en_ejecucion != NULL && pid_pcb_before_start_clock == pcb_en_ejecucion->cde->pid && flag_clock_pcb_before_start_clock == pcb_en_ejecucion->flag_clock){
+        enviar_codOp(fd_cpu_int, DESALOJO);
+
+        t_buffer* buffer = crear_buffer();
+        agregar_buffer_uint32(buffer, pcb_ejecutando->cde->pid); // lo enviamos porque interrupt recibe un buffer, pero no hacemos nada con esto
+        enviar_buffer(buffer, fd_cpu_int);
+        destruir_buffer(buffer);
+        // }
+        sem_post(&sem_reiniciar_quantum);
+    }
+
+}
+
+void enviar_de_exec_a_ready(){
+    // sem_wait(&cont_exec);
+    // if(planificacion_detenida == 1){
+    //     sem_wait(&pausar_exec_a_ready);
+    // }
+    agregar_pcb_a(colaREADY, pcb_ejecutando, &mutex_ready);
+    pcb_ejecutando->estado = READY;
+    
+    log_info(logger_kernel, "PID: %d - Estado anterior: %s - Estado actual: %s", pcb_ejecutando->cde->pid, "EXEC", "READY");
+
+    pthread_mutex_lock(&mutex_pcb_en_ejecucion);
+    pcb_ejecutando = NULL;
+    pthread_mutex_unlock(&mutex_pcb_en_ejecucion);
+    
+    sem_post(&cpu_libre); // se libera el procesador
+    sem_post(&procesos_en_ready);
 }

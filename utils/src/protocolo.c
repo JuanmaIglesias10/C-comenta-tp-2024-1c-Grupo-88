@@ -207,7 +207,7 @@ uint8_t leer_buffer_uint8(t_buffer* buffer) {
 void agregar_buffer_string(t_buffer* buffer, char* string) {
 	uint32_t length = strlen(string);
     agregar_buffer_uint32(buffer, length);
-    agregar_a_buffer(buffer, string, length); 
+    agregar_a_buffer(buffer, string, length);
 } // OK
 
 void agregar_buffer_registros(t_buffer* buffer, t_registros* registros){

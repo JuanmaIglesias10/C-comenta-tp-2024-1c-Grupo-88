@@ -29,11 +29,22 @@ extern int fd_cpu_int;
 extern int fd_kernel_dis;
 extern int fd_kernel_int;
 
+// Semaforos
+
+extern pthread_mutex_t mutex_realizar_desalojo;
+extern pthread_mutex_t mutex_cde_ejecutando;
+
 // Registro
 extern t_registros* registros_cpu;
 
 //Interrupciones
 extern int interrupcion;
+extern int realizar_desalojo;
+
+extern uint8_t algoritmo_planificacion;
+
+// Proceso Ejecutando
+extern uint32_t pid_de_cde_ejecutando;
 
 // Fin variables globales CPU
 

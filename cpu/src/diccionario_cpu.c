@@ -12,11 +12,21 @@ int fd_cpu_int;
 int fd_kernel_dis;
 int fd_kernel_int;
 
+//Semaforos
+
+pthread_mutex_t mutex_realizar_desalojo;
+pthread_mutex_t mutex_cde_ejecutando;
+
 // Registro
 t_registros* registros_cpu;
 
 //Interrupciones
 int interrupcion = 0;
+int realizar_desalojo = 0;
 
+uint8_t algoritmo_planificacion;
+
+// Proceso Ejecutando
+uint32_t pid_de_cde_ejecutando;
 
 // fin variables globales CPU

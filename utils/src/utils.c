@@ -42,11 +42,28 @@ void destruir_cde(t_cde* cde){
     free(cde);
 }
 
-void destruir_instruccion(t_instruccion* instruccion){
-	free(instruccion->par1);
-	free(instruccion->par2);
-	free(instruccion->par3);
-	free(instruccion->par4);
-	free(instruccion->par5);
-	free(instruccion);
+void destruir_instruccion(t_instruccion* instruccion) {
+    if (instruccion == NULL) return;
+
+    if (instruccion->par1 != NULL) {
+        free(instruccion->par1);
+        instruccion->par1 = NULL;
+    }
+    if (instruccion->par2 != NULL) {
+        free(instruccion->par2);
+        instruccion->par2 = NULL;
+    }
+    if (instruccion->par3 != NULL) {
+        free(instruccion->par3);
+        instruccion->par3 = NULL;
+    }
+    if (instruccion->par4 != NULL) {
+        free(instruccion->par4);
+        instruccion->par4 = NULL;
+    }
+    if (instruccion->par5 != NULL) {
+        free(instruccion->par5);
+        instruccion->par5 = NULL;
+    }
+    free(instruccion);
 }
