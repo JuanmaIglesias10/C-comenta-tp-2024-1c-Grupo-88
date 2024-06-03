@@ -1,6 +1,8 @@
 #include "IO.h"
 
-int main(char* nombre_interfaz, char* path_archivo_config) {
+int main(int argc, char* argv[]) {
+	char* nombre_interfaz = argv[1];
+	char* path_archivo_config = argv[2];
 	inicializar_IO(nombre_interfaz , path_archivo_config);
 }
 
@@ -10,21 +12,18 @@ void inicializar_IO(char* nombre_interfaz, char* path_archivo_config){
 	config = config_create(path_archivo_config);
 	char* tipo_interfaz = config_get_string_value(config, "TIPO_INTERFAZ");
 	if (strcmp(tipo_interfaz,"GENERICA") == 0){
-		inicializar_config_IO_generica();
-		// inicializar_IO_generica()
+		inicializar_config_IO_GENERICA();
+		inicializar_IO_generica();
 	} else if (strcmp(tipo_interfaz,"STDIN") == 0){
 		inicializar_config_IO_STDIN();
-		// inicializar_IO_STDIN()
+		inicializar_IO_STDIN();
 	} else if (strcmp(tipo_interfaz,"STDOUT") == 0){
 		inicializar_config_IO_STDOUT();
-		// inicializar_IO_STDOUT()
+		inicializar_IO_STDOUT();
 	} else {
 		inicializar_config_IO_DIALFS();
-		// inicializar_IO_DIALFS()
+		inicializar_IO_DIALFS();
 	}
-
-	
-	inicializar_config_IO();
 	inicializar_conexiones();
 }
 
@@ -65,22 +64,25 @@ void inicializar_config_IO_DIALFS(){
 }
 
 void inicializar_IO_generica() {
-	fd_kernel = conectarse(config_IO_GENERICA.ip_kernel,config_IO.puerto_kernel, "KERNEL", logger_IO);
+	fd_kernel = conectarse(config_IO_GENERICA.ip_kernel,config_IO_GENERICA.puerto_kernel, "KERNEL", logger_IO);
+	while(1);
 }
 
 void inicializar_IO_STDIN(){
-	fd_memoria = conectarse(config_IO_STDIN.ip_memoria,config_IO.puerto_memoria, "MEMORIA", logger_IO);
-	fd_kernel = conectarse(config_IO_STDIN.ip_kernel,config_IO.puerto_kernel, "KERNEL", logger_IO);
+	fd_memoria = conectarse(config_IO_STDIN.ip_memoria,config_IO_STDIN.puerto_memoria, "MEMORIA", logger_IO);
+	fd_kernel = conectarse(config_IO_STDIN.ip_kernel,config_IO_STDIN.puerto_kernel, "KERNEL", logger_IO);
+	if(fd_kernel == -1) exit(1);
+	while(1);
 }
 
 void inicializar_IO_STDOUT() {
-	fd_memoria = conectarse(config_IO_STDOUT.ip_memoria,config_IO.puerto_memoria, "MEMORIA", logger_IO);
-	fd_kernel = conectarse(config_IO_STDOUT.ip_kernel,config_IO.puerto_kernel, "KERNEL", logger_IO);
+	fd_memoria = conectarse(config_IO_STDOUT.ip_memoria,config_IO_STDOUT.puerto_memoria, "MEMORIA", logger_IO);
+	fd_kernel = conectarse(config_IO_STDOUT.ip_kernel,config_IO_STDOUT.puerto_kernel, "KERNEL", logger_IO);
 }
 
 void inicializar_IO_DIALFS() {
-	fd_memoria = conectarse(config_IO_DIALFS.ip_memoria,config_IO.puerto_memoria, "MEMORIA", logger_IO);
-	fd_kernel = conectarse(config_IO_DIALFS.ip_kernel,config_IO.puerto_kernel, "KERNEL", logger_IO);
+	fd_memoria = conectarse(config_IO_DIALFS.ip_memoria,config_IO_DIALFS.puerto_memoria, "MEMORIA", logger_IO);
+	fd_kernel = conectarse(config_IO_DIALFS.ip_kernel,config_IO_DIALFS.puerto_kernel, "KERNEL", logger_IO);
 }
 
 
