@@ -51,7 +51,7 @@ void atender_consola(char* input){
 			actual = actual->next;
 		}
 		
-		list_destroy_and_destroy_elements(lista_script, (void*)script_destroy);
+		// list_destroy_and_destroy_elements(lista_script, (void*)script_destroy);
 	} else {
 		switch_comandos(cod_operacion, lista_mensaje[1]);
 	}

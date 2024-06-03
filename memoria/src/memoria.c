@@ -42,7 +42,7 @@ void inicializar_conexiones() {
 	pthread_create(&hilo_memoria_cpu, NULL, (void*)atender_cpu, NULL);
 	pthread_detach(hilo_memoria_cpu);
 
-
+	
 	pthread_t hilo_memoria_kernel;
 	pthread_create(&hilo_memoria_kernel, NULL, (void*)atender_kernel, NULL);
 	pthread_detach(hilo_memoria_kernel);

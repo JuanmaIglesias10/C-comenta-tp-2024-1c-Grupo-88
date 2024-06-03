@@ -66,7 +66,8 @@ void inicializar_conexiones(){
 	fd_kernel = iniciar_servidor(config_kernel.puerto_escucha, logger_kernel);
 
 	fd_IO = esperar_cliente(fd_kernel, logger_kernel,"IO"); 
-
+    //Agregar un hilo para esperar clientes
+    
 	pthread_t hilo_memoria;
 	pthread_create(&hilo_memoria, NULL, (void*)atender_memoria, NULL);
 	pthread_detach(hilo_memoria);
