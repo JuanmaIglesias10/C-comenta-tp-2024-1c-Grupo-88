@@ -64,10 +64,27 @@ void inicializar_config_IO_DIALFS(){
 	config_IO_DIALFS.retraso_compactacion = config_get_int_value(config,"RETRASO_COMPACTACION"); 
 }
 
+void inicializar_IO_generica() {
+	fd_kernel = conectarse(config_IO_GENERICA.ip_kernel,config_IO.puerto_kernel, "KERNEL", logger_IO);
+}
+
+void inicializar_IO_STDIN(){
+	fd_memoria = conectarse(config_IO_STDIN.ip_memoria,config_IO.puerto_memoria, "MEMORIA", logger_IO);
+	fd_kernel = conectarse(config_IO_STDIN.ip_kernel,config_IO.puerto_kernel, "KERNEL", logger_IO);
+}
+
+void inicializar_IO_STDOUT() {
+	fd_memoria = conectarse(config_IO_STDOUT.ip_memoria,config_IO.puerto_memoria, "MEMORIA", logger_IO);
+	fd_kernel = conectarse(config_IO_STDOUT.ip_kernel,config_IO.puerto_kernel, "KERNEL", logger_IO);
+}
+
+void inicializar_IO_DIALFS() {
+	fd_memoria = conectarse(config_IO_DIALFS.ip_memoria,config_IO.puerto_memoria, "MEMORIA", logger_IO);
+	fd_kernel = conectarse(config_IO_DIALFS.ip_kernel,config_IO.puerto_kernel, "KERNEL", logger_IO);
+}
+
 
 void inicializar_conexiones(){
-	fd_memoria = conectarse(config_IO.ip_memoria,config_IO.puerto_memoria, "MEMORIA", logger_IO);
-	fd_kernel = conectarse(config_IO.ip_kernel,config_IO.puerto_kernel, "KERNEL", logger_IO);
 	
 	pthread_t hilo_memoria;
 	pthread_create(&hilo_memoria, NULL, (void*)atender_memoria, NULL);

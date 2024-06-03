@@ -10,6 +10,10 @@ void inicializar_config_IO_GENERICA();
 void inicializar_config_IO_STDIN();
 void inicializar_config_IO_STDOUT();
 void inicializar_config_IO_DIALFS();
+void inicializar_IO_generica();
+void inicializar_IO_STDIN();
+void inicializar_IO_STDOUT();
+void inicializar_IO_DIALFS();
 void inicializar_conexiones();
 void IO_Generica();
 #endif /* IO_H_ */
