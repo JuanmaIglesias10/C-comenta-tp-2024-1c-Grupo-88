@@ -13,10 +13,10 @@ void* atender_memoria()
         //         break;
         //     default:
         //         log_info(logger_cpu, "Se desconectó MEMORIA");
-        //         break;
+        //         return NULL;
         //     }
+        sleep(10);
 	}
-    return 0;
 }
 
 void* atender_kernel_dis()
@@ -42,10 +42,9 @@ void* atender_kernel_dis()
                 break;
             default:
                 log_info(logger_cpu, "Se desconectó KERNEL (DISPATCH)");
-                break;
+                return;
             }
 	}
-    return 0;
 }
 
 void* atender_kernel_int()
@@ -71,9 +70,8 @@ void* atender_kernel_int()
                 break;
             default:
                 log_info(logger_cpu, "Se desconectó KERNEL (INTERRUPT)");
-                break;
+                return;
             }
 	}
-    return 0;
 }
 

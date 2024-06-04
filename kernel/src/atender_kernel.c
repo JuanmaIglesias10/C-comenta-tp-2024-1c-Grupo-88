@@ -15,8 +15,8 @@ void* atender_memoria()
         //         log_info(logger_kernel, "Se desconectó MEMORIA");
         //         break;
         //     }
+		sleep(5);
 	}
-    return NULL;
 }
 
 
@@ -33,10 +33,9 @@ void* atender_IO()
                 break;
             default:
                 log_info(logger_kernel, "Se desconectó IO");
-                break;
+                return;
             }
 	}
-    return NULL;
 }
 
 
@@ -74,8 +73,7 @@ void* atender_cpu_int()
                 break;
             default:
                 log_info(logger_kernel, "Se desconectó CPU (INTERRUPT)");
-                break;
+                return;
             }
 	}
-    return NULL;
 }

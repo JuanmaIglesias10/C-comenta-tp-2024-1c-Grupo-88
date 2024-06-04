@@ -13,7 +13,7 @@ while (1) {
                 break;
             default:
                 log_info(logger_IO, "Se desconectó MEMORIA");
-                break;
+                return;
             }
     }
 return NULL;
@@ -29,7 +29,7 @@ void* atender_kernel()
                     break;
                 default:
                     log_info(logger_IO, "Se desconectó KERNEL");
-                    break;
+                    return;
                 }
         }
     return NULL;

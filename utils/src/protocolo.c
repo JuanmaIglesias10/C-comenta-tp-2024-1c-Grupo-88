@@ -109,9 +109,9 @@ uint8_t recibir_codOp(int socket_conexion)
 	else
 	{
 		close(socket_conexion);
-		exit(1);
+		return -1;
 	}
-} // TODO: ver si esta ok lo del exit
+}
 
 t_buffer* recibir_buffer(int socket_conexion){
     t_buffer* buffer = crear_buffer();

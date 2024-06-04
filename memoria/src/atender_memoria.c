@@ -6,16 +6,15 @@ void* atender_cpu()
 		mensajeCpuMemoria cod_op = recibir_codOp(fd_cpu);
 		
 		switch (cod_op) {
-		case PEDIDO_INSTRUCCION:
-			usleep(config_memoria.retardo_respuesta * 1000);
-			enviar_instruccion();
-			break;
-		default:
-			log_info(logger_memoria,"Se desconectó CPU");
-			break;
+			case PEDIDO_INSTRUCCION:
+				usleep(config_memoria.retardo_respuesta * 1000);
+				enviar_instruccion();
+				break;
+			default:
+				log_info(logger_memoria,"Se desconectó CPU");
+				return;
 		}
 	}
-	return NULL;
 }
 
 
@@ -35,7 +34,8 @@ void* atender_kernel()
 				// atender_page_fault();
 				break;
 			default:
-				break;
+				log_info(logger_memoria,"Se desconectó Kernel");
+				return;
 		}
 	}
 }
@@ -52,9 +52,8 @@ void* atender_IO()
 			//
 			break;
 		default:
-			log_info(logger_memoria,"Se desconectó KERNEL");
-			break;
+			log_info(logger_memoria,"Se desconectó IO");
+			return;
 		}
 	}
-	return NULL;
 }
