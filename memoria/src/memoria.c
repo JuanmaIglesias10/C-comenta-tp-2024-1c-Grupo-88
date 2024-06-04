@@ -1,59 +1,77 @@
 #include "memoria.h"
 
 int main(void) {
-	inicializar_memoria();
-	
+    inicializar_memoria();
+    // Mantener el main en ejecución
+    while (1) {
+        sleep(1);
+    }
+    return 0;
 }
 
 void inicializar_memoria(){
-	logger_memoria = iniciar_logger("logMemoria.log", "MEMORIA", LOG_LEVEL_INFO);
-	inicializar_config();
-	listaProcesos = list_create();
+    logger_memoria = iniciar_logger("logMemoria.log", "MEMORIA", LOG_LEVEL_INFO);
+    inicializar_config();
+    listaProcesos = list_create();
 
-	// iniciar_semaforos();
-	pthread_mutex_init(&mutex_lista_procesos, NULL);
-	
-	
+    pthread_mutex_init(&mutex_lista_procesos, NULL);
 
-
-	inicializar_conexiones();
+    inicializar_conexiones();
 }
 
 void inicializar_config(){
-	config = config_create("./memoria.config");
-	config_memoria.puerto_escucha = config_get_int_value(config, "PUERTO_ESCUCHA");
-	config_memoria.tam_memoria = config_get_int_value(config, "TAM_MEMORIA");
-	config_memoria.tam_pagina = config_get_int_value(config, "TAM_PAGINA");
-	config_memoria.path_instrucciones = config_get_string_value(config, "PATH_INSTRUCCIONES");
-	config_memoria.retardo_respuesta = config_get_int_value(config, "RETARDO_RESPUESTA");
-
+    config = config_create("./memoria.config");
+    config_memoria.puerto_escucha = config_get_int_value(config, "PUERTO_ESCUCHA");
+    config_memoria.tam_memoria = config_get_int_value(config, "TAM_MEMORIA");
+    config_memoria.tam_pagina = config_get_int_value(config, "TAM_PAGINA");
+    config_memoria.path_instrucciones = config_get_string_value(config, "PATH_INSTRUCCIONES");
+    config_memoria.retardo_respuesta = config_get_int_value(config, "RETARDO_RESPUESTA");
 }
 
 void inicializar_conexiones() {
-	fd_memoria = iniciar_servidor(config_memoria.puerto_escucha, logger_memoria);
+    fd_memoria = iniciar_servidor(config_memoria.puerto_escucha, logger_memoria);
 
-	fd_cpu = esperar_cliente(fd_memoria, logger_memoria, "CPU");
+    fd_cpu = esperar_cliente(fd_memoria, logger_memoria, "CPU");
+    if (fd_cpu == -1) {
+        log_error(logger_memoria, "Error al esperar conexión de CPU");
+        return;
+    }
 
-	fd_kernel = esperar_cliente(fd_memoria, logger_memoria,"KERNEL"); 
+    fd_kernel = esperar_cliente(fd_memoria, logger_memoria, "KERNEL");
+    if (fd_kernel == -1) {
+        log_error(logger_memoria, "Error al esperar conexión de Kernel");
+        return;
+    }
 
-	fd_IO = esperar_cliente(fd_memoria, logger_memoria,"IO"); 
+    fd_IO = esperar_cliente_timeout(fd_memoria, logger_memoria, "IO", 10); // 10 segundos de timeout
+    if (fd_IO == -1) {
+        log_info(logger_memoria, "No se recibió conexión de I/O, continuando...");
+    } 
 
-	pthread_t hilo_memoria_cpu;
-	pthread_create(&hilo_memoria_cpu, NULL, (void*)atender_cpu, NULL);
-	pthread_detach(hilo_memoria_cpu);
+    pthread_t hilo_memoria_cpu;
+    if (pthread_create(&hilo_memoria_cpu, NULL, (void*)atender_cpu, NULL) != 0) {
+        log_error(logger_memoria, "Error al crear hilo de CPU");
+        return;
+    }
+    pthread_detach(hilo_memoria_cpu);
 
-	
-	pthread_t hilo_memoria_kernel;
-	pthread_create(&hilo_memoria_kernel, NULL, (void*)atender_kernel, NULL);
-	pthread_detach(hilo_memoria_kernel);
+    pthread_t hilo_memoria_kernel;
+    if (pthread_create(&hilo_memoria_kernel, NULL, (void*)atender_kernel, NULL) != 0) {
+        log_error(logger_memoria, "Error al crear hilo de Kernel");
+        return;
+    }
+    pthread_detach(hilo_memoria_kernel);
 
-
-	pthread_t hilo_memoria_IO;
-	pthread_create(&hilo_memoria_IO, NULL, (void*)atender_IO, NULL);
-	pthread_join(hilo_memoria_IO,NULL);
-	
-	// liberar_conexion(fd_memoria);
+    if (fd_IO != -1) {
+        pthread_t hilo_memoria_IO;
+        if (pthread_create(&hilo_memoria_IO, NULL, (void*)atender_IO, NULL) != 0) {
+            log_error(logger_memoria, "Error al crear hilo de I/O");
+            return;
+        }
+        pthread_detach(hilo_memoria_IO);
+    }
 }
+
 
 void iniciar_proceso(){
 	//Recibo el buffer 

@@ -109,3 +109,37 @@ void chequearErrores(char* tipoError, int status)
     	exit(EXIT_FAILURE);
 	}
 }
+
+int esperar_cliente_timeout(int socket_servidor, t_log* logger, char* nombre_cliente, int timeout) {
+    struct sockaddr_in dir_cliente;
+    uint32_t tam_direccion = sizeof(struct sockaddr_in);
+    int socket_cliente;
+
+    fd_set set;
+    struct timeval tv;
+
+    // Inicializar el conjunto de descriptores
+    FD_ZERO(&set);
+    FD_SET(socket_servidor, &set);
+
+    // Configurar el timeout
+    tv.tv_sec = timeout;
+    tv.tv_usec = 0;
+
+    int rv = select(socket_servidor + 1, &set, NULL, NULL, &tv);
+    if (rv == -1) {
+        log_error(logger, "Error en select");
+        return -1;
+    } else if (rv == 0) {
+        log_info(logger, "Timeout esperando conexión de %s", nombre_cliente);
+        return -1;
+    } else {
+        socket_cliente = accept(socket_servidor, (void*)&dir_cliente, &tam_direccion);
+        if (socket_cliente == -1) {
+            log_error(logger, "Error al aceptar conexión de %s", nombre_cliente);
+            return -1;
+        }
+        log_info(logger, "Se conectó un cliente %s", nombre_cliente);
+        return socket_cliente;
+    }
+}
