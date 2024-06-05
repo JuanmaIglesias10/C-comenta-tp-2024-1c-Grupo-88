@@ -9,4 +9,5 @@ void* atender_cpu();
 void* atender_IO(void* fd_IO_ptr);
 void* atender_kernel();
 
+void* aceptar_conexiones_IO(void* arg);
 #endif /* ATENDER_H_ */

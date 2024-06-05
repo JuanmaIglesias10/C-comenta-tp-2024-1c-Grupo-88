@@ -61,3 +61,18 @@ void* atender_IO(void* fd_IO_ptr) {
     }
     return NULL;
 }
+
+void* aceptar_conexiones_IO(void* arg) {
+    int fd_memoria = *(int*)arg;
+
+    while (1) {
+        int fd_IO = esperar_cliente(fd_memoria, logger_memoria, "IO");
+        if (fd_IO != -1) {
+            pthread_t hilo_IO;
+            int* fd_IO_ptr = malloc(sizeof(int));
+            *fd_IO_ptr = fd_IO;
+            pthread_create(&hilo_IO, NULL, (void*)atender_IO, (void*)fd_IO_ptr);
+            pthread_detach(hilo_IO);
+        }
+    }
+}

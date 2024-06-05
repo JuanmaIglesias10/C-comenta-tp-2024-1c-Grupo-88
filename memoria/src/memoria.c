@@ -43,6 +43,10 @@ void inicializar_conexiones() {
         return;
     }
 
+	pthread_t hilo_IO_accept;
+    pthread_create(&hilo_IO_accept, NULL, (void*)aceptar_conexiones_IO, (void*)&fd_memoria);
+    pthread_detach(hilo_IO_accept);
+
     pthread_t hilo_memoria_cpu;
     if (pthread_create(&hilo_memoria_cpu, NULL, (void*)atender_cpu, NULL) != 0) {
         log_error(logger_memoria, "Error al crear hilo de CPU");
@@ -57,22 +61,6 @@ void inicializar_conexiones() {
     }
     pthread_detach(hilo_memoria_kernel);
 
-	while (1) {
-	    int fd_IO = esperar_cliente(fd_memoria, logger_memoria, "IO");
-	        if (fd_IO != -1) {
-	            pthread_t hilo_memoria_IO;
-	            int* fd_IO_ptr = malloc(sizeof(int)); // Alocamos memoria para el descriptor de archivo
-	            *fd_IO_ptr = fd_IO;
-	            if (pthread_create(&hilo_memoria_IO, NULL, (void*)atender_IO, fd_IO_ptr) != 0) {
-	                log_error(logger_memoria, "Error al crear hilo de I/O");
-	                free(fd_IO_ptr); // Liberamos memoria en caso de error
-	            } else {
-	                pthread_detach(hilo_memoria_IO);
-	            }
-	        } else {
-	            log_info(logger_memoria, "No se recibió conexión de I/O");
-	        }
-	}
 }
 
 
