@@ -40,20 +40,24 @@ void* atender_kernel()
 	}
 }
 
-void* atender_IO()
-{
-	while (1) {
-		uint8_t cod_op = recibir_codOp(fd_IO);
-		switch (cod_op) {
-		case MENSAJE:
-			//
-			break;
-		case PAQUETE:
-			//
-			break;
-		default:
-			log_info(logger_memoria,"Se desconectó IO");
-			return;
-		}
-	}
+void* atender_IO(void* fd_IO_ptr) {
+    int fd_IO = *(int*)fd_IO_ptr;
+    free(fd_IO_ptr); // Liberamos la memoria alocada para el descriptor de archivo
+
+    while (1) {
+        uint8_t cod_op = recibir_codOp(fd_IO);
+        switch (cod_op) {
+            case MENSAJE:
+                // Manejo del mensaje
+                break;
+            case PAQUETE:
+                // Manejo del paquete
+                break;
+            default:
+                log_info(logger_memoria, "Se desconectó IO");
+                close(fd_IO); // Cerramos la conexión
+                return NULL;
+        }
+    }
+    return NULL;
 }
