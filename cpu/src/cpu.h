@@ -18,11 +18,15 @@ void inicializar_registros();
 
 void cargar_registros();
 
+void* atender_kernel_int();
+
 void guardar_cde(t_cde* cde);
 
 void ejecutar_proceso(t_cde* cde);
 
 void ejecutar_instruccion(t_cde* cde, t_instruccion* instruccion_a_ejecutar);
+
+bool es_bloqueante(t_codigo_instruccion instruccion);
 
 void desalojar_cde(t_cde* cde, t_instruccion* instruccion_a_ejecutar);
 

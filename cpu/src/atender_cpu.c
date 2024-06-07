@@ -42,36 +42,9 @@ void* atender_kernel_dis()
                 break;
             default:
                 log_info(logger_cpu, "Se desconectó KERNEL (DISPATCH)");
-                return;
+                return NULL;
             }
 	}
 }
 
-void* atender_kernel_int()
-{
-	while (1) {
-		mensajeKernelCpu cod_op = recibir_codOp(fd_kernel_int);
-		switch (cod_op) {
-            case DESALOJO:
-                t_buffer* buffer = recibir_buffer(fd_kernel_int); // recibe pid o lo que necesite
-                uint32_t pid_recibido = leer_buffer_uint32(buffer);
-                // se desaloja proceso en ejecucion
-                if(algoritmo_planificacion == 1 && pid_de_cde_ejecutando != pid_recibido){ // significa que el algoritmo es RR
-                    break;
-                }
-                // else if(algoritmo_planificacion == 1 && pid_de_cde_ejecutando == pid_recibido){
-                //      if(es_bloqueante(instruccion_actualizada)){ //Esto hay que hacerlo para la interfaz generica
-                //         break;
-                //     }
-                // }
-                pthread_mutex_lock(&mutex_realizar_desalojo);
-                realizar_desalojo = 1;
-                pthread_mutex_unlock(&mutex_realizar_desalojo);
-                break;
-            default:
-                log_info(logger_cpu, "Se desconectó KERNEL (INTERRUPT)");
-                return;
-            }
-	}
-}
 

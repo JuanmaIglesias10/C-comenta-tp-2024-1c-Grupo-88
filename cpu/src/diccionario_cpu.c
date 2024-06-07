@@ -16,6 +16,7 @@ int fd_kernel_int;
 
 pthread_mutex_t mutex_realizar_desalojo;
 pthread_mutex_t mutex_cde_ejecutando;
+pthread_mutex_t mutex_instruccion_actualizada;
 
 // Registro
 t_registros* registros_cpu;
@@ -28,5 +29,8 @@ uint8_t algoritmo_planificacion;
 
 // Proceso Ejecutando
 uint32_t pid_de_cde_ejecutando;
+
+//Nombre instruccion actual ejecutando
+t_codigo_instruccion instruccion_actualizada;
 
 // fin variables globales CPU
