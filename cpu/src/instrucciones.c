@@ -283,17 +283,16 @@ void ejecutar_jnz(void* registro, char* char_nro_instruccion) {
 
 
 void ejecutar_dormirIO(char* nombreInterfaz, uint32_t unidadesDeTiempo) {
-    interrupcion = 1;
-    
-    /*
-    uint8_t numeroInterfaz = obtener_numero_interfaz(nombreInterfaz);
     enviar_codOp(fd_kernel_int, INTERRUPT);
     t_buffer* buffer_a_enviar = crear_buffer();
     agregar_buffer_uint8(buffer_a_enviar,unidadesDeTiempo);
-    agregar_buffer_uint8(buffer_a_enviar,numeroInterfaz);
+    agregar_buffer_string(buffer_a_enviar,nombreInterfaz);
     enviar_buffer(buffer_a_enviar,fd_kernel_int);
-    destruir_buffer(buffer_a_enviar);*/
-    }
+    destruir_buffer(buffer_a_enviar);
+    
+    interrupcion = 1;
+
+}
 
 void ejecutar_exit(){
     interrupcion = 1;

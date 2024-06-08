@@ -492,6 +492,9 @@ void recibir_dormirIO() {
 		uint8_t interfaz = leer_buffer_uint8(buffer_recibido);
 		destruir_buffer(buffer_recibido);
 
+        // Chequeo de si existe la interfaz y coincide el tipo
+
+
 		//Mandarlo a IO GENERICA
 		enviar_codOp(fd_IO,SLEEP);
 		t_buffer* buffer_a_enviar = crear_buffer();
@@ -505,7 +508,9 @@ void recibir_dormirIO() {
 
 
 void evaluar_instruccion(t_instruccion* instruccion_actual){
-    switch(instruccion_actual->codigo){    
+    switch(instruccion_actual->codigo){
+        case IO_GEN_SLEEP:
+            recibir_dormirIO();
         case EXIT:
             // if(strcmp(config_kernel.algoritmo, "RR") == 0){
             //     pcb_en_ejecucion->flag_clock = true;
