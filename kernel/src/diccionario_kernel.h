@@ -62,6 +62,12 @@ typedef struct {
 	char* par1;
 } t_script;
 
+typedef struct {
+    char* nombre;
+    char* tipo;
+    int fd;
+} t_interfaz;
+
 
 /* VARIABLES GLOBALES */
 extern int pid_a_asignar;
@@ -90,6 +96,11 @@ extern t_queue* colaREADY;
 extern t_queue* colaBLOCKED;
 extern t_queue* colaFINISHED;
 
+extern t_queue* colaGenerica;
+extern t_queue* colaSTDIN;
+extern t_queue* colaSTDOUT;
+extern t_queue* colaDIALFS;
+
 //Semaforos
 
 extern pthread_mutex_t mutex_new;
@@ -98,6 +109,7 @@ extern pthread_mutex_t mutex_ready;
 extern pthread_mutex_t mutex_exec;
 extern pthread_mutex_t mutex_pcb_en_ejecucion;
 extern pthread_mutex_t mutex_finalizados;
+extern pthread_mutex_t mutex_colasIO;
 
 
 extern sem_t procesos_NEW;

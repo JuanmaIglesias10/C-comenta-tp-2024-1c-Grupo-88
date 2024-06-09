@@ -22,6 +22,11 @@ t_queue* colaREADY;
 t_queue* colaBLOCKED;
 t_queue* colaFINISHED;
 
+t_queue* colaGenerica;
+t_queue* colaSTDIN;
+t_queue* colaSTDOUT;
+t_queue* colaDIALFS;
+
 int pid_a_asignar;
 
 //Semaforos
@@ -31,6 +36,7 @@ pthread_mutex_t mutex_ready;
 pthread_mutex_t mutex_exec;
 pthread_mutex_t mutex_pcb_en_ejecucion;
 pthread_mutex_t mutex_finalizados;
+pthread_mutex_t mutex_colasIO;
 
 sem_t procesos_NEW;
 sem_t cpu_libre;

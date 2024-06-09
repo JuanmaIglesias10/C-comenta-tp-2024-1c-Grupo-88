@@ -93,6 +93,11 @@ void inicializar_listas_colas(){
 	colaREADY = queue_create();
 	colaBLOCKED = queue_create();
 	colaFINISHED = queue_create();
+
+    colaGenerica = queue_create();
+    colaSTDIN = queue_create();
+    colaSTDOUT = queue_create();
+    colaDIALFS = queue_create();
 }
 
 void inicializar_semaforos(){
@@ -101,6 +106,7 @@ void inicializar_semaforos(){
 	pthread_mutex_init(&mutex_exec, NULL);
 	pthread_mutex_init(&mutex_pcb_en_ejecucion, NULL);
 	pthread_mutex_init(&mutex_finalizados, NULL);
+    pthread_mutex_init(&mutex_colasIO,NULL);
 	sem_init(&cpu_libre, 0, 1);
 	sem_init(&procesos_en_ready, 0, 0);
 	sem_init(&procesos_NEW, 0, 0);
@@ -493,6 +499,7 @@ void recibir_dormirIO() {
 		destruir_buffer(buffer_recibido);
 
         // Chequeo de si existe la interfaz y coincide el tipo
+
 
 
 		//Mandarlo a IO GENERICA

@@ -24,6 +24,27 @@ void* atender_IO(void* arg) {
     int fd_IO = *(int*)arg;
     free(arg);
 
+    t_buffer* buffer = recibir_buffer(fd_IO);
+    char* nombre = leer_buffer_string(buffer);
+    char* tipo = leer_buffer_string(buffer);
+
+    t_interfaz* interfaz = malloc(sizeof(t_interfaz));
+    interfaz->nombre = nombre;
+    interfaz->tipo = tipo;
+    interfaz->fd = fd_IO;
+
+    pthread_mutex_lock(&mutex_colasIO);
+    if (strcmp(tipo, "GENERICA") == 0) {
+        queue_push(colaGenerica, interfaz);
+    } else if (strcmp(tipo, "STDIN") == 0) {
+        queue_push(colaSTDIN, interfaz);
+    } else if (strcmp(tipo, "STDOUT") == 0) {
+        queue_push(colaSTDOUT, interfaz);
+    } else if (strcmp(tipo, "DIALFS") == 0) {
+        queue_push(colaDIALFS, interfaz);
+    }
+    pthread_mutex_unlock(&mutex_colasIO);
+
     while (1) {
         uint8_t cod_op = recibir_codOp(fd_IO);
         switch (cod_op) {
