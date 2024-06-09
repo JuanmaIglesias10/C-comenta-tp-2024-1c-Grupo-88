@@ -4,7 +4,7 @@
 #include "utils.h"
 #include "atender_memoria.h"
 #include "diccionario_memoria.h"
-
+#include "commons/temporal.h"
 
 // Function declarations
 void inicializar_memoria();

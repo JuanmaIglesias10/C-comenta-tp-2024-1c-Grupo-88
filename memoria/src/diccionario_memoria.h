@@ -43,8 +43,8 @@ extern int fd_IO;
 
 //Listas
 extern t_list* listaProcesos;
-extern t_list*  tablaGlobalPaginas;
-extern t_lista* listaMarcos;
+extern t_list* tablaGlobalPaginas;
+extern t_list* listaMarcos;
 
 
 // Semaforos

@@ -44,6 +44,7 @@ extern t_registros* registros_cpu;
 //Interrupciones
 extern int interrupcion;
 extern int realizar_desalojo;
+extern uint32_t tam_pagina;
 
 extern uint8_t algoritmo_planificacion;
 

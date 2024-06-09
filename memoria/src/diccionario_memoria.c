@@ -13,6 +13,8 @@ int fd_IO;
 
 //Listas
 t_list* listaProcesos;
+t_list* tablaGlobalPaginas;
+t_list* listaMarcos;
 
 //Semaforos
 pthread_mutex_t mutex_lista_procesos;

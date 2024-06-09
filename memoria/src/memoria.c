@@ -272,9 +272,9 @@ void devolver_nro_marco(){
 	
 	t_pagina* pagina = existePageFault(nro_pagina, pid);
 	if(pagina == NULL)
-		enviar_codigo(fd_cpu, PAGE_FAULT);
+		enviar_codOp(fd_cpu, PAGE_FAULT);
 	else{
-		enviar_codigo(fd_cpu, NUMERO_MARCO_OK);
+		enviar_codOp(fd_cpu, NUMERO_MARCO_OK);
 		buffer = crear_buffer();
 		agregar_buffer_uint32(buffer, pagina->nroMarco);
 		enviar_buffer(buffer, fd_cpu);
@@ -298,7 +298,7 @@ t_pagina* buscarPaginaPorNroYPid(uint32_t nroPag, uint32_t pid){
 	for(int i = 0; i < list_size(tablaGlobalPaginas); i++){
 		t_pagina* pag = list_get(tablaGlobalPaginas, i);
 
-		if(pag->nroPagina == nroPag && pag->pidCreador == pid)
+		if(pag->nroPagina == nroPag && pag->pidProcesoCreador == pid)
 			return pag;
 	}
 

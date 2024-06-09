@@ -24,6 +24,7 @@ t_registros* registros_cpu;
 //Interrupciones
 int interrupcion = 0;
 int realizar_desalojo = 0;
+uint32_t tam_pagina;
 
 uint8_t algoritmo_planificacion;
 

@@ -5,6 +5,7 @@
 #include "atender_cpu.h"
 #include "diccionario_cpu.h"
 #include "instrucciones.h"
+#include "math.h"
 
 void inicializar_cpu();
 
