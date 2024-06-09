@@ -36,7 +36,6 @@ void* atender_IO(void* arg) {
     pthread_mutex_lock(&mutex_colasIO);
     if (strcmp(tipo, "GENERICA") == 0) {
         queue_push(colaGenerica, interfaz);
-        log_info(logger_kernel,"Lo agregue a la colaGen");
     } else if (strcmp(tipo, "STDIN") == 0) {
         queue_push(colaSTDIN, interfaz);
     } else if (strcmp(tipo, "STDOUT") == 0) {

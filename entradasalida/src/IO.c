@@ -19,12 +19,15 @@ void inicializar_IO(char* nombre_interfaz, char* path_archivo_config){
 	} else if (strcmp(tipo_interfaz,"STDIN") == 0){
 		inicializar_config_IO_STDIN();
 		inicializar_IO_STDIN();
+		enviar_info_kernel(nombre_interfaz,tipo_interfaz);
 	} else if (strcmp(tipo_interfaz,"STDOUT") == 0){
 		inicializar_config_IO_STDOUT();
 		inicializar_IO_STDOUT();
+		enviar_info_kernel(nombre_interfaz,tipo_interfaz);
 	} else {
 		inicializar_config_IO_DIALFS();
 		inicializar_IO_DIALFS();
+		enviar_info_kernel(nombre_interfaz,tipo_interfaz);
 	}
 	inicializar_conexiones();
 }
