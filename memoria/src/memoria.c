@@ -262,3 +262,70 @@ t_proceso* buscarProcesoPorPid(uint32_t pid){
 	}
 	return NULL; 
 }
+
+
+void devolver_nro_marco(){
+	t_buffer* buffer = recibir_buffer(fd_cpu);
+	uint32_t nro_pagina = leer_buffer_uint32(buffer);
+	uint32_t pid = leer_buffer_uint32(buffer);
+	destruir_buffer(buffer);
+	
+	t_pagina* pagina = existePageFault(nro_pagina, pid);
+	if(pagina == NULL)
+		enviar_codigo(fd_cpu, PAGE_FAULT);
+	else{
+		enviar_codigo(fd_cpu, NUMERO_MARCO_OK);
+		buffer = crear_buffer();
+		agregar_buffer_uint32(buffer, pagina->nroMarco);
+		enviar_buffer(buffer, fd_cpu);
+		destruir_buffer(buffer);
+	}
+}
+
+//funciones paginas
+t_pagina* existePageFault(uint32_t nro_Pagina, uint32_t pid){
+	t_pagina* pagina = buscarPaginaPorNroYPid(nro_Pagina, pid);
+
+	if(pagina == NULL || !(pagina->bitPresencia))
+		return NULL;
+
+	return pagina;
+}
+
+
+t_pagina* buscarPaginaPorNroYPid(uint32_t nroPag, uint32_t pid){
+
+	for(int i = 0; i < list_size(tablaGlobalPaginas); i++){
+		t_pagina* pag = list_get(tablaGlobalPaginas, i);
+
+		if(pag->nroPagina == nroPag && pag->pidCreador == pid)
+			return pag;
+	}
+
+	return NULL;
+}
+
+t_pagina* crear_pagina(uint32_t nroPag, uint32_t nroMarco, void* dirreccionInicio, uint32_t pid){
+	t_pagina* paginaCreada= malloc(sizeof(t_pagina));
+
+	paginaCreada->bitModificado = false;
+	paginaCreada->bitPresencia = true;
+	paginaCreada->direccionFisicaInicio = dirreccionInicio;
+	paginaCreada->nroMarco = nroMarco;
+	paginaCreada->nroPagina = nroPag;
+	paginaCreada->pidProcesoCreador = pid;
+	// paginaCreada->pidEnUso = pid;
+	paginaCreada->ultimaReferencia = temporal_get_string_time("%H:%M:%S:%MS");
+
+	list_add(tablaGlobalPaginas, paginaCreada);
+	
+	// enviar_codigo(fd_IO, CREAR_PAGINA_SOLICITUD);
+	
+	// t_buffer* b = crear_buffer_nuestro();
+	// buffer_write_uint32(b, nroPag);
+	// buffer_write_uint32(b, paginaCreada->pidCreador);
+	// enviar_buffer(b, fd_IO);
+	// destruir_buffer_nuestro(b);
+	
+	return paginaCreada;
+}

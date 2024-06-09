@@ -18,6 +18,17 @@ typedef struct{
 }t_proceso;
 
 // variables globales Memoria
+typedef struct {
+	uint32_t pidProcesoCreador;
+    uint32_t nroPagina;
+    uint32_t nroMarco;
+    bool bitModificado;
+    bool bitPresencia;
+    char* ultimaReferencia;
+    void* direccionFisicaInicio;
+    uint32_t direccionLogica;
+}t_pagina;
+
 
 // Logger Y Config
 extern t_log* logger_memoria;
@@ -32,6 +43,8 @@ extern int fd_IO;
 
 //Listas
 extern t_list* listaProcesos;
+extern t_list*  tablaGlobalPaginas;
+extern t_lista* listaMarcos;
 
 
 // Semaforos

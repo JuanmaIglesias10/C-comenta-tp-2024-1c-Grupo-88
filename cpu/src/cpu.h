@@ -32,4 +32,10 @@ void desalojar_cde(t_cde* cde, t_instruccion* instruccion_a_ejecutar);
 
 void devolver_cde_a_kernel(t_cde* cde, t_instruccion* instruccion_a_ejecutar);
 
+int obtener_nro_pagina(int direccionLogica);
+
+int obtener_desplazamiento_pagina(int direccionLogica);
+
+uint32_t calcular_direccion_fisica(int direccion_logica, t_cde* cde);
+
 #endif /* CPU_H */

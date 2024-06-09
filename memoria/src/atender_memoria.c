@@ -10,6 +10,9 @@ void* atender_cpu()
 				usleep(config_memoria.retardo_respuesta * 1000);
 				enviar_instruccion();
 				break;
+            case NUMERO_MARCO_SOLICITUD:
+				devolver_nro_marco();
+				break;
 			default:
 				log_info(logger_memoria,"Se desconectó CPU");
 				return;

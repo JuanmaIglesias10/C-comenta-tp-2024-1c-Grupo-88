@@ -15,6 +15,9 @@ typedef struct{
     char* algoritmo_tlb;
 } t_config_cpu;
 
+
+
+
 // Variables globales CPU
 
 // Logger Y Config
