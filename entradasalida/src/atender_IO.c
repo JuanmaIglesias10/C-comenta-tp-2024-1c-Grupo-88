@@ -25,7 +25,7 @@ void* atender_kernel()
             mensajeKernelIO cod_op = recibir_codOp(fd_kernel);
             switch (cod_op) {
                 case SLEEP:
-                    IO_Generica();
+                    //IO_Generica();
                     break;
                 default:
                     log_info(logger_IO, "Se desconectó KERNEL");

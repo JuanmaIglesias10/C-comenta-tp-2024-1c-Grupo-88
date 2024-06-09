@@ -15,5 +15,6 @@ void inicializar_IO_STDIN();
 void inicializar_IO_STDOUT();
 void inicializar_IO_DIALFS();
 void inicializar_conexiones();
-void IO_Generica();
+void enviar_info_kernel(char* nombre_interfaz, char* tipo);
+void exec_IO_Generica(); 
 #endif /* IO_H_ */

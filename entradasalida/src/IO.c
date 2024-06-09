@@ -14,6 +14,8 @@ void inicializar_IO(char* nombre_interfaz, char* path_archivo_config){
 	if (strcmp(tipo_interfaz,"GENERICA") == 0){
 		inicializar_config_IO_GENERICA();
 		inicializar_IO_generica();
+		enviar_info_kernel(nombre_interfaz,tipo_interfaz);
+		exec_IO_Generica();
 	} else if (strcmp(tipo_interfaz,"STDIN") == 0){
 		inicializar_config_IO_STDIN();
 		inicializar_IO_STDIN();
@@ -63,9 +65,8 @@ void inicializar_config_IO_DIALFS(){
 	config_IO_DIALFS.retraso_compactacion = config_get_int_value(config,"RETRASO_COMPACTACION"); 
 }
 
-void inicializar_IO_generica() {
+void inicializar_IO_generica(char* nombre_interfaz, char* tipo) {
 	fd_kernel = conectarse(config_IO_GENERICA.ip_kernel,config_IO_GENERICA.puerto_kernel, "KERNEL", logger_IO);
-	while(1);
 }
 
 void inicializar_IO_STDIN(){
@@ -103,10 +104,26 @@ void inicializar_conexiones(){
 	// log_destroy(logger_IO);
 }
 
+void enviar_info_kernel(char* nombre_interfaz, char* tipo){
+	
+	t_buffer* buffer = crear_buffer();
+	agregar_buffer_string(buffer,nombre_interfaz);
+	agregar_buffer_string(buffer,tipo);
+	enviar_buffer(buffer,fd_kernel);
+	destruir_buffer(buffer);
 
-void IO_Generica() {
+
+}
+
+
+void exec_IO_Generica() {
+
+	uint8_t codigo = recibir_codOp(fd_kernel);
+	
+	if (codigo == IO_GEN_SLEEP) { 
 	t_buffer* buffer_recibido = recibir_buffer(fd_kernel);
 	uint8_t unidadesDeTiempo = leer_buffer_uint8(buffer_recibido);
 	usleep(unidadesDeTiempo * 1000);
 		// 	CUANDO LA IO HACE SLEEP EL PROCESO DEBERIA BLOQUEARSE, NO OLVIDARSE DE CODEAR ESO!!!
+	}
 }
