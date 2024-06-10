@@ -126,10 +126,11 @@ void* atender_kernel_int()
                 t_buffer* buffer = recibir_buffer(fd_kernel_int); // recibe pid o lo que necesite
                 uint32_t pid_recibido = leer_buffer_uint32(buffer);
                 // se desaloja proceso en ejecucion
-                if(algoritmo_planificacion == 1 && pid_de_cde_ejecutando != pid_recibido){ // significa que el algoritmo es RR
+                if(algoritmo_planificacion == 1 && pid_de_cde_ejecutando != pid_recibido){
                     break;
                 }
                 else if(algoritmo_planificacion == 1 && pid_de_cde_ejecutando == pid_recibido){
+
                      if(es_bloqueante(instruccion_actualizada)){ 
                         break;
                     }
@@ -276,7 +277,7 @@ void ejecutar_instruccion(t_cde* cde, t_instruccion* instruccion_a_ejecutar){
             // break;
         case IO_GEN_SLEEP:
             log_info(logger_cpu, "PID: %d - Ejecutando: %s - %s %s", cde->pid, obtener_nombre_instruccion(instruccion_a_ejecutar), instruccion_a_ejecutar->par1, instruccion_a_ejecutar->par2);
-            ejecutar_dormirIO(instruccion_a_ejecutar->par1,(uint32_t)(uintptr_t)instruccion_a_ejecutar->par2);
+            ejecutar_dormirIO(instruccion_a_ejecutar->par1,instruccion_a_ejecutar->par2); //(uint32_t)(uintptr_t)
                 if (interrupcion == 0 && realizar_desalojo == 0)
                     destruir_instruccion(instruccion_a_ejecutar);
                 break;
@@ -316,11 +317,11 @@ bool es_bloqueante(t_codigo_instruccion instruccion){
     case MOV_OUT:
         //
     case SUM:
-        //
+        return false;
     case SUB:
-        //
+        return false;
     case JNZ:
-        //
+        return false;
     case RESIZE:
         //
     case COPY_STRING:

@@ -3,18 +3,18 @@
 void* atender_memoria()
 {
 while (1) {
-        uint8_t cod_op = recibir_codOp(fd_memoria);
-        switch (cod_op) {
-            case MENSAJE:
-                //
-                break;
-            case PAQUETE:
-                //
-                break;
-            default:
-                log_info(logger_IO, "Se desconectó MEMORIA");
-                return;
-            }
+        // uint8_t cod_op = recibir_codOp(fd_memoria);
+        // switch (cod_op) {
+        //     case MENSAJE:
+        //         //
+        //         break;
+        //     case PAQUETE:
+        //         //
+        //         break;
+        //     default:
+        //         log_info(logger_IO, "Se desconectó MEMORIA");
+        //         return;
+        //     }
     }
 return NULL;
 }
@@ -25,7 +25,8 @@ void* atender_kernel()
             mensajeKernelIO cod_op = recibir_codOp(fd_kernel);
             switch (cod_op) {
                 case SLEEP:
-                    //IO_Generica();
+                    exec_IO_Generica();
+                    // log_info(logger_IO, "xd");
                     break;
                 default:
                     log_info(logger_IO, "Se desconectó KERNEL");

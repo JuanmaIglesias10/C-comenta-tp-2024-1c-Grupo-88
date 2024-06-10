@@ -122,6 +122,7 @@ extern sem_t procesos_en_exit;
 extern sem_t sem_iniciar_quantum;
 extern sem_t sem_reiniciar_quantum;
 extern sem_t procesos_en_blocked;
+extern sem_t cont_exec;
 
 #endif 
 

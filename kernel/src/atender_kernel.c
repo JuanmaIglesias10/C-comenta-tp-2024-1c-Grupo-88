@@ -87,18 +87,18 @@ void* atender_IO(void* arg) {
 void* atender_cpu_int()
 {
 	while (1) {
-		uint8_t cod_op = recibir_codOp(fd_cpu_int);
-		switch (cod_op) {
-            case MENSAJE:
-                //
-                break;
-            case PAQUETE:
-                //
-                break;
-            default:
-                log_info(logger_kernel, "Se desconectó CPU (INTERRUPT)");
-                return;
-            }
+		// uint8_t cod_op = recibir_codOp(fd_cpu_int);
+		// switch (cod_op) {
+        //     case MENSAJE:
+        //         //
+        //         break;
+        //     case PAQUETE:
+        //         //
+        //         break;
+        //     default:
+        //         log_info(logger_kernel, "Se desconectó CPU (INTERRUPT)");
+        //         return;
+        //     }
 	}
 }
 

@@ -48,4 +48,5 @@ sem_t procesos_en_exit;
 sem_t procesos_en_blocked;
 sem_t sem_iniciar_quantum;
 sem_t sem_reiniciar_quantum;
+sem_t cont_exec;
 

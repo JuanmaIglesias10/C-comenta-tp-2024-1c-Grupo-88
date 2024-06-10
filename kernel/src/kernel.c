@@ -116,6 +116,7 @@ void inicializar_semaforos(){
 	sem_init(&procesos_en_exit, 0, 0); //Inicia en 0, posteado por ready_a_exec
     sem_init(&sem_iniciar_quantum, 0, 0);
     sem_init(&sem_reiniciar_quantum, 0, 1);
+    sem_init(&cont_exec, 0, 0);
 }
 
 t_list* ejecutar_script(char* pathScript){
@@ -301,7 +302,7 @@ void ready_a_exec(){
 		log_info(logger_kernel, "PID: %d - Estado anterior: READY - Estado actual: EXEC", pcb_ejecutando->cde->pid); //OBLIGATORIO
         pcb_ejecutando->estado = EXEC;
 
-		sem_post(&aviso_exec); 
+		sem_post(&cont_exec); 
         
         if(strcmp(config_kernel.algoritmo_planificacion, "RR") == 0){
             pcb_ejecutando->fin_q = false;
@@ -539,7 +540,7 @@ void recibir_dormirIO() {
 void evaluar_instruccion(t_instruccion* instruccion_actual){
     switch(instruccion_actual->codigo){
         case IO_GEN_SLEEP:
-        log_info(logger_kernel,"OK");
+            log_info(logger_kernel,"OK");
             recibir_dormirIO();
         case EXIT:
             // if(strcmp(config_kernel.algoritmo, "RR") == 0){
@@ -561,7 +562,7 @@ void evaluar_instruccion(t_instruccion* instruccion_actual){
 
 
 void agregar_a_cola_finished(char* razon){
-    // sem_wait(&cont_exec);
+    sem_wait(&cont_exec);
     
     // if(planificacion_detenida == 1){
     //     sem_wait(&pausar_exec_a_finalizado);
@@ -593,7 +594,6 @@ void prender_quantum(){
 void controlar_tiempo_de_ejecucion(){
     while(1){
         sem_wait(&sem_iniciar_quantum);
-
         // uint32_t pid_pcb_before_start_clock = pcb_en_ejecucion->cde->pid;
         // bool flag_clock_pcb_before_start_clock = pcb_en_ejecucion->flag_clock; //aranca en false
 
@@ -616,7 +616,7 @@ void controlar_tiempo_de_ejecucion(){
 }
 
 void enviar_de_exec_a_ready(){
-    // sem_wait(&cont_exec);
+    sem_wait(&cont_exec);
     // if(planificacion_detenida == 1){
     //     sem_wait(&pausar_exec_a_ready);
     // }
@@ -634,7 +634,7 @@ void enviar_de_exec_a_ready(){
 }
 
 void enviar_de_exec_a_block(){
-    //sem_wait(&cont_exec);
+    sem_wait(&cont_exec);
     //if(planificacion_detenida == 1){
     //    sem_wait(&pausar_exec_a_blocked);
     //}
@@ -668,9 +668,16 @@ void enviar_pcb_de_block_a_ready(t_pcb* pcb){
     list_remove_element(colaBLOCKED->elements, pcb);
     pthread_mutex_unlock(&mutex_block);
 
+    // t_pcb* pcb_a_ready =retirar_pcb_de(colaBLOCKED, &mutex_block);
+    
     agregar_pcb_a(colaREADY, pcb_a_ready, &mutex_ready);
     pcb_a_ready->estado = READY;
-
+    
+    //Agrego el pcb_a_ready a ejecutando
+    // pthread_mutex_lock(&mutex_pcb_en_ejecucion);
+    // pcb_ejecutando = pcb_a_ready;
+    // pthread_mutex_unlock(&mutex_pcb_en_ejecucion);
+    
     log_info(logger_kernel, "PID: %d - Estado anterior: %s - Estado actual: %s", pcb_a_ready->cde->pid, "BLOCKED", "READY");
 
     sem_post(&procesos_en_ready);
