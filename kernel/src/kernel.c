@@ -309,9 +309,9 @@ void ready_a_exec(){
             sem_wait(&sem_reiniciar_quantum);
             sem_post(&sem_iniciar_quantum);
         }
-		 
+		
         enviar_cde_a_cpu();
-	}
+    }
 }
 
 void exec_a_finished(){
@@ -490,20 +490,20 @@ void recibir_cde_de_cpu(){
     }
 }
 
-void recibir_dormirIO() {
+void io_gen_sleep() {
 	mensajeKernelCpu codOp = recibir_codOp(fd_cpu_int);
 
 	if (codOp == INTERRUPT) {
 		// Recibir buffer y extraer lo recibido
 		t_buffer* buffer_recibido = recibir_buffer(fd_cpu_int);
 		uint8_t unidadesDeTiempo  = leer_buffer_uint8(buffer_recibido);
-		char* interfaz = leer_buffer_string(buffer_recibido);
+		char* interfaz = leer_buffer_string(buffer_recibido); //Int1 
 		destruir_buffer(buffer_recibido);
 
         // Chequeo de si existe la interfaz y coincide el tipo
         t_interfaz* aux = queue_pop(colaGenerica);
         
-        if (strcmp(aux->nombre, interfaz) == 0){
+        if (strcmp(aux->nombre, interfaz) == 0 ){
             if (strcmp(aux->tipo , "GENERICA") == 0) {
 		    //Mandarlo a IO GENERICA y BLOQUEAR PROCESO
 		    enviar_codOp(fd_IO,SLEEP);
@@ -523,14 +523,16 @@ void recibir_dormirIO() {
                     enviar_pcb_de_block_a_ready(pcb_sleep);
                 }
             
-            }
-            else {
+            } else {
                 agregar_a_cola_finished("Interfaz no coincide el tipo");
             }
         }
-        else {
-            agregar_a_cola_finished("Interfaz no existe");
-        }
+        // else if(strcmp(aux->nombre, interfaz) != 0){
+        //     agregar_a_cola_finished("No coincide el nombre de la interfaz");
+        // } else {
+        //     agregar_a_cola_finished("No existe la interfaz");
+
+        // }
     }
 	// ¿¿Algo mas??
 }
@@ -540,8 +542,8 @@ void recibir_dormirIO() {
 void evaluar_instruccion(t_instruccion* instruccion_actual){
     switch(instruccion_actual->codigo){
         case IO_GEN_SLEEP:
-            log_info(logger_kernel,"OK");
-            recibir_dormirIO();
+            io_gen_sleep();
+            break;
         case EXIT:
             // if(strcmp(config_kernel.algoritmo, "RR") == 0){
             //     pcb_en_ejecucion->flag_clock = true;
@@ -562,6 +564,8 @@ void evaluar_instruccion(t_instruccion* instruccion_actual){
 
 
 void agregar_a_cola_finished(char* razon){
+    log_info(logger_kernel, "LLEGUE");
+    
     sem_wait(&cont_exec);
     
     // if(planificacion_detenida == 1){
@@ -668,7 +672,7 @@ void enviar_pcb_de_block_a_ready(t_pcb* pcb){
     list_remove_element(colaBLOCKED->elements, pcb);
     pthread_mutex_unlock(&mutex_block);
 
-    // t_pcb* pcb_a_ready =retirar_pcb_de(colaBLOCKED, &mutex_block);
+    // t_pcb* pcb_a_ready = retirar_pcb_de(colaBLOCKED, &mutex_block);
     
     agregar_pcb_a(colaREADY, pcb_a_ready, &mutex_ready);
     pcb_a_ready->estado = READY;
