@@ -499,7 +499,7 @@ void io_gen_sleep() {
 		uint8_t unidadesDeTiempo  = leer_buffer_uint8(buffer_recibido);
 		char* interfaz = leer_buffer_string(buffer_recibido); //Int1 
 		destruir_buffer(buffer_recibido);
-
+        
         // Chequeo de si existe la interfaz y coincide el tipo
         t_interfaz* aux = queue_pop(colaGenerica);
         
@@ -527,12 +527,12 @@ void io_gen_sleep() {
                 agregar_a_cola_finished("Interfaz no coincide el tipo");
             }
         }
-        // else if(strcmp(aux->nombre, interfaz) != 0){
-        //     agregar_a_cola_finished("No coincide el nombre de la interfaz");
-        // } else {
-        //     agregar_a_cola_finished("No existe la interfaz");
+        else if(strcmp(aux->nombre, interfaz) != 0){
+            agregar_a_cola_finished("No coincide el nombre de la interfaz");
+        } else {
+            agregar_a_cola_finished("No existe la interfaz");
 
-        // }
+        }
     }
 	// ¿¿Algo mas??
 }
@@ -564,7 +564,6 @@ void evaluar_instruccion(t_instruccion* instruccion_actual){
 
 
 void agregar_a_cola_finished(char* razon){
-    log_info(logger_kernel, "LLEGUE");
     
     sem_wait(&cont_exec);
     
