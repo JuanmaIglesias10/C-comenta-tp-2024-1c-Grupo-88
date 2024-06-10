@@ -107,6 +107,7 @@ extern pthread_mutex_t mutex_new;
 extern pthread_mutex_t mutex_procesos_globales;
 extern pthread_mutex_t mutex_ready;
 extern pthread_mutex_t mutex_exec;
+extern pthread_mutex_t mutex_block;
 extern pthread_mutex_t mutex_pcb_en_ejecucion;
 extern pthread_mutex_t mutex_finalizados;
 extern pthread_mutex_t mutex_colasIO;
@@ -120,6 +121,7 @@ extern sem_t bin_recibir_cde;
 extern sem_t procesos_en_exit;
 extern sem_t sem_iniciar_quantum;
 extern sem_t sem_reiniciar_quantum;
+extern sem_t procesos_en_blocked;
 
 #endif 
 

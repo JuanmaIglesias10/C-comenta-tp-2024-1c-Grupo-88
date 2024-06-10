@@ -291,7 +291,6 @@ void ejecutar_dormirIO(char* nombreInterfaz, uint32_t unidadesDeTiempo) {
     destruir_buffer(buffer_a_enviar);
     
     interrupcion = 1;
-
 }
 
 void ejecutar_exit(){

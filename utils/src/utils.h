@@ -51,7 +51,8 @@ typedef enum{
 }mensajeCpuMemoria;
 
 typedef enum{
-	SLEEP
+	SLEEP,
+	SLEEP_OK
 } mensajeKernelIO;
 
 

@@ -107,6 +107,7 @@ void inicializar_semaforos(){
 	pthread_mutex_init(&mutex_pcb_en_ejecucion, NULL);
 	pthread_mutex_init(&mutex_finalizados, NULL);
     pthread_mutex_init(&mutex_colasIO,NULL);
+    pthread_mutex_init(&mutex_block,NULL);
 	sem_init(&cpu_libre, 0, 1);
 	sem_init(&procesos_en_ready, 0, 0);
 	sem_init(&procesos_NEW, 0, 0);
@@ -495,28 +496,50 @@ void recibir_dormirIO() {
 		// Recibir buffer y extraer lo recibido
 		t_buffer* buffer_recibido = recibir_buffer(fd_cpu_int);
 		uint8_t unidadesDeTiempo  = leer_buffer_uint8(buffer_recibido);
-		uint8_t interfaz = leer_buffer_uint8(buffer_recibido);
+		char* interfaz = leer_buffer_string(buffer_recibido);
 		destruir_buffer(buffer_recibido);
 
         // Chequeo de si existe la interfaz y coincide el tipo
+        t_interfaz* aux = queue_pop(colaGenerica);
+        
+        if (strcmp(aux->nombre, interfaz) == 0){
+            if (strcmp(aux->tipo , "GENERICA") == 0) {
+		    //Mandarlo a IO GENERICA y BLOQUEAR PROCESO
+		    enviar_codOp(fd_IO,SLEEP);
+		    t_buffer* buffer_a_enviar = crear_buffer();
+		    agregar_buffer_uint8(buffer_a_enviar,unidadesDeTiempo);
+		    enviar_buffer(buffer_a_enviar,aux->fd);
+		    destruir_buffer(buffer_a_enviar);
+            
+            //Bloqueo el proceso
+            t_pcb* pcb_sleep = malloc(sizeof(t_pcb)); // REVISAR ESTO, NECESITO COPIAR LA INFO DEL PCB EJECUTANDO EN OTRO AUXILIAR.
+            pcb_sleep = pcb_ejecutando;             
+            enviar_de_exec_a_block();
 
-
-
-		//Mandarlo a IO GENERICA
-		enviar_codOp(fd_IO,SLEEP);
-		t_buffer* buffer_a_enviar = crear_buffer();
-		agregar_buffer_uint8(buffer_a_enviar,unidadesDeTiempo);
-		enviar_buffer(buffer_a_enviar,fd_IO);
-		destruir_buffer(buffer_a_enviar);
-
-		// ¿¿Algo mas??
-	}
+            //Espero el OK de la interfaz para volver a ponerlo en ready
+            mensajeKernelIO codigo = recibir_codOp(aux->fd);
+                if(codigo == SLEEP_OK) {
+                    enviar_pcb_de_block_a_ready(pcb_sleep);
+                }
+            
+            }
+            else {
+                agregar_a_cola_finished("Interfaz no coincide el tipo");
+            }
+        }
+        else {
+            agregar_a_cola_finished("Interfaz no existe");
+        }
+    }
+	// ¿¿Algo mas??
 }
+
 
 
 void evaluar_instruccion(t_instruccion* instruccion_actual){
     switch(instruccion_actual->codigo){
         case IO_GEN_SLEEP:
+        log_info(logger_kernel,"OK");
             recibir_dormirIO();
         case EXIT:
             // if(strcmp(config_kernel.algoritmo, "RR") == 0){
@@ -608,4 +631,60 @@ void enviar_de_exec_a_ready(){
     
     sem_post(&cpu_libre); // se libera el procesador
     sem_post(&procesos_en_ready);
+}
+
+void enviar_de_exec_a_block(){
+    //sem_wait(&cont_exec);
+    //if(planificacion_detenida == 1){
+    //    sem_wait(&pausar_exec_a_blocked);
+    //}
+    agregar_pcb_a(colaBLOCKED, pcb_ejecutando, &mutex_block);
+    pcb_ejecutando->estado = BLOCKED;
+
+    log_info(logger_kernel, "PID: %d - Estado anterior: %s - Estado actual: %s", pcb_ejecutando->cde->pid, "EXEC", "BLOCKED");
+    
+    pthread_mutex_lock(&mutex_pcb_en_ejecucion);
+    pcb_ejecutando = NULL;
+    pthread_mutex_unlock(&mutex_pcb_en_ejecucion);
+    
+
+    sem_post(&cpu_libre); // se libera el procesador
+    sem_post(&procesos_en_blocked);
+}
+
+void enviar_pcb_de_block_a_ready(t_pcb* pcb){
+    
+    sem_wait(&procesos_en_blocked);
+    
+   // if(planificacion_detenida == 1){
+   //     sem_wait(&pausar_blocked_a_ready);
+   // }
+
+    int posicion_pcb = esta_proceso_en_cola_bloqueados(pcb);
+
+    t_pcb* pcb_a_ready = list_get(colaBLOCKED->elements,posicion_pcb);
+    
+    pthread_mutex_lock(&mutex_block);
+    list_remove_element(colaBLOCKED->elements, pcb);
+    pthread_mutex_unlock(&mutex_block);
+
+    agregar_pcb_a(colaREADY, pcb_a_ready, &mutex_ready);
+    pcb_a_ready->estado = READY;
+
+    log_info(logger_kernel, "PID: %d - Estado anterior: %s - Estado actual: %s", pcb_a_ready->cde->pid, "BLOCKED", "READY");
+
+    sem_post(&procesos_en_ready);
+}
+
+int esta_proceso_en_cola_bloqueados(t_pcb* pcb){
+    int posicion_pcb = -1;
+    for(int i=0; i < list_size(colaBLOCKED->elements); i++){
+        t_pcb* pcb_get = list_get(colaBLOCKED->elements, i);
+        int pid_pcb = pcb_get->cde->pid;
+        if(pcb->cde->pid == pid_pcb){
+            posicion_pcb = i;
+            break;
+        }
+    }
+    return posicion_pcb;
 }
