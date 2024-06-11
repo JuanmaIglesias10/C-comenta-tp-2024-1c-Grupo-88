@@ -122,10 +122,14 @@ void exec_IO_Generica() {
 	// mensajeKernelIO codigo = recibir_codOp(fd_kernel);
 	
 	// if (codigo == SLEEP) { 
+		log_info(logger_IO,"1");
 		t_buffer* buffer_recibido = recibir_buffer(fd_kernel);
 		uint8_t unidadesDeTiempo = leer_buffer_uint8(buffer_recibido);
 		usleep(unidadesDeTiempo * 1000);
+		log_info(logger_IO,"2");
+		destruir_buffer(buffer_recibido);
 		enviar_codOp(fd_kernel,SLEEP_OK);
+		log_info(logger_IO,"3");
 	
 	// }
 }
