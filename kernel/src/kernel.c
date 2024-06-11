@@ -39,8 +39,6 @@ void inicializar_kernel(){
 
 	inicializar_planificadores();
 
-	
-
 }
 
 void iniciar_config_kernel(){
@@ -533,8 +531,8 @@ void io_gen_sleep() {
             agregar_a_cola_finished("No existe la interfaz");
 
         }
+    queue_push(colaGenerica,aux);
     }
-	// ¿¿Algo mas??
 }
 
 

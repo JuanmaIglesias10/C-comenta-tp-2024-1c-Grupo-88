@@ -5,6 +5,7 @@
 #include "consola.h"
 #include <atender_kernel.h>
 #include <utils.h>
+#include "commons/temporal.h"
 
 
 // CONEXIONES
