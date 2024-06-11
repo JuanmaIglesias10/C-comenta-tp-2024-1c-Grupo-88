@@ -19,19 +19,17 @@ while (1) {
 return NULL;
 }
 
-void* atender_kernel()
+void atender_kernel()
 {
-    while (1) {
-            mensajeKernelIO cod_op = recibir_codOp(fd_kernel);
-            switch (cod_op) {
-                case SLEEP:
-                    exec_IO_Generica();
-                    // log_info(logger_IO, "xd");
-                    break;
-                default:
-                    log_info(logger_IO, "Se desconectó KERNEL");
-                    return;
-                }
-        }
-    return NULL;
+     while (1) {
+             mensajeKernelIO cod_op = recibir_codOp(fd_kernel);
+             switch (cod_op) {
+                 case SLEEP:
+                     exec_IO_Generica();
+                     break;
+                 default:
+                     log_info(logger_IO, "Se desconectó KERNEL");
+                     return;
+                 }
+         }
 }

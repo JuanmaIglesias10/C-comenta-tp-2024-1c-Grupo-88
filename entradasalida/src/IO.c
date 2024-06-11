@@ -119,14 +119,13 @@ void enviar_info_kernel(char* nombre_interfaz, char* tipo){
 
 void exec_IO_Generica() {
 
-	// uint8_t codigo = recibir_codOp(fd_kernel);
+	// mensajeKernelIO codigo = recibir_codOp(fd_kernel);
 	
-	// if (codigo == IO_GEN_SLEEP) { 
-	t_buffer* buffer_recibido = recibir_buffer(fd_kernel);
-	uint8_t unidadesDeTiempo = leer_buffer_uint8(buffer_recibido);
-	usleep(unidadesDeTiempo * 1000);
-
-	// 	CUANDO LA IO HACE SLEEP EL PROCESO DEBERIA BLOQUEARSE, NO OLVIDARSE DE CODEAR ESO!!!
-	enviar_codOp(fd_kernel,SLEEP_OK);
+	// if (codigo == SLEEP) { 
+		t_buffer* buffer_recibido = recibir_buffer(fd_kernel);
+		uint8_t unidadesDeTiempo = leer_buffer_uint8(buffer_recibido);
+		usleep(unidadesDeTiempo * 1000);
+		enviar_codOp(fd_kernel,SLEEP_OK);
+	
 	// }
 }

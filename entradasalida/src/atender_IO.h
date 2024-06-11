@@ -6,7 +6,7 @@
 
 
 void* atender_memoria();
-void* atender_kernel();
+void atender_kernel();
 
 
 #endif

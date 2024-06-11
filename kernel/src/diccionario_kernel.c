@@ -19,6 +19,7 @@ t_list* procesos_globales;
 // Colas
 t_queue* colaNEW;
 t_queue* colaREADY;
+t_queue* colaREADYMAS;
 t_queue* colaBLOCKED;
 t_queue* colaFINISHED;
 
@@ -49,4 +50,8 @@ sem_t procesos_en_blocked;
 sem_t sem_iniciar_quantum;
 sem_t sem_reiniciar_quantum;
 sem_t cont_exec;
+sem_t sem_timer;
 
+//Temporal
+t_temporal* timer;
+int ms_transcurridos;

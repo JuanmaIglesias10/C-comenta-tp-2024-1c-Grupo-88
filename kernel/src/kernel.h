@@ -54,8 +54,10 @@ void controlar_tiempo_de_ejecucion();
 void enviar_de_exec_a_ready();
 void enviar_de_exec_a_block();
 void enviar_pcb_de_block_a_ready(t_pcb* pcb);
+void enviar_pcb_de_block_a_ready_mas(t_pcb* pcb);
 int esta_proceso_en_cola_bloqueados(t_pcb* pcb);
 void io_gen_sleep();
-
+void timer_vrr();
+void enviar_de_exec_a_ready_mas();
 
 #endif

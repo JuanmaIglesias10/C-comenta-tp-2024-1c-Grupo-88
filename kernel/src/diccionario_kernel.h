@@ -5,6 +5,7 @@
 #include <commons/collections/queue.h>
 #include <readline/history.h>
 #include <readline/readline.h>
+#include "commons/temporal.h"
 
 
 //STRUCT'S && ENUM
@@ -34,6 +35,7 @@ typedef enum {
 typedef struct{
 	t_cde* cde;
 	t_estado_proceso estado;
+	uint32_t quantum;
 	// char* path;
 	// int prioridad;
 	// t_list* archivos_abiertos;
@@ -93,6 +95,7 @@ extern t_list* procesos_globales;
 // Colas
 extern t_queue* colaNEW;
 extern t_queue* colaREADY;
+extern t_queue* colaREADYMAS;
 extern t_queue* colaBLOCKED;
 extern t_queue* colaFINISHED;
 
@@ -123,6 +126,12 @@ extern sem_t sem_iniciar_quantum;
 extern sem_t sem_reiniciar_quantum;
 extern sem_t procesos_en_blocked;
 extern sem_t cont_exec;
+extern sem_t sem_timer;
+
+// Temporal
+extern t_temporal* timer;
+extern int ms_transcurridos;
+
 
 #endif 
 
