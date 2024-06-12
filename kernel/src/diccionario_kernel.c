@@ -40,6 +40,7 @@ pthread_mutex_t mutex_pcb_en_ejecucion;
 pthread_mutex_t mutex_finalizados;
 pthread_mutex_t mutex_colasIO;
 
+
 sem_t procesos_NEW;
 sem_t cpu_libre;
 sem_t procesos_en_ready;
@@ -52,6 +53,7 @@ sem_t sem_reiniciar_quantum;
 sem_t cont_exec;
 sem_t sem_timer;
 
+
 //Temporal
 t_temporal* timer;
-int ms_transcurridos;
+uint64_t ms_transcurridos;

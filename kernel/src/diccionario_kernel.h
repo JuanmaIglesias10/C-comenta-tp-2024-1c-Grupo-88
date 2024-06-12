@@ -42,7 +42,7 @@ typedef struct{
 	// t_list* archivos_solicitados;
 	// t_list* recursos_asignados;
 	// t_list* recursos_solicitados;
-	// bool flag_clock;
+	bool flag_clock;
 	bool fin_q;
 }t_pcb;
 
@@ -128,9 +128,10 @@ extern sem_t procesos_en_blocked;
 extern sem_t cont_exec;
 extern sem_t sem_timer;
 
+
 // Temporal
 extern t_temporal* timer;
-extern int ms_transcurridos;
+extern uint64_t ms_transcurridos;
 
 
 #endif 

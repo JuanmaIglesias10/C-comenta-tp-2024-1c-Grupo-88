@@ -165,13 +165,23 @@ void agregar_a_buffer(t_buffer* buffer, void* data, uint32_t size) {
 } // OK
 
 // Guarda size bytes del principio del buffer en la dirección data y avanza el offset
+//void* leer_buffer(t_buffer* buffer, uint32_t size) {
+//	if (buffer == NULL || size == 0) return NULL;
+//	void* data = malloc(size);
+//    memcpy(data, buffer->stream + buffer->offset, size);
+//    buffer->offset += size;
+//	return data;
+//} // OK
+
 void* leer_buffer(t_buffer* buffer, uint32_t size) {
-	if (buffer == NULL || size == 0) return NULL;
-	void* data = malloc(size);
+    if (buffer == NULL || size == 0) return NULL;
+    void* data = malloc(size);
+    if (data == NULL) return NULL; // Verificar si malloc falla
     memcpy(data, buffer->stream + buffer->offset, size);
     buffer->offset += size;
-	return data;
-} // OK
+    return data;
+}
+
 
 // Agrega un uint32_t al buffer
 void agregar_buffer_uint32(t_buffer* buffer, uint32_t data){
@@ -243,14 +253,35 @@ t_registros* leer_buffer_registros(t_buffer* buffer){
 }
 
 // Lee un string y su longitud del buffer y avanza el offset
+//char* leer_buffer_string(t_buffer* buffer) {
+//    uint32_t length = leer_buffer_uint32(buffer); 
+//    char* string = malloc(length + 1); 
+//    string = leer_buffer(buffer, length);
+//    if (string == NULL || strcmp(string,"") == 0) return NULL;
+//    string[length] = '\0'; // Null-terminate the string
+//    return string;
+//} // OK
+
 char* leer_buffer_string(t_buffer* buffer) {
-    uint32_t length = leer_buffer_uint32(buffer); 
-    char* string = malloc(length + 1); 
-    string = leer_buffer(buffer, length);
-    if (string == NULL || strcmp(string,"") == 0) return NULL;
+    uint32_t length = leer_buffer_uint32(buffer);
+    if (length == 0) return NULL; // Verificar si length es 0 para evitar asignaciones innecesarias
+
+    char* string = malloc(length + 1);
+    if (string == NULL) return NULL; // Verificar si malloc falla
+
+    void* data = leer_buffer(buffer, length);
+    if (data == NULL) {
+        free(string);
+        return NULL;
+    }
+
+    memcpy(string, data, length);
+    free(data); // Liberar la memoria temporal utilizada por leer_buffer
+
     string[length] = '\0'; // Null-terminate the string
     return string;
-} // OK
+}
+
 
 t_instruccion* leer_buffer_instruccion(t_buffer* buffer){
 	t_instruccion* instr = malloc(sizeof(t_instruccion));

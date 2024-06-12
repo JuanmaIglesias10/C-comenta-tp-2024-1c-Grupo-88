@@ -182,6 +182,7 @@ t_pcb* crear_PCB(){
 	PCB_creado->estado = NULO;
 
 	pid_a_asignar++; //Aumento en 1 el PID
+    PCB_creado->flag_clock = false;
     PCB_creado->fin_q = false;
 	return PCB_creado;
 }
@@ -323,8 +324,6 @@ void ready_a_exec(){
             sem_post(&sem_iniciar_quantum);
             timer_vrr();
         }
-        
-            
     }
 }
 
@@ -339,6 +338,8 @@ void exec_a_finished(){
         pthread_mutex_lock(&mutex_procesos_globales);
 	    list_remove_element(procesos_globales, pcb);
 	    pthread_mutex_unlock(&mutex_procesos_globales);
+
+
         destruir_pcb(pcb);
 
         // liberar_recursos_pcb(pcb);
@@ -462,9 +463,9 @@ void enviar_cde_a_cpu(){
 	// agregar_buffer_registros(buffer, pcb_ejecutando->cde->registros);
     pthread_mutex_unlock(&mutex_pcb_en_ejecucion);
 
-    // if(strcmp(config_kernel.algoritmo, "RR") == 0){
-    //     pcb_en_ejecucion->flag_clock = false;
-    // }
+     if(strcmp(config_kernel.algoritmo_planificacion, "RR") == 0 || strcmp(config_kernel.algoritmo_planificacion, "VRR") == 0 ){
+         pcb_ejecutando->flag_clock = false;
+     }
 
     enviar_buffer(buffer, fd_cpu_dis);
     destruir_buffer(buffer);
@@ -586,13 +587,16 @@ void io_gen_sleep() {
 void evaluar_instruccion(t_instruccion* instruccion_actual){
     switch(instruccion_actual->codigo){
         case IO_GEN_SLEEP:
+            if(strcmp(config_kernel.algoritmo_planificacion, "RR") == 0 || strcmp(config_kernel.algoritmo_planificacion, "VRR") == 0){
+                pcb_ejecutando->flag_clock = true;
+            }
             io_gen_sleep();
             destruir_instruccion(instruccion_actual);
             break;
         case EXIT:
-            // if(strcmp(config_kernel.algoritmo, "RR") == 0){
-            //     pcb_en_ejecucion->flag_clock = true;
-            // }
+            if(strcmp(config_kernel.algoritmo_planificacion, "RR") == 0 || strcmp(config_kernel.algoritmo_planificacion, "VRR") == 0){
+                pcb_ejecutando->flag_clock = true;
+            }
             agregar_a_cola_finished("SUCCESS");
             destruir_instruccion(instruccion_actual);
             break;
@@ -643,24 +647,21 @@ void prender_quantum(){
 void controlar_tiempo_de_ejecucion(){
     while(1){
         sem_wait(&sem_iniciar_quantum);
-        // uint32_t pid_pcb_before_start_clock = pcb_en_ejecucion->cde->pid;
-        // bool flag_clock_pcb_before_start_clock = pcb_en_ejecucion->flag_clock; //aranca en false
+        uint32_t pid_pcb_before_start_clock = pcb_ejecutando->cde->pid;
+        bool flag_clock_pcb_before_start_clock = pcb_ejecutando->flag_clock; //aranca en false
+        
         usleep(pcb_ejecutando->quantum * 1000);
-        // if(pcb_ejecutando->quantum < 2000){
-        //     pcb_ejecutando->quantum = 2000;
-        // }
 
-        // if(pcb_en_ejecucion != NULL)
-        //     pcb_en_ejecucion->fin_q = true;
+        if(pcb_ejecutando != NULL) pcb_ejecutando->fin_q = true;
 
-        // if(pcb_en_ejecucion != NULL && pid_pcb_before_start_clock == pcb_en_ejecucion->cde->pid && flag_clock_pcb_before_start_clock == pcb_en_ejecucion->flag_clock){
+        if(pcb_ejecutando != NULL && pid_pcb_before_start_clock == pcb_ejecutando->cde->pid && flag_clock_pcb_before_start_clock == pcb_ejecutando->flag_clock){
         enviar_codOp(fd_cpu_int, DESALOJO);
 
         t_buffer* buffer = crear_buffer();
         agregar_buffer_uint32(buffer, pcb_ejecutando->cde->pid); // lo enviamos porque interrupt recibe un buffer, pero no hacemos nada con esto
         enviar_buffer(buffer, fd_cpu_int);
         destruir_buffer(buffer);
-        // }
+        }
         sem_post(&sem_reiniciar_quantum);
 
     }
@@ -787,8 +788,7 @@ void timer_vrr(){
     sem_wait(&sem_timer);
     ms_transcurridos = temporal_gettime(timer); //setea el tiempo
     temporal_destroy(timer); //lo destruye
-    log_info(logger_kernel, "%d",timer->elapsed_ms);
-
+    timer = NULL;
 }
 
 void enviar_de_exec_a_ready_mas(){
