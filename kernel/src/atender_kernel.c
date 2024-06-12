@@ -27,11 +27,12 @@ void* atender_IO(void* arg) {
     t_buffer* buffer = recibir_buffer(fd_IO);
     char* nombre = leer_buffer_string(buffer);
     char* tipo = leer_buffer_string(buffer);
-
+    destruir_buffer(buffer);
     t_interfaz* interfaz = malloc(sizeof(t_interfaz));
     interfaz->nombre = nombre;
     interfaz->tipo = tipo;
     interfaz->fd = fd_IO;
+    
 
     pthread_mutex_lock(&mutex_colasIO);
     if (strcmp(tipo, "GENERICA") == 0) {
@@ -44,21 +45,22 @@ void* atender_IO(void* arg) {
         queue_push(colaDIALFS, interfaz);
     }
     pthread_mutex_unlock(&mutex_colasIO);
-
+    // free(nombre);
+    // free(tipo);
     while (1) {
-        uint8_t cod_op = recibir_codOp(fd_IO);
-        switch (cod_op) {
-            case MENSAJE:
-                // Manejar el mensaje
-                break;
-            case PAQUETE:
-                // Manejar el paquete
-                break;
-            default:
-                log_info(logger_kernel, "Se desconectó IO");
-                close(fd_IO);
-                return NULL;
-        }
+        // uint8_t cod_op = recibir_codOp(fd_IO);
+        // switch (cod_op) {
+        //     case MENSAJE:
+        //         // Manejar el mensaje
+        //         break;
+        //     case PAQUETE:
+        //         // Manejar el paquete
+        //         break;
+        //     default:
+        //         log_info(logger_kernel, "Se desconectó IO");
+        //         close(fd_IO);
+        //         return NULL;
+        // }
     }
 }
 
@@ -102,8 +104,7 @@ void* atender_cpu_int()
 	}
 }
 
-void* aceptar_conexiones_IO(void* arg) {
-    int fd_kernel = *(int*)arg;
+void aceptar_conexiones_IO() {
 
     while (1) {
         int fd_IO = esperar_cliente(fd_kernel, logger_kernel, "IO");
