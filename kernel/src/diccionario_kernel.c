@@ -29,6 +29,7 @@ t_queue* colaSTDOUT;
 t_queue* colaDIALFS;
 
 int pid_a_asignar;
+int planificacion_detenida = 1;
 
 //Semaforos
 pthread_mutex_t mutex_new;
@@ -52,6 +53,7 @@ sem_t sem_iniciar_quantum;
 sem_t sem_reiniciar_quantum;
 sem_t cont_exec;
 sem_t sem_timer;
+sem_t grado_de_multiprogramacion;
 
 
 //Temporal

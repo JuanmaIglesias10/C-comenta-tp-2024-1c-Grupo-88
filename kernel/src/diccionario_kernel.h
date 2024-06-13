@@ -73,6 +73,7 @@ typedef struct {
 
 /* VARIABLES GLOBALES */
 extern int pid_a_asignar;
+extern int planificacion_detenida;
 
 // Logger Y Config
 extern t_log* logger_kernel;
@@ -127,6 +128,7 @@ extern sem_t sem_reiniciar_quantum;
 extern sem_t procesos_en_blocked;
 extern sem_t cont_exec;
 extern sem_t sem_timer;
+extern sem_t grado_de_multiprogramacion;
 
 
 // Temporal

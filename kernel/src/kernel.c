@@ -117,6 +117,7 @@ void inicializar_semaforos(){
     sem_init(&sem_reiniciar_quantum, 0, 1);
     sem_init(&cont_exec, 0, 0);
     sem_init(&sem_timer, 0, 0);
+    sem_init(&grado_de_multiprogramacion, 0, config_kernel.grado_multiprogramacion);
 }
 
 t_list* ejecutar_script(char* pathScript){
@@ -156,6 +157,22 @@ void iniciar_proceso(char* path) {
     else if(cod_op == INICIAR_PROCESO_ERROR)
         log_info(logger_kernel, "No se pudo crear el proceso %d", pcb_nuevo->cde->pid);
     
+}
+
+void cambiar_grado_multiprogramacion(char* nuevo_grado){
+    //para cambiarlo la planificacion debe estar detendida
+    int grado_a_asignar = atoi(nuevo_grado);
+
+    if(planificacion_detenida == 1){ // se puede cambiar el grado de multiprogramacion
+        
+        grado_de_multiprogramacion.__align = grado_a_asignar - config_kernel.grado_multiprogramacion + grado_de_multiprogramacion.__align - 1;
+        sem_post(&grado_de_multiprogramacion);
+        config_kernel.grado_multiprogramacion = grado_a_asignar; 
+    }
+    else{
+        // no se puede realizar el cambio
+        log_warning(logger_kernel, "La planificacion no se detuvo. No se puede cambiar el grado de multiprogramacion");
+    }
 }
 
 t_pcb* crear_PCB(){
@@ -258,7 +275,7 @@ void new_a_ready(){
 	while(1){
 		sem_wait(&procesos_NEW);
         
-        // sem_wait(&grado_de_multiprogramacion);
+        sem_wait(&grado_de_multiprogramacion);
 
         // if(planificacion_detenida == 1){ 
         //     sem_wait(&pausar_new_a_ready);
@@ -632,7 +649,7 @@ void agregar_a_cola_finished(char* razon){
 
     sem_post(&cpu_libre); // se libera el procesador
 	sem_post(&procesos_en_exit); // se agrega uno a procesosExit
-    // sem_post(&grado_de_multiprogramacion); // Se libera 1 grado de multiprog
+    sem_post(&grado_de_multiprogramacion); // Se libera 1 grado de multiprog
 
 }
 

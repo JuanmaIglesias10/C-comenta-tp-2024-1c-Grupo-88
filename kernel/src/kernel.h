@@ -28,6 +28,7 @@ t_list* ejecutar_script(char* pathScript);
 t_list* obtener_lista_script(char* pathScript);
 t_codigo_operacion obtener_codigo_operacion(char* parametro);
 void iniciar_proceso(char* path);
+void cambiar_grado_multiprogramacion(char* nuevo_grado);
 t_pcb* crear_PCB();
 t_pcb* retirar_pcb_de_ready_segun_algoritmo();
 t_pcb* retirar_pcb_de(t_queue* cola, pthread_mutex_t* mutex);
