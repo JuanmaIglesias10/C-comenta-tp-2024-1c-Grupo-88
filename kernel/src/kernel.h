@@ -34,31 +34,18 @@ t_pcb* retirar_pcb_de_ready_segun_algoritmo();
 t_pcb* retirar_pcb_de(t_queue* cola, pthread_mutex_t* mutex);
 void agregar_pcb_a(t_queue* cola, t_pcb* pcb_a_agregar, pthread_mutex_t* mutex);
 
-// Planificacion a largo plazo
-void new_a_ready();
-void exec_a_finished();
-
-
-// Planificacion a corto plazo
-
-void ready_a_exec();
 char* obtener_elementos_cargados_en(t_queue* );
 void enviar_cde_a_cpu();
 void recibir_cde_de_cpu();
 void evaluar_instruccion(t_instruccion* instruccion_actual);
 
-void agregar_a_cola_finished(char* razon);
-
 void prender_quantum();
 
 void controlar_tiempo_de_ejecucion();
-void enviar_de_exec_a_ready();
-void enviar_de_exec_a_block();
-void enviar_pcb_de_block_a_ready(t_pcb* pcb);
-void enviar_pcb_de_block_a_ready_mas(t_pcb* pcb);
+
 int esta_proceso_en_cola_bloqueados(t_pcb* pcb);
 void io_gen_sleep();
 void timer_vrr();
-void enviar_de_exec_a_ready_mas();
+
 void destruir_pcb(t_pcb* pcb);
 #endif
