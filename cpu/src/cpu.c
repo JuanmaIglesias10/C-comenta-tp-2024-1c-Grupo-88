@@ -237,7 +237,7 @@ void ejecutar_instruccion(t_cde* cde, t_instruccion* instruccion_a_ejecutar){
             // ejecutar_mov_out(par1, instruccion_a_ejecutar->par2, cde);
             // if (interruption == 0 && realizar_desalojo == 0 && interrupcion_consola == 0)
             //     destruir_instruccion(instruccion_a_ejecutar);
-            // break;
+            break;
         case SUM:
             log_info(logger_cpu, "PID: %d - Ejecutando: %s - %s %s", cde->pid, obtener_nombre_instruccion(instruccion_a_ejecutar), instruccion_a_ejecutar->par1, instruccion_a_ejecutar->par2);
             ejecutar_sum(instruccion_a_ejecutar->par1, instruccion_a_ejecutar->par2);
@@ -264,20 +264,20 @@ void ejecutar_instruccion(t_cde* cde, t_instruccion* instruccion_a_ejecutar){
 			//
 			break;
         case WAIT:
-            // log_info(logger_cpu, "PID: %d - Ejecutando: %s - %s", cde->pid, obtener_nombre_instruccion(instruccion_a_ejecutar), instruccion_a_ejecutar->par1);
-            // ejecutar_wait(instruccion_a_ejecutar->par1);
-            // if (interruption == 0 && realizar_desalojo == 0 && interrupcion_consola == 0)
-            //     destruir_instruccion(instruccion_a_ejecutar);
-            // break;
+            log_info(logger_cpu, "PID: %d - Ejecutando: %s - %s", cde->pid, obtener_nombre_instruccion(instruccion_a_ejecutar), instruccion_a_ejecutar->par1);
+            ejecutar_wait(instruccion_a_ejecutar->par1);
+            if (interrupcion == 0 && realizar_desalojo == 0)
+                destruir_instruccion(instruccion_a_ejecutar);
+            break;
         case SIGNAL:
-            // log_info(logger_cpu, "PID: %d - Ejecutando: %s - %s", cde->pid, obtener_nombre_instruccion(instruccion_a_ejecutar), instruccion_a_ejecutar->par1);
-            // ejecutar_signal(instruccion_a_ejecutar->par1);
-            // if (interruption == 0 && realizar_desalojo == 0 && interrupcion_consola == 0)
-            //     destruir_instruccion(instruccion_a_ejecutar);
-            // break;
+            log_info(logger_cpu, "PID: %d - Ejecutando: %s - %s", cde->pid, obtener_nombre_instruccion(instruccion_a_ejecutar), instruccion_a_ejecutar->par1);
+            ejecutar_signal(instruccion_a_ejecutar->par1);
+            if (interrupcion == 0 && realizar_desalojo == 0)
+                 destruir_instruccion(instruccion_a_ejecutar);
+            break;
         case IO_GEN_SLEEP:
             log_info(logger_cpu, "PID: %d - Ejecutando: %s - %s %s", cde->pid, obtener_nombre_instruccion(instruccion_a_ejecutar), instruccion_a_ejecutar->par1, instruccion_a_ejecutar->par2);
-            ejecutar_dormirIO(instruccion_a_ejecutar->par1,instruccion_a_ejecutar->par2); //(uint32_t)(uintptr_t)
+            ejecutar_io_gen_sleep(instruccion_a_ejecutar->par1,instruccion_a_ejecutar->par2); //(uint32_t)(uintptr_t)
                 if (interrupcion == 0 && realizar_desalojo == 0)
                     destruir_instruccion(instruccion_a_ejecutar);
                 break;
@@ -294,10 +294,13 @@ void ejecutar_instruccion(t_cde* cde, t_instruccion* instruccion_a_ejecutar){
             break;
         case IO_FS_TRUNCATE:
             //
+            break;
         case IO_FS_WRITE:
             //
+            break;
         case IO_FS_READ:
             //
+            break;
         case EXIT:
             log_info(logger_cpu, "PID: %d - Ejecutando: %s", cde->pid, obtener_nombre_instruccion(instruccion_a_ejecutar));
             ejecutar_exit();
@@ -312,38 +315,55 @@ bool es_bloqueante(t_codigo_instruccion instruccion){
     switch(instruccion){
     case SET:
         return false;
+        break;
     case MOV_IN:
         //
+        break;
     case MOV_OUT:
         //
+        break;
     case SUM:
         return false;
+        break;
     case SUB:
         return false;
+        break;
     case JNZ:
         return false;
+        break;
     case RESIZE:
         //
+        break;
     case COPY_STRING:
         //
+        break;
     case WAIT: 
-        //
+        return true;
+        break;
     case SIGNAL:
-        //
+        return true;
+        break;
     case IO_STDIN_READ:
         //
+        break;
     case IO_STDOUT_WRITE:
         //
+        break;
     case IO_FS_CREATE:
         //
+        break;
     case IO_FS_DELETE:
         //
+        break;
     case IO_FS_WRITE: 
         //
+        break;
     case IO_FS_READ:
         //
+        break;
     case IO_FS_TRUNCATE:
         //
+        break;
     case IO_GEN_SLEEP:
         return true;
         break;

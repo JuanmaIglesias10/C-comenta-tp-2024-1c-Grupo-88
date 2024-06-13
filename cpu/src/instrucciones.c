@@ -282,7 +282,7 @@ void ejecutar_jnz(void* registro, char* char_nro_instruccion) {
 }
 
 
-void ejecutar_dormirIO(char* nombreInterfaz, char* charUnidadesDeTiempo) {
+void ejecutar_io_gen_sleep(char* nombreInterfaz, char* charUnidadesDeTiempo) {
     uint32_t unidadesDeTiempo = atoi(charUnidadesDeTiempo);
     // log_info(logger_cpu, unidadesDeTiempo);
     enviar_codOp(fd_kernel_int, INTERRUPT);
@@ -293,6 +293,14 @@ void ejecutar_dormirIO(char* nombreInterfaz, char* charUnidadesDeTiempo) {
     destruir_buffer(buffer_a_enviar);
     interrupcion = 1;
     
+}
+
+void ejecutar_wait(char* recurso){ //solicitar a kernel que se asigne una instancia del recurso
+    interrupcion = 1;
+}
+
+void ejecutar_signal(char* recurso){ //solicitar a kernel que se libere una instancia del recurso
+    interrupcion = 1;
 }
 
 void ejecutar_exit(){
