@@ -29,7 +29,7 @@ t_queue* colaSTDOUT;
 t_queue* colaDIALFS;
 
 int pid_a_asignar;
-int planificacion_detenida = 1;
+int planificacion_detenida = 1; //INICIALIZO EN 1 PROVISORIAMENTE PARA TESTEAR MULTIPROGRAMACION
 
 //Semaforos
 pthread_mutex_t mutex_new;

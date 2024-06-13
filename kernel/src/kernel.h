@@ -6,7 +6,7 @@
 #include <atender_kernel.h>
 #include <utils.h>
 #include "commons/temporal.h"
-
+#include "cambio_de_estado.h"
 
 // CONEXIONES
 void inicializar_kernel();
