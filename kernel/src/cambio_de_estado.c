@@ -57,15 +57,20 @@ void ready_a_exec(){
 		log_info(logger_kernel, "PID: %d - Estado anterior: READY - Estado actual: EXEC", pcb_ejecutando->cde->pid); //OBLIGATORIO
         pcb_ejecutando->estado = EXEC;
 
+
 		sem_post(&cont_exec); 
         
+
         if(strcmp(config_kernel.algoritmo_planificacion, "RR") == 0){
+            pcb_ejecutando->fin_q = false;
             sem_wait(&sem_reiniciar_quantum);
             sem_post(&sem_iniciar_quantum);
         }
-        enviar_cde_a_cpu();
 		
+        enviar_cde_a_cpu(); 
+
         if(strcmp(config_kernel.algoritmo_planificacion, "VRR") == 0){
+            pcb_ejecutando->fin_q = false;
             sem_wait(&sem_reiniciar_quantum);
             sem_post(&sem_iniciar_quantum);
             timer_vrr();

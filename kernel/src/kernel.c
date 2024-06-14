@@ -20,7 +20,7 @@ void inicializar_kernel(){
     t_buffer* buffer = crear_buffer();
     // si el algoritmo es FIFO envia 0
     // si el algoritmo es ROUND ROBIN envia un 1
-    // si el algoritmo es VIRTUAL ROUND ROBBIN envia un 2
+    // si el algoritmo es VIRTUAL ROUND ROBIN envia un 2
     if(strcmp(config_kernel.algoritmo_planificacion, "FIFO") == 0) {
         agregar_buffer_uint32(buffer, 0);
         }
@@ -51,9 +51,22 @@ void iniciar_config_kernel(){
 	config_kernel.puerto_cpu_interrupt = config_get_int_value(config, "PUERTO_CPU_INTERRUPT");
 	config_kernel.algoritmo_planificacion = config_get_string_value(config, "ALGORITMO_PLANIFICACION");
 	config_kernel.quantum = config_get_int_value(config, "QUANTUM");
-	// config_kernel.recursos = config_get_string_value(config, "RECURSOS");
-	// config_kernel.instancias_recursos = config_get_string_value(config, "INSTANCIAS_RECURSOS");
 	config_kernel.grado_multiprogramacion = config_get_int_value(config, "GRADO_MULTIPROGRAMACION");
+
+    char **recursos = config_get_array_value(config,"RECURSOS");
+	char **instancias = config_get_array_value(config,"INSTANCIAS_RECURSOS");
+	config_kernel.recursos = list_create();
+
+	int i = 0;
+	while(recursos[i]!= NULL){
+		int num_instancias = strtol(instancias[i],NULL,10);
+		t_recurso* recurso = inicializar_recurso(recursos[i], num_instancias);
+		list_add(config_kernel.recursos, recurso);
+		i++;
+	}
+
+    string_array_destroy(recursos);
+    string_array_destroy(instancias);
 }
 
 void inicializar_conexiones(){
@@ -119,6 +132,26 @@ void inicializar_semaforos(){
     sem_init(&sem_timer, 0, 0);
     sem_init(&grado_de_multiprogramacion, 0, config_kernel.grado_multiprogramacion);
 }
+
+t_recurso* inicializar_recurso(char* nombre_recurso, int instancias_totales){
+    t_recurso* recurso = malloc(sizeof(t_recurso));
+    int tam = 0;
+
+    while(nombre_recurso[tam] != '\0') // Corrección aquí
+        tam++;
+
+    recurso->nombre = malloc(tam + 1); // +1 para el carácter nulo
+    strcpy(recurso->nombre, nombre_recurso);
+
+    recurso->instancias = instancias_totales;
+    recurso->procesos_bloqueados = list_create();
+    sem_t sem;
+    sem_init(&sem, instancias_totales, 1);
+    recurso->sem_recurso = sem;
+
+    return recurso;
+}
+
 
 t_list* ejecutar_script(char* pathScript){
 	t_list* scriptProcesos = obtener_lista_script(pathScript);
@@ -197,6 +230,8 @@ t_pcb* crear_PCB(){
 	PCB_creado->cde->registros->SI=0;
 	PCB_creado->cde->registros->DI=0;
 	PCB_creado->estado = NULO;
+    PCB_creado->recursos_asignados = list_create();
+    PCB_creado->recursos_solicitados = list_create();
 
 	pid_a_asignar++; //Aumento en 1 el PID
     PCB_creado->flag_clock = false;
@@ -362,7 +397,7 @@ void enviar_cde_a_cpu(){
 	enviar_codOp(fd_cpu_dis, EJECUTAR_PROCESO);
 
     t_buffer* buffer = crear_buffer();
-    pthread_mutex_lock(&mutex_pcb_en_ejecucion); //ESTE SEMAFORO NI IDEA DONDE MAS ESTÁ
+    pthread_mutex_lock(&mutex_pcb_en_ejecucion); 
 	agregar_buffer_cde(buffer, pcb_ejecutando->cde);
 	// agregar_buffer_uint32(buffer, pcb_ejecutando->cde->pid);
 	// agregar_buffer_registros(buffer, pcb_ejecutando->cde->registros);
@@ -382,18 +417,21 @@ void enviar_cde_a_cpu(){
 void recibir_cde_de_cpu(){
 	while(1){
         sem_wait(&bin_recibir_cde);
+
         t_buffer* buffer = recibir_buffer(fd_cpu_dis);
+        
         pthread_mutex_lock(&mutex_exec);
         destruir_cde(pcb_ejecutando->cde);        
         pcb_ejecutando->cde = leer_buffer_cde(buffer);
         pthread_mutex_unlock(&mutex_exec);
         //---------------------------------
+        //---------------------------------
+        t_instruccion* instruccion_actual = leer_buffer_instruccion(buffer);
+        
         if(strcmp(config_kernel.algoritmo_planificacion, "VRR") == 0){
             temporal_stop(timer);
             sem_post(&sem_timer);
         }
-        //---------------------------------
-        t_instruccion* instruccion_actual = leer_buffer_instruccion(buffer);
         /*
         if(strcmp(config_kernel.algoritmo, "RR") == 0 && pcb_en_ejecucion->fin_q && (instruccion_actual->codigo == MOV_IN || instruccion_actual->codigo == MOV_OUT)){
             log_info(logger_kernel, "PID: %d - Desalojado por fin de Quantum", pcb_en_ejecucion->cde->pid);
@@ -432,97 +470,6 @@ void recibir_cde_de_cpu(){
         
         destruir_buffer(buffer);
 
-    }
-}
-
-void io_gen_sleep() {
-	mensajeKernelCpu codOp = recibir_codOp(fd_cpu_int);
-
-	if (codOp == INTERRUPT) {
-		// Recibir buffer y extraer lo recibido
-		t_buffer* buffer_recibido = recibir_buffer(fd_cpu_int);
-		uint8_t unidadesDeTiempo  = leer_buffer_uint8(buffer_recibido);
-		char* interfaz = leer_buffer_string(buffer_recibido); //Int1 
-		destruir_buffer(buffer_recibido);
-        
-        // Chequeo de si existe la interfaz y coincide el tipo
-        t_interfaz* aux = queue_pop(colaGenerica);
-        
-        if (strcmp(aux->nombre, interfaz) == 0 ){
-            if (strcmp(aux->tipo , "GENERICA") == 0) {
-		    //Mandarlo a IO GENERICA y BLOQUEAR PROCESO
-		    enviar_codOp(aux->fd,SLEEP);
-		    t_buffer* buffer_a_enviar = crear_buffer();
-		    agregar_buffer_uint8(buffer_a_enviar,unidadesDeTiempo);
-		    enviar_buffer(buffer_a_enviar,aux->fd);
-		    destruir_buffer(buffer_a_enviar);
-            
-            //Bloqueo el proceso
-            t_pcb* pcb_sleep = malloc(sizeof(t_pcb)); // REVISAR ESTO, NECESITO COPIAR LA INFO DEL PCB EJECUTANDO EN OTRO AUXILIAR.
-            pcb_sleep = pcb_ejecutando;             
-            enviar_de_exec_a_block();
-
-            //Espero el OK de la interfaz para volver a ponerlo en ready
-            mensajeKernelIO codigo = recibir_codOp(aux->fd);
-                if(codigo == SLEEP_OK) {
-                    if(strcmp(config_kernel.algoritmo_planificacion,"VRR") == 0 && ms_transcurridos < pcb_sleep->quantum){
-                        pcb_sleep->quantum -= ms_transcurridos;
-                        enviar_pcb_de_block_a_ready_mas(pcb_sleep);
-                    } else {
-                        enviar_pcb_de_block_a_ready(pcb_sleep);
-                    }
-                }
-            
-            } else {
-                agregar_a_cola_finished("Interfaz no coincide el tipo");
-            }
-        }
-        else if(strcmp(aux->nombre, interfaz) != 0){
-            agregar_a_cola_finished("No coincide el nombre de la interfaz");
-        } else {
-            agregar_a_cola_finished("No existe la interfaz");
-
-        }
-    free(interfaz);
-    queue_push(colaGenerica,aux);
-    
-    }
-}
-
-void evaluar_instruccion(t_instruccion* instruccion_actual){
-    switch(instruccion_actual->codigo){
-        case WAIT:
-            //if(strcmp(config_kernel.algoritmo_planificacion, "RR" ) == 0 || strcmp(config_kernel.algoritmo_planificacion, "VRR") == 0){
-            //    pcb_en_ejecucion->flag_clock = true;
-            //} // si se bloquea tengo que reiniciar el clock para el nuevo proceso (RR-VRR)
-            //char* nombre_recurso = instruccion_actual->par1;
-            //evaluar_wait(nombre_recurso);
-            //destruir_instruccion(instruccion_actual);
-            //break;        
-        case IO_GEN_SLEEP:
-            if(strcmp(config_kernel.algoritmo_planificacion, "RR") == 0 || strcmp(config_kernel.algoritmo_planificacion, "VRR") == 0){
-                pcb_ejecutando->flag_clock = true;
-            }
-            io_gen_sleep();
-            destruir_instruccion(instruccion_actual);
-            break;
-        case EXIT:
-            if(strcmp(config_kernel.algoritmo_planificacion, "RR") == 0 || strcmp(config_kernel.algoritmo_planificacion, "VRR") == 0){
-                pcb_ejecutando->flag_clock = true;
-            }
-            agregar_a_cola_finished("SUCCESS");
-            destruir_instruccion(instruccion_actual);
-            break;
-        default: // FIN DE QUANTUM
-        log_info(logger_kernel, "PID: %d - Desalojado por fin de Quantum", pcb_ejecutando->cde->pid);
-        if (strcmp(config_kernel.algoritmo_planificacion,"VRR") == 0) {
-            pcb_ejecutando->quantum = config_kernel.quantum; 
-        }
-        enviar_de_exec_a_ready();
-        destruir_instruccion(instruccion_actual);
-
-        break;
-        
     }
 }
 
@@ -579,4 +526,212 @@ void timer_vrr(){
     ms_transcurridos = temporal_gettime(timer); //setea el tiempo
     temporal_destroy(timer); //lo destruye
     timer = NULL;
+}
+
+// EVALUAR INSTRUCCIONES
+
+void evaluar_instruccion(t_instruccion* instruccion_actual){
+    switch(instruccion_actual->codigo){
+        case WAIT:
+            if(strcmp(config_kernel.algoritmo_planificacion, "RR" ) == 0 || strcmp(config_kernel.algoritmo_planificacion, "VRR") == 0){
+                pcb_ejecutando->flag_clock = true;
+            } // si se bloquea tengo que reiniciar el clock para el nuevo proceso (RR-VRR)
+            char* nombre_recurso = instruccion_actual->par1;
+            evaluar_wait(nombre_recurso);
+            destruir_instruccion(instruccion_actual);
+            break;
+        case SIGNAL:
+            if(es_RR_o_VRR()){
+                pcb_ejecutando->flag_clock = true;
+            }
+            char* nombre_recurso_signal = instruccion_actual->par1;
+            evaluar_signal(nombre_recurso_signal);
+            destruir_instruccion(instruccion_actual);
+            break;      
+        case IO_GEN_SLEEP:
+            if(strcmp(config_kernel.algoritmo_planificacion, "RR") == 0 || strcmp(config_kernel.algoritmo_planificacion, "VRR") == 0){
+                pcb_ejecutando->flag_clock = true;
+            }
+            io_gen_sleep();
+            destruir_instruccion(instruccion_actual);
+            break;
+        case EXIT:
+            if(strcmp(config_kernel.algoritmo_planificacion, "RR") == 0 || strcmp(config_kernel.algoritmo_planificacion, "VRR") == 0){
+                pcb_ejecutando->flag_clock = true;
+            }
+            agregar_a_cola_finished("SUCCESS");
+            destruir_instruccion(instruccion_actual);
+            break;
+        default: // FIN DE QUANTUM
+        log_info(logger_kernel, "PID: %d - Desalojado por fin de Quantum", pcb_ejecutando->cde->pid);
+        if (strcmp(config_kernel.algoritmo_planificacion,"VRR") == 0) {
+            pcb_ejecutando->quantum = config_kernel.quantum; 
+        }
+        enviar_de_exec_a_ready();
+        destruir_instruccion(instruccion_actual);
+
+        break;
+        
+    }
+}
+
+void io_gen_sleep() {
+	mensajeKernelCpu codOp = recibir_codOp(fd_cpu_int);
+
+	if (codOp == INTERRUPT) {
+		// Recibir buffer y extraer lo recibido
+		t_buffer* buffer_recibido = recibir_buffer(fd_cpu_int);
+		uint8_t unidadesDeTiempo  = leer_buffer_uint8(buffer_recibido);
+		char* interfaz = leer_buffer_string(buffer_recibido); //Int1 
+		destruir_buffer(buffer_recibido);
+        
+        // Chequeo de si existe la interfaz y coincide el tipo
+        t_interfaz* aux = queue_pop(colaGenerica);
+        
+        if (strcmp(aux->nombre, interfaz) == 0 ){
+            if (strcmp(aux->tipo , "GENERICA") == 0) {
+		    //Mandarlo a IO GENERICA y BLOQUEAR PROCESO
+		    enviar_codOp(aux->fd,SLEEP);
+		    t_buffer* buffer_a_enviar = crear_buffer();
+		    agregar_buffer_uint8(buffer_a_enviar,unidadesDeTiempo);
+		    enviar_buffer(buffer_a_enviar,aux->fd);
+		    destruir_buffer(buffer_a_enviar);
+            
+            //Bloqueo el proceso
+            t_pcb* pcb_sleep = malloc(sizeof(t_pcb)); // REVISAR ESTO, NECESITO COPIAR LA INFO DEL PCB EJECUTANDO EN OTRO AUXILIAR.
+            pcb_sleep = pcb_ejecutando;             
+            enviar_de_exec_a_block();
+
+            //Espero el OK de la interfaz para volver a ponerlo en ready
+            mensajeKernelIO codigo = recibir_codOp(aux->fd);
+                if(codigo == SLEEP_OK) {
+                    if(strcmp(config_kernel.algoritmo_planificacion,"VRR") == 0 && ms_transcurridos < pcb_sleep->quantum){
+                        pcb_sleep->quantum -= ms_transcurridos;
+                        enviar_pcb_de_block_a_ready_mas(pcb_sleep);
+                    } else {
+                        enviar_pcb_de_block_a_ready(pcb_sleep);
+                    }
+                }
+            
+            } else {
+                agregar_a_cola_finished("INVALID_INTERFACE");
+            }
+        }
+        else if(strcmp(aux->nombre, interfaz) != 0){
+            agregar_a_cola_finished("INVALID_INTERFACE");
+        } else {
+            agregar_a_cola_finished("INVALID_INTERFACE");
+
+        }
+    free(interfaz);
+    queue_push(colaGenerica,aux);
+    
+    }
+}
+
+void evaluar_wait(char* nombre_recurso_pedido){
+    int coincidencia = 0;
+    int posicion_recurso;
+    
+    for(int i=0; i < list_size(config_kernel.recursos); i++){
+        t_recurso* recurso = list_get(config_kernel.recursos, i);
+        char* nombre_recurso = recurso->nombre;
+        if(string_equals_ignore_case(nombre_recurso_pedido, nombre_recurso)){
+            coincidencia++;
+            posicion_recurso = i;
+        }
+    }
+    if(coincidencia>0){ // Significa que el recurso existe
+        t_recurso* recurso = list_get(config_kernel.recursos, posicion_recurso);
+        recurso->instancias--;
+        
+        if(recurso->instancias < 0){  // Chequea si debe bloquear al proceso por falta de instancias
+
+            sem_t semaforo_recurso = recurso->sem_recurso;
+        	sem_wait(&semaforo_recurso);
+
+        	list_add(recurso->procesos_bloqueados, pcb_ejecutando);
+        	recurso->instancias = 0;
+        	sem_post(&semaforo_recurso);
+
+            log_info(logger_kernel, "PID: %d - Bloqueado por: %s", pcb_ejecutando->cde->pid, nombre_recurso_pedido);
+
+            list_add(pcb_ejecutando->recursos_solicitados, recurso);
+            
+            enviar_de_exec_a_block();
+        }
+        else{
+            list_add(pcb_ejecutando->recursos_asignados, recurso);
+
+            if(es_RR_o_VRR() && !pcb_ejecutando->fin_q)
+                enviar_cde_a_cpu();
+            else if(es_RR_o_VRR() && pcb_ejecutando->fin_q)
+                enviar_de_exec_a_ready();
+            else
+                enviar_cde_a_cpu();
+        }
+    }
+    else{ // el recurso no existe
+        agregar_a_cola_finished("INVALID_RESOURCE"); //TODO: codigo de inexistencia de recurso
+    }
+}
+
+void evaluar_signal(char* nombre_recurso_pedido) {
+    int coincidencia = 0;
+    int posicion_recurso = -1; // Inicializado a un valor inválido por defecto
+    int asignado = 0;
+
+    // Primer bucle: Buscar el recurso en config_kernel.recursos
+    for (int i = 0; i < list_size(config_kernel.recursos); i++) {
+        t_recurso* recurso = list_get(config_kernel.recursos, i);
+        char* nombre_recurso = recurso->nombre;
+        if (string_equals_ignore_case(nombre_recurso_pedido, nombre_recurso)) {
+            coincidencia++;
+            posicion_recurso = i;
+        }
+    }
+
+    // Segundo bucle: Verificar si el recurso está asignado a pcb_ejecutando
+    for (int i = 0; i < list_size(pcb_ejecutando->recursos_asignados); i++) {
+        t_recurso* recurso = list_get(pcb_ejecutando->recursos_asignados, i);
+        char* nombre_recurso = recurso->nombre;
+        if (string_equals_ignore_case(nombre_recurso_pedido, nombre_recurso)) {
+            asignado++;
+        }
+    }
+
+    if (coincidencia > 0 && asignado > 0) { // el recurso existe y lo tiene asignado
+        t_recurso* recurso = list_get(config_kernel.recursos, posicion_recurso);
+        recurso->instancias++; // Incrementar instancias del recurso
+
+        list_remove_element(pcb_ejecutando->recursos_asignados, recurso); // Remover el recurso de los asignados
+
+        // Enviar señales dependiendo del algoritmo y estado del quantum
+        if (es_RR_o_VRR() && !pcb_ejecutando->fin_q) {
+            enviar_cde_a_cpu();
+        } else if (es_RR_o_VRR() && pcb_ejecutando->fin_q) {
+            enviar_de_exec_a_ready();
+        } else {
+            enviar_cde_a_cpu();
+        }
+
+        // Desbloquear el primer proceso de la cola de bloqueados si existe
+        if (list_size(recurso->procesos_bloqueados) > 0) {
+            t_pcb* pcb = list_remove(recurso->procesos_bloqueados, 0); // Remover el primer proceso bloqueado
+
+            list_remove_element(pcb->recursos_solicitados, recurso); // Remover el recurso solicitado
+
+            list_add(pcb->recursos_asignados, recurso); // Asignar el recurso al proceso desbloqueado
+            recurso->instancias--; // Decrementar instancias del recurso
+            enviar_pcb_de_block_a_ready(pcb); // Mover el proceso de bloqueado a ready
+        }
+    } else if (coincidencia > 0 && asignado == 0) { // el recurso existe y NO lo tiene asignado
+        exec_a_finished("INVALID_RESOURCE");
+    } else if (coincidencia == 0 && asignado == 0) { // el recurso NO existe y NO lo tiene asignado
+        exec_a_finished("INVALID_RESOURCE");
+    }
+}
+
+bool es_RR_o_VRR() {
+    return (strcmp(config_kernel.algoritmo_planificacion, "RR") == 0 || strcmp(config_kernel.algoritmo_planificacion, "VRR") == 0);
 }
