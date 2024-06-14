@@ -223,9 +223,9 @@ void ejecutar_instruccion(t_cde* cde, t_instruccion* instruccion_a_ejecutar){
                 destruir_instruccion(instruccion_a_ejecutar);
             break;
         case MOV_IN:
-            // log_info(logger_cpu, "PID: %d - Ejecutando: %s - %s %s", cde->pid, obtener_nombre_instruccion(instruccion_a_ejecutar), instruccion_a_ejecutar->par1, instruccion_a_ejecutar->par2);
+            log_info(logger_cpu, "PID: %d - Ejecutando: %s - %s %s", cde->pid, obtener_nombre_instruccion(instruccion_a_ejecutar), instruccion_a_ejecutar->par1, instruccion_a_ejecutar->par2);
             // par2 = leerEnteroParametroInstruccion(2, instruccion_a_ejecutar);
-            // ejecutar_mov_in(instruccion_a_ejecutar->par1, par2, cde);
+            ejecutar_mov_in(instruccion_a_ejecutar->par1, instruccion_a_ejecutar->par2, cde);
                         if (interrupcion == 0 && realizar_desalojo == 0)
 
                 destruir_instruccion(instruccion_a_ejecutar);
@@ -316,7 +316,7 @@ bool es_bloqueante(t_codigo_instruccion instruccion){
         return false;
         break;
     case MOV_IN:
-        //
+        return false;
         break;
     case MOV_OUT:
         //
@@ -373,6 +373,7 @@ bool es_bloqueante(t_codigo_instruccion instruccion){
         return false;
         break;
     }
+    return false; //Para evitar el warning
 }
 
 void desalojar_cde(t_cde* cde, t_instruccion* instruccion_a_ejecutar){

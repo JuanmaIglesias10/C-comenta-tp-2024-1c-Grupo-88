@@ -2,7 +2,7 @@
 #include "math.h"
 #include "diccionario_cpu.h"
 
-int obtener_nro_pagina(int direccionLogica);
+int obtener_numero_pagina(int direccionLogica);
 
 int obtener_desplazamiento_pagina(int direccionLogica);
 

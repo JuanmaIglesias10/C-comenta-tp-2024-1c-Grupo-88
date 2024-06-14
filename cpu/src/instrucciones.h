@@ -1,5 +1,6 @@
 #include "diccionario_cpu.h"
 #include "utils.h"
+#include "mmu.h"
 
 
 char* obtener_nombre_instruccion(t_instruccion* instruccion);
@@ -18,3 +19,4 @@ void ejecutar_wait(char* recurso);
 void ejecutar_signal(char* recurso);
 void ejecutar_exit();
 uint8_t obtener_numero_interfaz(char* nombreInterfaz);
+void ejecutar_mov_in(char* registro, char* charDirLogica, t_cde* cde);

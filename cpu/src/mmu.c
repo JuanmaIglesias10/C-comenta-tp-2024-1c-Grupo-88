@@ -1,17 +1,17 @@
 /*MMU*/
 #include "mmu.h"
 
-int obtener_nro_pagina(int direccionLogica){
+int obtener_numero_pagina(int direccionLogica){
 		return floor (direccionLogica/tam_pagina);
 }
 
 int obtener_desplazamiento_pagina(int direccionLogica){
-	int numero_pagina = obtener_nro_pagina(direccionLogica);
+	int numero_pagina = obtener_numero_pagina(direccionLogica);
 	return (direccionLogica - numero_pagina * tam_pagina);
 }
 
 uint32_t calcular_direccion_fisica(int direccion_logica, t_cde* cde){
-	int nro_pagina = obtener_nro_pagina(direccion_logica);
+	int nro_pagina = obtener_numero_pagina(direccion_logica);
 	int desplazamiento = obtener_desplazamiento_pagina(direccion_logica);
     enviar_codOp(fd_memoria,NUMERO_MARCO_SOLICITUD);
 
@@ -36,4 +36,5 @@ uint32_t calcular_direccion_fisica(int direccion_logica, t_cde* cde){
 		cde->registros->PC--;
 		return -1;
 	}	
+	return -1; //Chequear, no deberia llegar hasta aquí, es para evitar el WARNING
 }

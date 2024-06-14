@@ -115,7 +115,6 @@ void ejecutar_set32(char* registro, char* char_valor_recibido){
     }
 }
 
-
 uint8_t  buscar_valor_registro8(void* registro) {
 	uint8_t  valorLeido8;
 	if(strcmp(registro, "AX") == 0){
@@ -162,6 +161,7 @@ uint32_t  buscar_valor_registro32(void* registro){
 
 
 }
+
 void ejecutar_sum(char* reg_dest, char* reg_origen) {
     if(strcmp(reg_dest, "AX") == 0){
         uint8_t  valor_reg_origen = buscar_valor_registro8(reg_origen);
@@ -281,7 +281,6 @@ void ejecutar_jnz(void* registro, char* char_nro_instruccion) {
         log_warning(logger_cpu, "Registro no valido");
 }
 
-
 void ejecutar_io_gen_sleep(char* nombreInterfaz, char* charUnidadesDeTiempo) {
     uint32_t unidadesDeTiempo = atoi(charUnidadesDeTiempo);
     // log_info(logger_cpu, unidadesDeTiempo);
@@ -307,3 +306,33 @@ void ejecutar_exit(){
     interrupcion = 1;
 }
 
+void ejecutar_mov_in(char* registro, char* charDirLogica, t_cde* cde){
+    uint32_t dirLogica = atoi(charDirLogica);
+    uint32_t dirFisica = calcular_direccion_fisica(dirLogica, cde);
+    uint32_t numPagina = obtener_numero_pagina(dirLogica);
+    //REVISAR
+    // if(interruption){ // significa que hubo page fault
+    //     return;
+    // }
+
+    enviar_codOp(fd_memoria, MOV_IN_SOLICITUD);
+    
+    t_buffer* buffer = crear_buffer();
+    agregar_buffer_uint32(buffer, dirFisica);
+    agregar_buffer_uint32(buffer, cde->pid);
+    agregar_buffer_uint32(buffer, numPagina);
+    enviar_buffer(buffer, fd_memoria);
+    destruir_buffer(buffer);
+    
+    mensajeCpuMemoria codigoMemoria = recibir_codOp(fd_memoria);
+
+    if(codigoMemoria == MOV_IN_OK){
+        buffer = recibir_buffer(fd_memoria);
+        char* valorLeido = leer_buffer_string(buffer); //RECIBIR COMO STRING EN MEMORIA.C
+        ejecutar_set32(registro, valorLeido);
+
+        destruir_buffer(buffer);
+
+        log_info(logger_cpu,"PID: %d - Acción: LEER - Dirección Física: %d - Valor: %s", cde->pid, dirFisica, valorLeido);
+    }
+}
