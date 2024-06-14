@@ -116,7 +116,7 @@ void switch_comandos(uint8_t codOp, char* lista_mensaje){
 			break;
 		case INICIAR_PLANIFICACION:
 			log_info(logger_kernel, "INICIO DE PLANIFICACIÓN");
-			// iniciarPlanificacion();
+			iniciarPlanificacion();
 			free(lista_mensaje);
 			break;
 		case DETENER_PLANIFICACION:
@@ -125,6 +125,7 @@ void switch_comandos(uint8_t codOp, char* lista_mensaje){
 			free(lista_mensaje);
 			break;
 		case MULTIPROGRAMACION:
+			log_info(logger_kernel, "CAMBIO DE GRADO DE MULTIPROGRAMACION A: %s", lista_mensaje);
 			cambiar_grado_multiprogramacion(lista_mensaje);
 			free(lista_mensaje);
 			break;

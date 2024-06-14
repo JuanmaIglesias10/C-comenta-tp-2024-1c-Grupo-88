@@ -215,9 +215,35 @@ void cambiar_grado_multiprogramacion(char* nuevo_grado){
 
 void detenerPlanificacion(){ 
     planificacion_detenida = 1;
-    log_info(logger_kernel, "Planificacion Detenida");
 }
 
+void iniciarPlanificacion(){
+    sem_post(&pausar_new_a_ready);
+    // if(pausar_new_a_ready.__align == 1)
+    //     sem_wait(&pausar_new_a_ready);
+    
+    sem_post(&pausar_ready_a_exec);
+    // if(pausar_ready_a_exec.__align == 1)
+    //     sem_wait(&pausar_ready_a_exec);
+    
+    sem_post(&pausar_exec_a_finalizado);
+    // if(pausar_exec_a_finalizado.__align == 1)
+    //     sem_wait(&pausar_exec_a_finalizado);
+    
+    sem_post(&pausar_exec_a_ready);
+    // if(pausar_exec_a_ready.__align == 1)
+    //     sem_wait(&pausar_exec_a_ready);
+    
+    sem_post(&pausar_exec_a_blocked);
+    // if(pausar_exec_a_blocked.__align == 1)
+    //     sem_wait(&pausar_exec_a_blocked);
+    
+    sem_post(&pausar_blocked_a_ready);
+    // if(pausar_blocked_a_ready.__align == 1)
+    //     sem_wait(&pausar_blocked_a_ready);
+    
+    planificacion_detenida = 0;
+} 
 
 
 t_pcb* crear_PCB(){
