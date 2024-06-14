@@ -9,6 +9,7 @@ int main(void)
 void inicializar_kernel(){
 
 	pid_a_asignar = 0;
+    planificacion_detenida = 0;
 
 	logger_kernel = iniciar_logger("logKernel.log","KERNEL",LOG_LEVEL_INFO);
 	iniciar_config_kernel();
@@ -131,6 +132,12 @@ void inicializar_semaforos(){
     sem_init(&cont_exec, 0, 0);
     sem_init(&sem_timer, 0, 0);
     sem_init(&grado_de_multiprogramacion, 0, config_kernel.grado_multiprogramacion);
+    sem_init(&pausar_new_a_ready, 0, 0);
+    sem_init(&pausar_ready_a_exec, 0, 0);
+    sem_init(&pausar_exec_a_finalizado, 0, 0);
+    sem_init(&pausar_exec_a_ready, 0, 0);
+    sem_init(&pausar_exec_a_blocked, 0, 0);
+    sem_init(&pausar_blocked_a_ready, 0, 0);
 }
 
 t_recurso* inicializar_recurso(char* nombre_recurso, int instancias_totales){
@@ -206,6 +213,13 @@ void cambiar_grado_multiprogramacion(char* nuevo_grado){
     }
 }
 
+void detenerPlanificacion(){ 
+    planificacion_detenida = 1;
+    log_info(logger_kernel, "Planificacion Detenida");
+}
+
+
+
 t_pcb* crear_PCB(){
 
 	t_pcb* PCB_creado = malloc(sizeof(t_pcb));
@@ -213,9 +227,7 @@ t_pcb* crear_PCB(){
 	PCB_creado->cde->registros = malloc(sizeof(t_registros));
     PCB_creado->quantum = config_kernel.quantum ;
 
-	// PCB_creado->path = path; //Path del .txt
 	PCB_creado->cde->pid = pid_a_asignar; 
-	// PCB_creado->quantum=0;
 	PCB_creado->cde->registros->PC= 0;
 	PCB_creado->cde->registros->AX=0;
 	PCB_creado->cde->registros->BX=0;
@@ -397,8 +409,6 @@ void enviar_cde_a_cpu() {
     t_buffer* buffer = crear_buffer();
     pthread_mutex_lock(&mutex_pcb_en_ejecucion); 
 	agregar_buffer_cde(buffer, pcb_ejecutando->cde);
-	// agregar_buffer_uint32(buffer, pcb_ejecutando->cde->pid);
-	// agregar_buffer_registros(buffer, pcb_ejecutando->cde->registros);
     pthread_mutex_unlock(&mutex_pcb_en_ejecucion);
 
      if(strcmp(config_kernel.algoritmo_planificacion, "RR") == 0 || strcmp(config_kernel.algoritmo_planificacion, "VRR") == 0 ){
@@ -519,10 +529,10 @@ int esta_proceso_en_cola_bloqueados(t_pcb* pcb){
 }
 
 void timer_vrr(){
-    timer = temporal_create(); //lo crea
+    timer = temporal_create(); 
     sem_wait(&sem_timer);
-    ms_transcurridos = temporal_gettime(timer); //setea el tiempo
-    temporal_destroy(timer); //lo destruye
+    ms_transcurridos = temporal_gettime(timer); 
+    temporal_destroy(timer);
 }
 
 // EVALUAR INSTRUCCIONES
@@ -576,18 +586,15 @@ void io_gen_sleep() {
 	mensajeKernelCpu codOp = recibir_codOp(fd_cpu_int);
 
 	if (codOp == INTERRUPT) {
-		// Recibir buffer y extraer lo recibido
 		t_buffer* buffer_recibido = recibir_buffer(fd_cpu_int);
 		uint8_t unidadesDeTiempo  = leer_buffer_uint8(buffer_recibido);
 		char* interfaz = leer_buffer_string(buffer_recibido); //Int1 
 		destruir_buffer(buffer_recibido);
         
-        // Chequeo de si existe la interfaz y coincide el tipo
         t_interfaz* aux = queue_pop(colaGenerica);
         
         if (strcmp(aux->nombre, interfaz) == 0 ){
             if (strcmp(aux->tipo , "GENERICA") == 0) {
-		    //Mandarlo a IO GENERICA y BLOQUEAR PROCESO
 		    enviar_codOp(aux->fd,SLEEP);
 		    t_buffer* buffer_a_enviar = crear_buffer();
 		    agregar_buffer_uint8(buffer_a_enviar,unidadesDeTiempo);
@@ -595,11 +602,10 @@ void io_gen_sleep() {
 		    destruir_buffer(buffer_a_enviar);
             
             //Bloqueo el proceso
-            t_pcb* pcb_sleep = malloc(sizeof(t_pcb)); // REVISAR ESTO, NECESITO COPIAR LA INFO DEL PCB EJECUTANDO EN OTRO AUXILIAR.
+            t_pcb* pcb_sleep = malloc(sizeof(t_pcb)); 
             pcb_sleep = pcb_ejecutando;             
             enviar_de_exec_a_block();
 
-            //Espero el OK de la interfaz para volver a ponerlo en ready
             mensajeKernelIO codigo = recibir_codOp(aux->fd);
                 if(codigo == SLEEP_OK) {
                     if(strcmp(config_kernel.algoritmo_planificacion,"VRR") == 0 && ms_transcurridos < pcb_sleep->quantum){

@@ -30,6 +30,7 @@ t_codigo_operacion get_codigo_operacion(char* , int );
 t_list* ejecutar_script(char* pathScript);
 t_list* obtener_lista_script(char* pathScript);
 void iniciar_proceso(char* path);
+void detenerPlanificacion();
 t_pcb* crear_PCB();
 void cambiar_grado_multiprogramacion(char* nuevo_grado);
 void destruir_pcb(t_pcb* pcb);

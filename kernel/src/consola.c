@@ -121,7 +121,7 @@ void switch_comandos(uint8_t codOp, char* lista_mensaje){
 			break;
 		case DETENER_PLANIFICACION:
 			log_info(logger_kernel, "PAUSA DE PLANIFICACIÓN");
-			// detenerPlanificacion();
+			detenerPlanificacion();
 			free(lista_mensaje);
 			break;
 		case MULTIPROGRAMACION:

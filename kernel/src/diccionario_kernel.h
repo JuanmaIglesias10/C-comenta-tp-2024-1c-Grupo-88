@@ -135,6 +135,12 @@ extern sem_t procesos_en_blocked;
 extern sem_t cont_exec;
 extern sem_t sem_timer;
 extern sem_t grado_de_multiprogramacion;
+extern sem_t pausar_new_a_ready;
+extern sem_t pausar_ready_a_exec;
+extern sem_t pausar_exec_a_finalizado;
+extern sem_t pausar_exec_a_ready;
+extern sem_t pausar_exec_a_blocked;
+extern sem_t pausar_blocked_a_ready;
 
 
 // Temporal

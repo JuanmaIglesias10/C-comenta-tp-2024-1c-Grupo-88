@@ -6,9 +6,9 @@ void new_a_ready(){
         
         sem_wait(&grado_de_multiprogramacion);
 
-        // if(planificacion_detenida == 1){ 
-        //     sem_wait(&pausar_new_a_ready);
-        // }
+        if(planificacion_detenida == 1){ 
+            sem_wait(&pausar_new_a_ready);
+        }
 
 
         t_pcb* pcb_a_ready = retirar_pcb_de(colaNEW, &mutex_new);
@@ -43,11 +43,11 @@ void ready_a_exec(){
         } 
         free(lista_pcbs_en_ready);	
         
-        /* 
+         
 		if(planificacion_detenida == 1){
             sem_wait(&pausar_ready_a_exec);
         } 
-		*/
+		
 		
 		pthread_mutex_lock(&mutex_exec);
 		pcb_ejecutando = retirar_pcb_de_ready_segun_algoritmo();
@@ -118,9 +118,9 @@ void exec_a_finished(){
 void agregar_a_cola_finished(char* razon){
     sem_wait(&cont_exec);
     
-    // if(planificacion_detenida == 1){
-    //     sem_wait(&pausar_exec_a_finalizado);
-    // }
+    if(planificacion_detenida == 1){
+        sem_wait(&pausar_exec_a_finalizado);
+    }
 
 	agregar_pcb_a(colaFINISHED, pcb_ejecutando, &mutex_finalizados);
     pcb_ejecutando->estado = EXIT;
@@ -139,9 +139,10 @@ void agregar_a_cola_finished(char* razon){
 }
 void enviar_de_exec_a_ready(){
     sem_wait(&cont_exec);
-    // if(planificacion_detenida == 1){
-    //     sem_wait(&pausar_exec_a_ready);
-    // }
+    if(planificacion_detenida == 1){
+        sem_wait(&pausar_exec_a_ready);
+    }
+
     agregar_pcb_a(colaREADY, pcb_ejecutando, &mutex_ready);
     pcb_ejecutando->estado = READY;
     
@@ -158,9 +159,9 @@ void enviar_de_exec_a_ready(){
 
 void enviar_de_exec_a_block(){
     sem_wait(&cont_exec);
-    //if(planificacion_detenida == 1){
-    //    sem_wait(&pausar_exec_a_blocked);
-    //}
+    if(planificacion_detenida == 1){
+        sem_wait(&pausar_exec_a_blocked);
+    }
     agregar_pcb_a(colaBLOCKED, pcb_ejecutando, &mutex_block);
     pcb_ejecutando->estado = BLOCKED;
 
@@ -178,9 +179,9 @@ void enviar_de_exec_a_block(){
 void enviar_pcb_de_block_a_ready(t_pcb* pcb){
     sem_wait(&procesos_en_blocked);
 
-    // if(planificacion_detenida == 1){
-   //     sem_wait(&pausar_blocked_a_ready);
-   // }
+    if(planificacion_detenida == 1){
+       sem_wait(&pausar_blocked_a_ready);
+    }
 
     int posicion_pcb = esta_proceso_en_cola_bloqueados(pcb);
 
@@ -209,9 +210,9 @@ void enviar_pcb_de_block_a_ready(t_pcb* pcb){
 void enviar_pcb_de_block_a_ready_mas(t_pcb* pcb){
     sem_wait(&procesos_en_blocked);
     
-   // if(planificacion_detenida == 1){
-   //     sem_wait(&pausar_blocked_a_ready);
-   // }
+    if(planificacion_detenida == 1){
+       sem_wait(&pausar_blocked_a_ready);
+    }
 
     int posicion_pcb = esta_proceso_en_cola_bloqueados(pcb);
 
@@ -239,9 +240,10 @@ void enviar_pcb_de_block_a_ready_mas(t_pcb* pcb){
 
 void enviar_de_exec_a_ready_mas(){
     sem_wait(&cont_exec);
-    // if(planificacion_detenida == 1){
-    //     sem_wait(&pausar_exec_a_ready);
-    // }
+    
+    if(planificacion_detenida == 1){
+        sem_wait(&pausar_exec_a_ready);
+    }
     agregar_pcb_a(colaREADYMAS, pcb_ejecutando, &mutex_ready);
     pcb_ejecutando->estado = READY;
     
