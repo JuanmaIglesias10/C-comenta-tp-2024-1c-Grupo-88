@@ -13,7 +13,7 @@ int obtener_desplazamiento_pagina(int direccionLogica){
 uint32_t calcular_direccion_fisica(int direccion_logica, t_cde* cde){
 	int nro_pagina = obtener_numero_pagina(direccion_logica);
 	int desplazamiento = obtener_desplazamiento_pagina(direccion_logica);
-    enviar_codOp(fd_memoria,NUMERO_MARCO_SOLICITUD);
+    enviar_codOp(fd_memoria,NUMERO_MARCO_SOLICITUD); //Hacia atender_cpu en atender_memoria.c
 
     t_buffer* buffer = crear_buffer();
 	agregar_buffer_uint32(buffer, nro_pagina);
@@ -23,7 +23,7 @@ uint32_t calcular_direccion_fisica(int direccion_logica, t_cde* cde){
 
 	mensajeCpuMemoria codigo_recibido = recibir_codOp(fd_memoria);
 
-	if(codigo_recibido == NUMERO_MARCO_OK){
+	if(codigo_recibido == NUMERO_MARCO_OK){ //Desde memoria.c en devolver_nro_marco
 		buffer = recibir_buffer(fd_memoria);
 		uint32_t nro_marco_recibido = leer_buffer_uint32(buffer);
 		destruir_buffer(buffer);

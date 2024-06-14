@@ -126,5 +126,6 @@ void enviar_codOp(int fd_cliente , uint8_t codOp);
 void destruir_cde(t_cde* cde);
 
 void destruir_instruccion(t_instruccion* instruccion);
+char* uint32_a_string(uint32_t num);
 
 #endif /* UTILS_H_ */

@@ -68,8 +68,7 @@ char* obtener_nombre_instruccion(t_instruccion* instruccion) {
 
 // FUNCIONALIDAD DE LAS INSTRUCCIONES
 
-void ejecutar_set8(char* registro, char* char_valor_recibido) {
-    uint8_t valor_recibido = atoi(char_valor_recibido);
+void ejecutar_set8(char* registro, uint8_t valor_recibido) {
     if (strcmp(registro, "AX") == 0) {
         registros_cpu->AX = valor_recibido;
     }
@@ -87,8 +86,7 @@ void ejecutar_set8(char* registro, char* char_valor_recibido) {
     }
 }
 
-void ejecutar_set32(char* registro, char* char_valor_recibido){
-    uint32_t valor_recibido = atoi(char_valor_recibido);
+void ejecutar_set32(char* registro, uint32_t valor_recibido){
      if (strcmp(registro, "PC") == 0) { 
         registros_cpu->PC = valor_recibido;
     }
@@ -328,11 +326,11 @@ void ejecutar_mov_in(char* registro, char* charDirLogica, t_cde* cde){
 
     if(codigoMemoria == MOV_IN_OK){
         buffer = recibir_buffer(fd_memoria);
-        char* valorLeido = leer_buffer_string(buffer); //RECIBIR COMO STRING EN MEMORIA.C
+        uint32_t valorLeido = leer_buffer_uint32(buffer);
         ejecutar_set32(registro, valorLeido);
 
         destruir_buffer(buffer);
 
-        log_info(logger_cpu,"PID: %d - Acción: LEER - Dirección Física: %d - Valor: %s", cde->pid, dirFisica, valorLeido);
+        log_info(logger_cpu,"PID: %d - Acción: LEER - Dirección Física: %d - Valor: %d", cde->pid, dirFisica, valorLeido);
     }
 }

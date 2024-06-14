@@ -35,6 +35,7 @@ void inicializar_semaforos(){
 void inicializar_conexiones(){
 	fd_memoria = conectarse(config_cpu.ip_memoria, config_cpu.puerto_memoria, "MEMORIA", logger_cpu);
 
+    recibir_tamaño_pagina();
 	fd_cpu_dis = iniciar_servidor(config_cpu.puerto_escucha_dispatch, logger_cpu);
 
 	fd_cpu_int = iniciar_servidor(config_cpu.puerto_escucha_interrupt, logger_cpu);
@@ -66,6 +67,11 @@ void inicializar_conexiones(){
 	// log_destroy(logger_cpu);
 }
 
+void recibir_tamaño_pagina(){
+    t_buffer* buffer = recibir_buffer(fd_memoria);
+    tam_pagina = leer_buffer_uint32(buffer);
+    destruir_buffer(buffer);
+}
 /*
 	TO DO -> Creo que conviene hacerla despues de codear el ciclo basico de instruccion
 			 y las operaciones para este check. Tambien despues de tener en claro como 
@@ -213,11 +219,12 @@ void ejecutar_instruccion(t_cde* cde, t_instruccion* instruccion_a_ejecutar){
     switch(instruccion_a_ejecutar->codigo){
         case SET:
             log_info(logger_cpu, "PID: %d - Ejecutando: %s - %s %s", cde->pid, obtener_nombre_instruccion(instruccion_a_ejecutar), instruccion_a_ejecutar->par1, instruccion_a_ejecutar->par2);
-            // par2 = leerEnteroParametroInstruccion(2, instruccion_a_ejecutar);
             if ( strcmp(instruccion_a_ejecutar->par1,"AX") == 0 || strcmp(instruccion_a_ejecutar->par1,"BX") == 0 || strcmp(instruccion_a_ejecutar->par1,"CX") == 0 || strcmp(instruccion_a_ejecutar->par1,"DX") == 0 ){
-                ejecutar_set8(instruccion_a_ejecutar->par1, instruccion_a_ejecutar->par2);
+                uint8_t valor8 = atoi(instruccion_a_ejecutar->par2);
+                ejecutar_set8(instruccion_a_ejecutar->par1, valor8);
             } else {
-                ejecutar_set32(instruccion_a_ejecutar->par1, instruccion_a_ejecutar->par2);
+                uint32_t valor32 = atoi(instruccion_a_ejecutar->par2);
+                ejecutar_set32(instruccion_a_ejecutar->par1, valor32);
             }
             if (interrupcion == 0 && realizar_desalojo == 0)
                 destruir_instruccion(instruccion_a_ejecutar);

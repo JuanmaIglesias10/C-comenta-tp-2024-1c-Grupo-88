@@ -67,3 +67,20 @@ void destruir_instruccion(t_instruccion* instruccion) {
     }
     free(instruccion);
 }
+
+char* uint32_a_string(uint32_t num) {
+    // Calcular el tamaño máximo de la cadena necesaria (10 dígitos + 1 para el carácter nulo)
+    int size = snprintf(NULL, 0, "%u", num) + 1;
+
+    // Asignar memoria para la cadena resultante
+    char *str = (char *)malloc(size * sizeof(char));
+    if (str == NULL) {
+        // Manejar el caso en que malloc falla
+        return NULL;
+    }
+
+    // Convertir el número a cadena
+    sprintf(str, "%u", num);
+
+    return str;
+}

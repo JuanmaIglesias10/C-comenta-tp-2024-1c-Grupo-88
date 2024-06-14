@@ -2,6 +2,7 @@
 #define DICCIONARIO_MEMORIA_H_
 
 #include <utils.h>
+#include "commons/temporal.h"
 
 typedef struct{
     int puerto_escucha;
@@ -50,6 +51,8 @@ extern t_list* listaMarcos;
 // Semaforos
 extern pthread_mutex_t mutex_lista_procesos;
 
+//Memoria Principal
+extern void* memoriaPrincipal;
 
 // fin variables globales Memoria
 

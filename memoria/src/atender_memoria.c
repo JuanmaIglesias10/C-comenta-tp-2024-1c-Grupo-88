@@ -1,16 +1,18 @@
 #include "atender_memoria.h"
 
-void* atender_cpu()
+void atender_cpu()
 {	
 	while (1) {
 		mensajeCpuMemoria cod_op = recibir_codOp(fd_cpu);
-		
 		switch (cod_op) {
+			case MOV_IN_SOLICITUD: //Desde ejecutar_mov_in
+				ejecutar_MOV_IN();
+				break;
 			case PEDIDO_INSTRUCCION:
 				usleep(config_memoria.retardo_respuesta * 1000);
 				enviar_instruccion();
 				break;
-            case NUMERO_MARCO_SOLICITUD:
+            case NUMERO_MARCO_SOLICITUD: //Desde calcular_direccion_fisica en mmu.c
 				devolver_nro_marco();
 				break;
 			default:
@@ -21,7 +23,7 @@ void* atender_cpu()
 }
 
 
-void* atender_kernel()
+void atender_kernel()
 {
 	while(1){
 		mensajeKernelMem codigoDeKernel = recibir_codOp(fd_kernel);

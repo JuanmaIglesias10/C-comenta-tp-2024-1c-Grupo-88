@@ -16,6 +16,8 @@ void inicializar_memoria(){
 
     pthread_mutex_init(&mutex_lista_procesos, NULL);
 
+	inicializar_variables();
+
     inicializar_conexiones();
 }
 
@@ -28,6 +30,18 @@ void inicializar_config(){
     config_memoria.retardo_respuesta = config_get_int_value(config, "RETARDO_RESPUESTA");
 }
 
+void inicializar_variables(){
+	listaProcesos = list_create();
+	tablaGlobalPaginas = list_create();
+
+	// sem_init(&finalizacion, 0, 0);
+	// sem_init(&sem_pagina_cargada, 0, 0);
+
+	memoriaPrincipal = malloc(config_memoria.tam_memoria);
+	
+	// indicePorFifo = 0;
+}
+
 void inicializar_conexiones() {
     fd_memoria = iniciar_servidor(config_memoria.puerto_escucha, logger_memoria);
 
@@ -36,6 +50,8 @@ void inicializar_conexiones() {
         log_error(logger_memoria, "Error al esperar conexión de CPU");
         return;
     }
+
+	enviar_tamanio_pagina();
 
     fd_kernel = esperar_cliente(fd_memoria, logger_memoria, "KERNEL");
     if (fd_kernel == -1) {
@@ -63,7 +79,12 @@ void inicializar_conexiones() {
 
 }
 
-
+void enviar_tamanio_pagina(){
+	t_buffer* buffer = crear_buffer();
+	agregar_buffer_uint32(buffer, config_memoria.tam_pagina);
+	enviar_buffer(buffer, fd_cpu);
+	destruir_buffer(buffer);
+	}
 
 void iniciar_proceso(){
 	//Recibo el buffer 
@@ -219,7 +240,7 @@ void obtener_parametros_instruccion(int numParametro, t_instruccion* instruccion
 		}
 }
 
-//Esto caga todo :D lpm
+//TODO: Testear el liberar las Instrucciones
 void instrucciones_destroy(t_instruccion* instrucciones_a_destruir){
 	// free(script_a_destruir->codigo_operacion);
 	free(instrucciones_a_destruir->par1);
@@ -254,6 +275,31 @@ void enviar_instruccion(){
 	destruir_buffer(buffer);
 }
 
+void ejecutar_MOV_IN(){
+	t_buffer* buffer = recibir_buffer(fd_cpu); 
+	uint32_t dirFisica = leer_buffer_uint32(buffer);
+	uint32_t pid = leer_buffer_uint32(buffer);
+	uint32_t nroPag = leer_buffer_uint32(buffer);
+	destruir_buffer(buffer);
+
+	uint32_t valorLeido = 0;
+
+	memcpy(&valorLeido, memoriaPrincipal + dirFisica, sizeof(uint32_t));
+
+	enviar_codOp(fd_cpu, MOV_IN_OK); //Hacia ejecutar_mov_in en instrucciones.c
+
+	t_pagina* pagLeida = buscarPaginaPorNroYPid(nroPag, pid);
+	pagLeida->ultimaReferencia = temporal_get_string_time("%H:%M:%S:%MS"); //LRU
+
+	log_info(logger_memoria, "PID: %d - Acción: LEER - Dirección física: %d", pid, dirFisica);
+
+	//log_warning(logger_memoria, "Valor leido: %d", valorLeido);
+	buffer = crear_buffer();
+	agregar_buffer_uint32(buffer, valorLeido);
+	enviar_buffer(buffer, fd_cpu);
+	destruir_buffer(buffer);
+}
+
 t_proceso* buscarProcesoPorPid(uint32_t pid){
 	for(int i = 0; i < list_size(listaProcesos); i++){
 		t_proceso* proceso = list_get(listaProcesos, i);
@@ -263,9 +309,8 @@ t_proceso* buscarProcesoPorPid(uint32_t pid){
 	return NULL; 
 }
 
-
 void devolver_nro_marco(){
-	t_buffer* buffer = recibir_buffer(fd_cpu);
+	t_buffer* buffer = recibir_buffer(fd_cpu); //Desde calcular_direccion_fisica en mmu.c
 	uint32_t nro_pagina = leer_buffer_uint32(buffer);
 	uint32_t pid = leer_buffer_uint32(buffer);
 	destruir_buffer(buffer);
@@ -274,7 +319,7 @@ void devolver_nro_marco(){
 	if(pagina == NULL)
 		enviar_codOp(fd_cpu, PAGE_FAULT);
 	else{
-		enviar_codOp(fd_cpu, NUMERO_MARCO_OK);
+		enviar_codOp(fd_cpu, NUMERO_MARCO_OK);  //Hacia calcular_direccion_fisica en mmu.c
 		buffer = crear_buffer();
 		agregar_buffer_uint32(buffer, pagina->nroMarco);
 		enviar_buffer(buffer, fd_cpu);
