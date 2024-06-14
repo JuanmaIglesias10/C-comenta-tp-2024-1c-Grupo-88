@@ -176,7 +176,6 @@ void ejecutar_proceso(t_cde* cde){
         log_info(logger_cpu,"%d %s %s %s %s %s",instruccion_a_ejecutar->codigo,instruccion_a_ejecutar->par1,instruccion_a_ejecutar->par2,instruccion_a_ejecutar->par4,instruccion_a_ejecutar->par4,instruccion_a_ejecutar->par5	);
         */
         
-
          pthread_mutex_lock(&mutex_instruccion_actualizada); 
          instruccion_actualizada = instruccion_a_ejecutar->codigo;
          pthread_mutex_unlock(&mutex_instruccion_actualizada);
@@ -382,13 +381,13 @@ void desalojar_cde(t_cde* cde, t_instruccion* instruccion_a_ejecutar){
     devolver_cde_a_kernel(cde, instruccion_a_ejecutar);
     destruir_cde(cde);
     
-    // pthread_mutex_lock(&mutex_cde_ejecutando);
-    // pid_de_cde_ejecutando = UINT32_MAX;
-    // pthread_mutex_unlock(&mutex_cde_ejecutando);
-
-    // pthread_mutex_lock(&mutex_instruccion_actualizada);
-    // instruccion_actualizada = NULO_INST;
-    // pthread_mutex_unlock(&mutex_instruccion_actualizada);
+    pthread_mutex_lock(&mutex_cde_ejecutando);
+    pid_de_cde_ejecutando = UINT32_MAX;
+    pthread_mutex_unlock(&mutex_cde_ejecutando);
+    
+    pthread_mutex_lock(&mutex_instruccion_actualizada);
+    instruccion_actualizada = NULO_INST;
+    pthread_mutex_unlock(&mutex_instruccion_actualizada);
 
     destruir_instruccion(instruccion_a_ejecutar);
 }

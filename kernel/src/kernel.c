@@ -135,10 +135,8 @@ void inicializar_semaforos(){
 
 t_recurso* inicializar_recurso(char* nombre_recurso, int instancias_totales){
     t_recurso* recurso = malloc(sizeof(t_recurso));
-    int tam = 0;
-
-    while(nombre_recurso[tam] != '\0') // Corrección aquí
-        tam++;
+    
+    int tam = strlen(nombre_recurso);
 
     recurso->nombre = malloc(tam + 1); // +1 para el carácter nulo
     strcpy(recurso->nombre, nombre_recurso);
@@ -393,7 +391,7 @@ char* obtener_nombre_estado(t_estado_proceso estado){
     }
 }
 
-void enviar_cde_a_cpu(){
+void enviar_cde_a_cpu() {
 	enviar_codOp(fd_cpu_dis, EJECUTAR_PROCESO);
 
     t_buffer* buffer = crear_buffer();
@@ -423,8 +421,8 @@ void recibir_cde_de_cpu(){
         pthread_mutex_lock(&mutex_exec);
         destruir_cde(pcb_ejecutando->cde);        
         pcb_ejecutando->cde = leer_buffer_cde(buffer);
+        if (pcb_ejecutando->cde == NULL) log_error(logger_kernel, "CDE NULL");
         pthread_mutex_unlock(&mutex_exec);
-        //---------------------------------
         //---------------------------------
         t_instruccion* instruccion_actual = leer_buffer_instruccion(buffer);
         
@@ -525,7 +523,6 @@ void timer_vrr(){
     sem_wait(&sem_timer);
     ms_transcurridos = temporal_gettime(timer); //setea el tiempo
     temporal_destroy(timer); //lo destruye
-    timer = NULL;
 }
 
 // EVALUAR INSTRUCCIONES
