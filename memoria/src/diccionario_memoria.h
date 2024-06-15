@@ -19,13 +19,14 @@ typedef struct{
 }t_proceso;
 
 // variables globales Memoria
+// Esto representa una fila de la Tabla de Paginas de un Proceso
 typedef struct {
 	uint32_t pidProcesoCreador;
     uint32_t nroPagina;
     uint32_t nroMarco;
     bool bitModificado;
     bool bitPresencia;
-    char* ultimaReferencia;
+    char* ultimaReferencia; //LRU
     void* direccionFisicaInicio;
     uint32_t direccionLogica;
 }t_pagina;
