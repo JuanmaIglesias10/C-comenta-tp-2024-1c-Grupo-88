@@ -233,9 +233,8 @@ void ejecutar_instruccion(t_cde* cde, t_instruccion* instruccion_a_ejecutar){
             log_info(logger_cpu, "PID: %d - Ejecutando: %s - %s %s", cde->pid, obtener_nombre_instruccion(instruccion_a_ejecutar), instruccion_a_ejecutar->par1, instruccion_a_ejecutar->par2);
             // par2 = leerEnteroParametroInstruccion(2, instruccion_a_ejecutar);
             ejecutar_mov_in(instruccion_a_ejecutar->par1, instruccion_a_ejecutar->par2, cde);
-                        if (interrupcion == 0 && realizar_desalojo == 0)
-
-                destruir_instruccion(instruccion_a_ejecutar);
+                if (interrupcion == 0 && realizar_desalojo == 0)
+                        destruir_instruccion(instruccion_a_ejecutar);
             break;
         case MOV_OUT:
             // log_info(logger_cpu, "PID: %d - Ejecutando: %s - %s %s", cde->pid, obtener_nombre_instruccion(instruccion_a_ejecutar), instruccion_a_ejecutar->par1, instruccion_a_ejecutar->par2);

@@ -53,6 +53,7 @@ extern pthread_mutex_t mutex_lista_procesos;
 
 //Memoria Principal
 extern void* memoriaPrincipal;
+extern int cantMarcos;
 
 // fin variables globales Memoria
 

@@ -19,6 +19,14 @@ void inicializar_memoria(){
 	inicializar_variables();
 
     inicializar_conexiones();
+
+	listaMarcos = list_create();
+	cantMarcos = config_memoria.tam_memoria / config_memoria.tam_pagina; //128
+	
+	for(int i = 0; i < cantMarcos; i++)
+		list_add(listaMarcos, NULL);
+		
+    return;
 }
 
 void inicializar_config(){
@@ -316,15 +324,15 @@ void devolver_nro_marco(){
 	destruir_buffer(buffer);
 	
 	t_pagina* pagina = existePageFault(nro_pagina, pid);
-	if(pagina == NULL)
-		enviar_codOp(fd_cpu, PAGE_FAULT);
-	else{
+	// if(pagina == NULL)
+	// 	enviar_codOp(fd_cpu, PAGE_FAULT);
+	// else{
 		enviar_codOp(fd_cpu, NUMERO_MARCO_OK);  //Hacia calcular_direccion_fisica en mmu.c
 		buffer = crear_buffer();
 		agregar_buffer_uint32(buffer, pagina->nroMarco);
 		enviar_buffer(buffer, fd_cpu);
 		destruir_buffer(buffer);
-	}
+	// }
 }
 
 //funciones paginas
