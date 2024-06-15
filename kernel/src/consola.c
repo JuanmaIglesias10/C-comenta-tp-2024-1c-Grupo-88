@@ -51,7 +51,7 @@ void atender_consola(char* input){
 			actual = actual->next;
 		}
 		
-		list_destroy_and_destroy_elements(lista_script, (void*)script_destroy);
+		// list_destroy_and_destroy_elements(lista_script, (void*)script_destroy);
 	} else {
 		switch_comandos(cod_operacion, lista_mensaje[1]);
 	}
@@ -116,16 +116,17 @@ void switch_comandos(uint8_t codOp, char* lista_mensaje){
 			break;
 		case INICIAR_PLANIFICACION:
 			log_info(logger_kernel, "INICIO DE PLANIFICACIÓN");
-			// iniciarPlanificacion();
+			iniciarPlanificacion();
 			free(lista_mensaje);
 			break;
 		case DETENER_PLANIFICACION:
 			log_info(logger_kernel, "PAUSA DE PLANIFICACIÓN");
-			// detenerPlanificacion();
+			detenerPlanificacion();
 			free(lista_mensaje);
 			break;
 		case MULTIPROGRAMACION:
-			// cambiar_grado_multiprogramacion(lista_mensaje);
+			log_info(logger_kernel, "CAMBIO DE GRADO DE MULTIPROGRAMACION A: %s", lista_mensaje);
+			cambiar_grado_multiprogramacion(lista_mensaje);
 			free(lista_mensaje);
 			break;
 		case PROCESO_ESTADO:

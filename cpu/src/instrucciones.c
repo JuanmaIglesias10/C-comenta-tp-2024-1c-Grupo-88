@@ -282,43 +282,28 @@ void ejecutar_jnz(void* registro, char* char_nro_instruccion) {
 }
 
 
-void ejecutar_dormirIO(char* nombreInterfaz, uint8_t unidadesDeTiempo) {
-    uint8_t numeroInterfaz = obtener_numero_interfaz(nombreInterfaz);
-    if (numeroInterfaz == 1) {
-        enviar_codOp(fd_kernel_int, INTERRUPT);
-        t_buffer* buffer_a_enviar = crear_buffer();
-        agregar_buffer_uint8(buffer_a_enviar,unidadesDeTiempo);
-        agregar_buffer_uint8(buffer_a_enviar,numeroInterfaz);
-        enviar_buffer(buffer_a_enviar,fd_kernel_int);
-        destruir_buffer(buffer_a_enviar);
-    }
-    else {
-        log_error(logger_cpu, "La interfaz %d no entiende esta instruccion", numeroInterfaz);
-    }
-    /* ACA HABRIA QUE INTERRUMPIR LA EJECUCION DEL PROCESO QUE EJECUTO ESTA INSTRUCCION,
-       NO LO HAGO TODAVIA PORQUE NO TENEMOS MODELADOS COMO VAMOS A HACER LAS INTERRUPCIONES.
-    */
+void ejecutar_io_gen_sleep(char* nombreInterfaz, char* charUnidadesDeTiempo) {
+    uint32_t unidadesDeTiempo = atoi(charUnidadesDeTiempo);
+    // log_info(logger_cpu, unidadesDeTiempo);
+    enviar_codOp(fd_kernel_int, INTERRUPT);
+    t_buffer* buffer_a_enviar = crear_buffer();
+    agregar_buffer_uint8(buffer_a_enviar,unidadesDeTiempo);
+    agregar_buffer_string(buffer_a_enviar,nombreInterfaz);
+    enviar_buffer(buffer_a_enviar,fd_kernel_int);
+    destruir_buffer(buffer_a_enviar);
+    interrupcion = 1;
+    
+}
+
+void ejecutar_wait(char* recurso){ //solicitar a kernel que se asigne una instancia del recurso
+    interrupcion = 1;
+}
+
+void ejecutar_signal(char* recurso){ //solicitar a kernel que se libere una instancia del recurso
+    interrupcion = 1;
 }
 
 void ejecutar_exit(){
     interrupcion = 1;
 }
 
-
-uint8_t obtener_numero_interfaz(char* nombreInterfaz) {
-    if(strcmp(nombreInterfaz, "Int1") == 0) { //Generica
-        return 1;
-    }
-    if(strcmp(nombreInterfaz, "Int2") == 0) { //StdIn
-        return 2;
-    }
-    if(strcmp(nombreInterfaz, "Int3") == 0) { //StdOut
-        return 3;
-    }
-    if(strcmp(nombreInterfaz, "Int4") == 0) { //DialFS
-        return 4;
-    }
-    else {
-        return 100;
-    }
-}

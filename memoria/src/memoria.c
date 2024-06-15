@@ -1,59 +1,69 @@
 #include "memoria.h"
 
 int main(void) {
-	inicializar_memoria();
-	
+    inicializar_memoria();
+    // Mantener el main en ejecución
+    while (1) {
+        sleep(1);
+    }
+    return 0;
 }
 
 void inicializar_memoria(){
-	logger_memoria = iniciar_logger("logMemoria.log", "MEMORIA", LOG_LEVEL_INFO);
-	inicializar_config();
-	listaProcesos = list_create();
+    logger_memoria = iniciar_logger("logMemoria.log", "MEMORIA", LOG_LEVEL_INFO);
+    inicializar_config();
+    listaProcesos = list_create();
 
-	// iniciar_semaforos();
-	pthread_mutex_init(&mutex_lista_procesos, NULL);
-	
-	
+    pthread_mutex_init(&mutex_lista_procesos, NULL);
 
-
-	inicializar_conexiones();
+    inicializar_conexiones();
 }
 
 void inicializar_config(){
-	config = config_create("./memoria.config");
-	config_memoria.puerto_escucha = config_get_int_value(config, "PUERTO_ESCUCHA");
-	config_memoria.tam_memoria = config_get_int_value(config, "TAM_MEMORIA");
-	config_memoria.tam_pagina = config_get_int_value(config, "TAM_PAGINA");
-	config_memoria.path_instrucciones = config_get_string_value(config, "PATH_INSTRUCCIONES");
-	config_memoria.retardo_respuesta = config_get_int_value(config, "RETARDO_RESPUESTA");
-
+    config = config_create("./memoria.config");
+    config_memoria.puerto_escucha = config_get_int_value(config, "PUERTO_ESCUCHA");
+    config_memoria.tam_memoria = config_get_int_value(config, "TAM_MEMORIA");
+    config_memoria.tam_pagina = config_get_int_value(config, "TAM_PAGINA");
+    config_memoria.path_instrucciones = config_get_string_value(config, "PATH_INSTRUCCIONES");
+    config_memoria.retardo_respuesta = config_get_int_value(config, "RETARDO_RESPUESTA");
 }
 
 void inicializar_conexiones() {
-	fd_memoria = iniciar_servidor(config_memoria.puerto_escucha, logger_memoria);
+    fd_memoria = iniciar_servidor(config_memoria.puerto_escucha, logger_memoria);
 
-	fd_cpu = esperar_cliente(fd_memoria, logger_memoria, "CPU");
+    fd_cpu = esperar_cliente(fd_memoria, logger_memoria, "CPU");
+    if (fd_cpu == -1) {
+        log_error(logger_memoria, "Error al esperar conexión de CPU");
+        return;
+    }
 
-	fd_kernel = esperar_cliente(fd_memoria, logger_memoria,"KERNEL"); 
+    fd_kernel = esperar_cliente(fd_memoria, logger_memoria, "KERNEL");
+    if (fd_kernel == -1) {
+        log_error(logger_memoria, "Error al esperar conexión de Kernel");
+        return;
+    }
 
-	fd_IO = esperar_cliente(fd_memoria, logger_memoria,"IO"); 
+	pthread_t hilo_IO_accept;
+    pthread_create(&hilo_IO_accept, NULL, (void*)aceptar_conexiones_IO, (void*)&fd_memoria);
+    pthread_detach(hilo_IO_accept);
 
-	pthread_t hilo_memoria_cpu;
-	pthread_create(&hilo_memoria_cpu, NULL, (void*)atender_cpu, NULL);
-	pthread_detach(hilo_memoria_cpu);
+    pthread_t hilo_memoria_cpu;
+    if (pthread_create(&hilo_memoria_cpu, NULL, (void*)atender_cpu, NULL) != 0) {
+        log_error(logger_memoria, "Error al crear hilo de CPU");
+        return;
+    }
+    pthread_detach(hilo_memoria_cpu);
 
+    pthread_t hilo_memoria_kernel;
+    if (pthread_create(&hilo_memoria_kernel, NULL, (void*)atender_kernel, NULL) != 0) {
+        log_error(logger_memoria, "Error al crear hilo de Kernel");
+        return;
+    }
+    pthread_detach(hilo_memoria_kernel);
 
-	pthread_t hilo_memoria_kernel;
-	pthread_create(&hilo_memoria_kernel, NULL, (void*)atender_kernel, NULL);
-	pthread_detach(hilo_memoria_kernel);
-
-
-	pthread_t hilo_memoria_IO;
-	pthread_create(&hilo_memoria_IO, NULL, (void*)atender_IO, NULL);
-	pthread_join(hilo_memoria_IO,NULL);
-	
-	// liberar_conexion(fd_memoria);
 }
+
+
 
 void iniciar_proceso(){
 	//Recibo el buffer 
@@ -239,8 +249,8 @@ void enviar_instruccion(){
 	agregar_buffer_instruccion(buffer, instruccion);
 	enviar_buffer(buffer, fd_cpu);
 	/* Para probar que se manden las instrucciones, NO BORRAR!
-	*/
     log_info(logger_memoria,"%d %s %s %s %s %s",instruccion->codigo,instruccion->par1,instruccion->par2,instruccion->par4,instruccion->par4,instruccion->par5);
+	*/
 	destruir_buffer(buffer);
 }
 
@@ -251,4 +261,71 @@ t_proceso* buscarProcesoPorPid(uint32_t pid){
 			return proceso;
 	}
 	return NULL; 
+}
+
+
+void devolver_nro_marco(){
+	t_buffer* buffer = recibir_buffer(fd_cpu);
+	uint32_t nro_pagina = leer_buffer_uint32(buffer);
+	uint32_t pid = leer_buffer_uint32(buffer);
+	destruir_buffer(buffer);
+	
+	t_pagina* pagina = existePageFault(nro_pagina, pid);
+	if(pagina == NULL)
+		enviar_codOp(fd_cpu, PAGE_FAULT);
+	else{
+		enviar_codOp(fd_cpu, NUMERO_MARCO_OK);
+		buffer = crear_buffer();
+		agregar_buffer_uint32(buffer, pagina->nroMarco);
+		enviar_buffer(buffer, fd_cpu);
+		destruir_buffer(buffer);
+	}
+}
+
+//funciones paginas
+t_pagina* existePageFault(uint32_t nro_Pagina, uint32_t pid){
+	t_pagina* pagina = buscarPaginaPorNroYPid(nro_Pagina, pid);
+
+	if(pagina == NULL || !(pagina->bitPresencia))
+		return NULL;
+
+	return pagina;
+}
+
+
+t_pagina* buscarPaginaPorNroYPid(uint32_t nroPag, uint32_t pid){
+
+	for(int i = 0; i < list_size(tablaGlobalPaginas); i++){
+		t_pagina* pag = list_get(tablaGlobalPaginas, i);
+
+		if(pag->nroPagina == nroPag && pag->pidProcesoCreador == pid)
+			return pag;
+	}
+
+	return NULL;
+}
+
+t_pagina* crear_pagina(uint32_t nroPag, uint32_t nroMarco, void* dirreccionInicio, uint32_t pid){
+	t_pagina* paginaCreada= malloc(sizeof(t_pagina));
+
+	paginaCreada->bitModificado = false;
+	paginaCreada->bitPresencia = true;
+	paginaCreada->direccionFisicaInicio = dirreccionInicio;
+	paginaCreada->nroMarco = nroMarco;
+	paginaCreada->nroPagina = nroPag;
+	paginaCreada->pidProcesoCreador = pid;
+	// paginaCreada->pidEnUso = pid;
+	paginaCreada->ultimaReferencia = temporal_get_string_time("%H:%M:%S:%MS");
+
+	list_add(tablaGlobalPaginas, paginaCreada);
+	
+	// enviar_codigo(fd_IO, CREAR_PAGINA_SOLICITUD);
+	
+	// t_buffer* b = crear_buffer_nuestro();
+	// buffer_write_uint32(b, nroPag);
+	// buffer_write_uint32(b, paginaCreada->pidCreador);
+	// enviar_buffer(b, fd_IO);
+	// destruir_buffer_nuestro(b);
+	
+	return paginaCreada;
 }

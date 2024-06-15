@@ -109,9 +109,9 @@ uint8_t recibir_codOp(int socket_conexion)
 	else
 	{
 		close(socket_conexion);
-		exit(1);
+		return -1;
 	}
-} // TODO: ver si esta ok lo del exit
+}
 
 t_buffer* recibir_buffer(int socket_conexion){
     t_buffer* buffer = crear_buffer();
@@ -165,24 +165,44 @@ void agregar_a_buffer(t_buffer* buffer, void* data, uint32_t size) {
 } // OK
 
 // Guarda size bytes del principio del buffer en la dirección data y avanza el offset
+//void* leer_buffer(t_buffer* buffer, uint32_t size) {
+//	if (buffer == NULL || size == 0) return NULL;
+//	void* data = malloc(size);
+//    memcpy(data, buffer->stream + buffer->offset, size);
+//    buffer->offset += size;
+//	return data;
+//} // OK
+
 void* leer_buffer(t_buffer* buffer, uint32_t size) {
-	if (buffer == NULL || size == 0) return NULL;
-	void* data = malloc(size);
+    if (buffer == NULL || buffer->stream == NULL || size == 0) return NULL; // Verificar punteros y tamaño
+
+    // Verificar que hay suficiente espacio en el buffer para leer
+    if (buffer->offset + size > buffer->size) {
+        return NULL; // Manejar error si el tamaño excede el límite del buffer
+    }
+
+    void* data = malloc(size);
+    if (data == NULL) return NULL; // Verificar si malloc falla
+
     memcpy(data, buffer->stream + buffer->offset, size);
     buffer->offset += size;
-	return data;
-} // OK
+
+    return data;
+}
+
+
 
 // Agrega un uint32_t al buffer
 void agregar_buffer_uint32(t_buffer* buffer, uint32_t data){
     agregar_a_buffer(buffer, &data, sizeof(uint32_t));
 } // OK
 
-// Lee un uint32_t del buffer y avanza el offset
-uint32_t leer_buffer_uint32(t_buffer* buffer){
-	uint32_t* data = leer_buffer(buffer, sizeof(uint32_t));
-    return *data;
-} // OK
+uint32_t leer_buffer_uint32(t_buffer* buffer) {
+    uint32_t* data = leer_buffer(buffer, sizeof(uint32_t));
+    uint32_t value = *data;
+    free(data); // Liberar la memoria asignada por leer_buffer
+    return value;
+}
 
 void agregar_buffer_int(t_buffer* buffer, uint8_t data){
 	agregar_a_buffer(buffer,&data,sizeof(int));
@@ -200,8 +220,10 @@ void agregar_buffer_uint8(t_buffer* buffer, uint8_t data) {
 
 uint8_t leer_buffer_uint8(t_buffer* buffer) {
     uint8_t* data = leer_buffer(buffer, sizeof(uint8_t));
-    return *data;
-} // OK
+    uint8_t value = *data;
+    free(data); // Liberar la memoria asignada por leer_buffer
+    return value;
+}
 
 // Agrega string al buffer con un uint32_t adelante indicando su longitud
 void agregar_buffer_string(t_buffer* buffer, char* string) {
@@ -243,14 +265,36 @@ t_registros* leer_buffer_registros(t_buffer* buffer){
 }
 
 // Lee un string y su longitud del buffer y avanza el offset
+//char* leer_buffer_string(t_buffer* buffer) {
+//    uint32_t length = leer_buffer_uint32(buffer); 
+//    char* string = malloc(length + 1); 
+//    string = leer_buffer(buffer, length);
+//    if (string == NULL || strcmp(string,"") == 0) return NULL;
+//    string[length] = '\0'; // Null-terminate the string
+//    return string;
+//} // OK
+
 char* leer_buffer_string(t_buffer* buffer) {
-    uint32_t length = leer_buffer_uint32(buffer); 
-    char* string = malloc(length + 1); 
-    string = leer_buffer(buffer, length);
-    if (string == NULL || strcmp(string,"") == 0) return NULL;
+    uint32_t length = leer_buffer_uint32(buffer);
+    if (length == 0) return NULL; // Verificar si length es 0 para evitar asignaciones innecesarias
+
+    char* string = malloc(length + 1);
+    if (string == NULL) return NULL; // Verificar si malloc falla
+
+    void* data = leer_buffer(buffer, length);
+    if (data == NULL) {
+        free(string);
+        return NULL;
+    }
+
+    memcpy(string, data, length);
+    free(data); // Liberar la memoria temporal utilizada por leer_buffer
+
     string[length] = '\0'; // Null-terminate the string
     return string;
-} // OK
+}
+
+
 
 t_instruccion* leer_buffer_instruccion(t_buffer* buffer){
 	t_instruccion* instr = malloc(sizeof(t_instruccion));
@@ -304,6 +348,8 @@ void agregar_buffer_cde(t_buffer* buffer, t_cde* cde){
 
 t_cde* leer_buffer_cde(t_buffer* buffer){
 	t_cde* cde = malloc(sizeof(t_cde));
+	if (cde == NULL) return NULL;
+
 	cde->pid = leer_buffer_uint32(buffer);
 	cde->registros = leer_buffer_registros(buffer);
 	return cde;

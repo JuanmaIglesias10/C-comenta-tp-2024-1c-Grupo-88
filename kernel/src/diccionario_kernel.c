@@ -19,18 +19,28 @@ t_list* procesos_globales;
 // Colas
 t_queue* colaNEW;
 t_queue* colaREADY;
+t_queue* colaREADYMAS;
 t_queue* colaBLOCKED;
 t_queue* colaFINISHED;
 
+t_queue* colaGenerica;
+t_queue* colaSTDIN;
+t_queue* colaSTDOUT;
+t_queue* colaDIALFS;
+
 int pid_a_asignar;
+int planificacion_detenida; 
 
 //Semaforos
 pthread_mutex_t mutex_new;
 pthread_mutex_t mutex_procesos_globales;
 pthread_mutex_t mutex_ready;
 pthread_mutex_t mutex_exec;
+pthread_mutex_t mutex_block;
 pthread_mutex_t mutex_pcb_en_ejecucion;
 pthread_mutex_t mutex_finalizados;
+pthread_mutex_t mutex_colasIO;
+
 
 sem_t procesos_NEW;
 sem_t cpu_libre;
@@ -38,6 +48,20 @@ sem_t procesos_en_ready;
 sem_t aviso_exec;
 sem_t bin_recibir_cde;
 sem_t procesos_en_exit;
+sem_t procesos_en_blocked;
 sem_t sem_iniciar_quantum;
 sem_t sem_reiniciar_quantum;
+sem_t cont_exec;
+sem_t sem_timer;
+sem_t grado_de_multiprogramacion;
+sem_t pausar_new_a_ready;
+sem_t pausar_ready_a_exec;
+sem_t pausar_exec_a_finalizado;
+sem_t pausar_exec_a_ready;
+sem_t pausar_exec_a_blocked;
+sem_t pausar_blocked_a_ready;
 
+
+//Temporal
+t_temporal* timer;
+uint64_t ms_transcurridos;

@@ -25,7 +25,7 @@ t_log* iniciar_logger(char* rutaLog, char* nombreProceso , t_log_level level)
 int conectarse(char* IP, int puerto, char* nombreConexion, t_log* logger){
 	char* puerto_conectado = string_itoa(puerto);
 	int conexion = crear_conexion(IP, puerto_conectado);
-	log_info(logger, "Conexion exitosa con %s" , nombreConexion);
+    log_info(logger, "Conexion exitosa con %s" , nombreConexion); 
 	return conexion;
 } 
 

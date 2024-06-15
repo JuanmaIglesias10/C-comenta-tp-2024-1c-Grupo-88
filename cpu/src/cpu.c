@@ -29,6 +29,7 @@ void inicializar_config(){
 void inicializar_semaforos(){
     pthread_mutex_init(&mutex_realizar_desalojo, NULL);
     pthread_mutex_init(&mutex_cde_ejecutando,NULL);
+    pthread_mutex_init(&mutex_instruccion_actualizada,NULL);
 }
 
 void inicializar_conexiones(){
@@ -114,6 +115,38 @@ void guardar_cde(t_cde* cde){
     cde->registros->DI = registros_cpu->DI;
 }
 
+
+// Tuve que mover esto aca!! necesito la variable global instruccion_actualizada para ver si es bloqueante! 
+void* atender_kernel_int()
+{
+	while (1) {
+		mensajeKernelCpu cod_op = recibir_codOp(fd_kernel_int);
+		switch (cod_op) {
+            case DESALOJO:
+                t_buffer* buffer = recibir_buffer(fd_kernel_int); // recibe pid o lo que necesite
+                uint32_t pid_recibido = leer_buffer_uint32(buffer);
+                // se desaloja proceso en ejecucion
+                if(algoritmo_planificacion == 1 && pid_de_cde_ejecutando != pid_recibido){
+                    break;
+                }
+                else if(algoritmo_planificacion == 1 && pid_de_cde_ejecutando == pid_recibido){
+
+                     if(es_bloqueante(instruccion_actualizada)){ 
+                        break;
+                    }
+                }
+                pthread_mutex_lock(&mutex_realizar_desalojo);
+                realizar_desalojo = 1;
+                pthread_mutex_unlock(&mutex_realizar_desalojo);
+                break;
+            default:
+                log_warning(logger_cpu, "Se desconectó KERNEL (INTERRUPT)");
+                return NULL;
+            }
+	}
+}
+
+
 void ejecutar_proceso(t_cde* cde){
 	cargar_registros(cde);
     t_instruccion* instruccion_a_ejecutar;
@@ -143,10 +176,9 @@ void ejecutar_proceso(t_cde* cde){
         log_info(logger_cpu,"%d %s %s %s %s %s",instruccion_a_ejecutar->codigo,instruccion_a_ejecutar->par1,instruccion_a_ejecutar->par2,instruccion_a_ejecutar->par4,instruccion_a_ejecutar->par4,instruccion_a_ejecutar->par5	);
         */
         
-
-        // pthread_mutex_lock(&mutex_instruccion_actualizada); Mirar luego esto, por ahora que la chupe
-        // instruccion_actualizada = instruccion_a_ejecutar->codigo;
-        // pthread_mutex_unlock(&mutex_instruccion_actualizada);
+         pthread_mutex_lock(&mutex_instruccion_actualizada); 
+         instruccion_actualizada = instruccion_a_ejecutar->codigo;
+         pthread_mutex_unlock(&mutex_instruccion_actualizada);
         ejecutar_instruccion(cde, instruccion_a_ejecutar);
     }
     if(interrupcion){
@@ -204,7 +236,7 @@ void ejecutar_instruccion(t_cde* cde, t_instruccion* instruccion_a_ejecutar){
             // ejecutar_mov_out(par1, instruccion_a_ejecutar->par2, cde);
             // if (interruption == 0 && realizar_desalojo == 0 && interrupcion_consola == 0)
             //     destruir_instruccion(instruccion_a_ejecutar);
-            // break;
+            break;
         case SUM:
             log_info(logger_cpu, "PID: %d - Ejecutando: %s - %s %s", cde->pid, obtener_nombre_instruccion(instruccion_a_ejecutar), instruccion_a_ejecutar->par1, instruccion_a_ejecutar->par2);
             ejecutar_sum(instruccion_a_ejecutar->par1, instruccion_a_ejecutar->par2);
@@ -231,20 +263,23 @@ void ejecutar_instruccion(t_cde* cde, t_instruccion* instruccion_a_ejecutar){
 			//
 			break;
         case WAIT:
-            // log_info(logger_cpu, "PID: %d - Ejecutando: %s - %s", cde->pid, obtener_nombre_instruccion(instruccion_a_ejecutar), instruccion_a_ejecutar->par1);
-            // ejecutar_wait(instruccion_a_ejecutar->par1);
-            // if (interruption == 0 && realizar_desalojo == 0 && interrupcion_consola == 0)
-            //     destruir_instruccion(instruccion_a_ejecutar);
-            // break;
-        case SIGNAL:
-            // log_info(logger_cpu, "PID: %d - Ejecutando: %s - %s", cde->pid, obtener_nombre_instruccion(instruccion_a_ejecutar), instruccion_a_ejecutar->par1);
-            // ejecutar_signal(instruccion_a_ejecutar->par1);
-            // if (interruption == 0 && realizar_desalojo == 0 && interrupcion_consola == 0)
-            //     destruir_instruccion(instruccion_a_ejecutar);
-            // break;
-        case IO_GEN_SLEEP:
-            //
+            log_info(logger_cpu, "PID: %d - Ejecutando: %s - %s", cde->pid, obtener_nombre_instruccion(instruccion_a_ejecutar), instruccion_a_ejecutar->par1);
+            ejecutar_wait(instruccion_a_ejecutar->par1);
+            if (interrupcion == 0 && realizar_desalojo == 0)
+                destruir_instruccion(instruccion_a_ejecutar);
             break;
+        case SIGNAL:
+            log_info(logger_cpu, "PID: %d - Ejecutando: %s - %s", cde->pid, obtener_nombre_instruccion(instruccion_a_ejecutar), instruccion_a_ejecutar->par1);
+            ejecutar_signal(instruccion_a_ejecutar->par1);
+            if (interrupcion == 0 && realizar_desalojo == 0)
+                 destruir_instruccion(instruccion_a_ejecutar);
+            break;
+        case IO_GEN_SLEEP:
+            log_info(logger_cpu, "PID: %d - Ejecutando: %s - %s %s", cde->pid, obtener_nombre_instruccion(instruccion_a_ejecutar), instruccion_a_ejecutar->par1, instruccion_a_ejecutar->par2);
+            ejecutar_io_gen_sleep(instruccion_a_ejecutar->par1,instruccion_a_ejecutar->par2); //(uint32_t)(uintptr_t)
+                if (interrupcion == 0 && realizar_desalojo == 0)
+                    destruir_instruccion(instruccion_a_ejecutar);
+                break;
         case IO_STDIN_READ:
             // 
         case IO_STDOUT_WRITE:
@@ -258,10 +293,13 @@ void ejecutar_instruccion(t_cde* cde, t_instruccion* instruccion_a_ejecutar){
             break;
         case IO_FS_TRUNCATE:
             //
+            break;
         case IO_FS_WRITE:
             //
+            break;
         case IO_FS_READ:
             //
+            break;
         case EXIT:
             log_info(logger_cpu, "PID: %d - Ejecutando: %s", cde->pid, obtener_nombre_instruccion(instruccion_a_ejecutar));
             ejecutar_exit();
@@ -272,19 +310,84 @@ void ejecutar_instruccion(t_cde* cde, t_instruccion* instruccion_a_ejecutar){
     }
 }
 
+bool es_bloqueante(t_codigo_instruccion instruccion){
+    switch(instruccion){
+    case SET:
+        return false;
+        break;
+    case MOV_IN:
+        //
+        break;
+    case MOV_OUT:
+        //
+        break;
+    case SUM:
+        return false;
+        break;
+    case SUB:
+        return false;
+        break;
+    case JNZ:
+        return false;
+        break;
+    case RESIZE:
+        //
+        break;
+    case COPY_STRING:
+        //
+        break;
+    case WAIT: 
+        return true;
+        break;
+    case SIGNAL:
+        return true;
+        break;
+    case IO_STDIN_READ:
+        //
+        break;
+    case IO_STDOUT_WRITE:
+        //
+        break;
+    case IO_FS_CREATE:
+        //
+        break;
+    case IO_FS_DELETE:
+        //
+        break;
+    case IO_FS_WRITE: 
+        //
+        break;
+    case IO_FS_READ:
+        //
+        break;
+    case IO_FS_TRUNCATE:
+        //
+        break;
+    case IO_GEN_SLEEP:
+        return true;
+        break;
+    case EXIT:
+        return true;
+        break;
+    default:
+        return false;
+        break;
+    }
+}
+
 void desalojar_cde(t_cde* cde, t_instruccion* instruccion_a_ejecutar){
     
     guardar_cde(cde); //cargar registros de cpu en el cde
     devolver_cde_a_kernel(cde, instruccion_a_ejecutar);
     destruir_cde(cde);
     
-    // pthread_mutex_lock(&mutex_cde_ejecutando);
-    // pid_de_cde_ejecutando = UINT32_MAX;
-    // pthread_mutex_unlock(&mutex_cde_ejecutando);
-
-    // pthread_mutex_lock(&mutex_instruccion_actualizada);
-    // instruccion_actualizada = NULO_INST;
-    // pthread_mutex_unlock(&mutex_instruccion_actualizada);
+    pthread_mutex_lock(&mutex_cde_ejecutando);
+    pid_de_cde_ejecutando = UINT32_MAX;
+    pthread_mutex_unlock(&mutex_cde_ejecutando);
+    
+    pthread_mutex_lock(&mutex_instruccion_actualizada);
+    instruccion_actualizada = NULO_INST;
+    pthread_mutex_unlock(&mutex_instruccion_actualizada);
 
     destruir_instruccion(instruccion_a_ejecutar);
 }
@@ -340,3 +443,4 @@ void devolver_cde_a_kernel(t_cde* cde, t_instruccion* instruccion_a_ejecutar){
     enviar_buffer(buffer, fd_kernel_dis);
     destruir_buffer(buffer);
 }
+

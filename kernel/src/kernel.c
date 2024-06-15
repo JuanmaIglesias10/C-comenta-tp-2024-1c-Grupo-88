@@ -9,6 +9,7 @@ int main(void)
 void inicializar_kernel(){
 
 	pid_a_asignar = 0;
+    planificacion_detenida = 0;
 
 	logger_kernel = iniciar_logger("logKernel.log","KERNEL",LOG_LEVEL_INFO);
 	iniciar_config_kernel();
@@ -20,7 +21,7 @@ void inicializar_kernel(){
     t_buffer* buffer = crear_buffer();
     // si el algoritmo es FIFO envia 0
     // si el algoritmo es ROUND ROBIN envia un 1
-    // si el algoritmo es VIRTUAL ROUND ROBBIN envia un 2
+    // si el algoritmo es VIRTUAL ROUND ROBIN envia un 2
     if(strcmp(config_kernel.algoritmo_planificacion, "FIFO") == 0) {
         agregar_buffer_uint32(buffer, 0);
         }
@@ -39,8 +40,6 @@ void inicializar_kernel(){
 
 	inicializar_planificadores();
 
-	
-
 }
 
 void iniciar_config_kernel(){
@@ -53,9 +52,22 @@ void iniciar_config_kernel(){
 	config_kernel.puerto_cpu_interrupt = config_get_int_value(config, "PUERTO_CPU_INTERRUPT");
 	config_kernel.algoritmo_planificacion = config_get_string_value(config, "ALGORITMO_PLANIFICACION");
 	config_kernel.quantum = config_get_int_value(config, "QUANTUM");
-	// config_kernel.recursos = config_get_string_value(config, "RECURSOS");
-	// config_kernel.instancias_recursos = config_get_string_value(config, "INSTANCIAS_RECURSOS");
 	config_kernel.grado_multiprogramacion = config_get_int_value(config, "GRADO_MULTIPROGRAMACION");
+
+    char **recursos = config_get_array_value(config,"RECURSOS");
+	char **instancias = config_get_array_value(config,"INSTANCIAS_RECURSOS");
+	config_kernel.recursos = list_create();
+
+	int i = 0;
+	while(recursos[i]!= NULL){
+		int num_instancias = strtol(instancias[i],NULL,10);
+		t_recurso* recurso = inicializar_recurso(recursos[i], num_instancias);
+		list_add(config_kernel.recursos, recurso);
+		i++;
+	}
+
+    string_array_destroy(recursos);
+    string_array_destroy(instancias);
 }
 
 void inicializar_conexiones(){
@@ -65,15 +77,13 @@ void inicializar_conexiones(){
 
 	fd_kernel = iniciar_servidor(config_kernel.puerto_escucha, logger_kernel);
 
-	fd_IO = esperar_cliente(fd_kernel, logger_kernel,"IO"); 
-
+    pthread_t hilo_IO_accept;
+    pthread_create(&hilo_IO_accept, NULL, (void*)aceptar_conexiones_IO, NULL);
+    pthread_detach(hilo_IO_accept);
+    
 	pthread_t hilo_memoria;
 	pthread_create(&hilo_memoria, NULL, (void*)atender_memoria, NULL);
 	pthread_detach(hilo_memoria);
-
-	pthread_t hilo_IO;
-	pthread_create(&hilo_IO, NULL, (void*)atender_IO, NULL);
-	pthread_detach(hilo_IO);
 
 	pthread_t hilo_cpu_dis;
 	pthread_create(&hilo_cpu_dis, NULL, (void*)recibir_cde_de_cpu, NULL);
@@ -93,8 +103,14 @@ void inicializar_listas_colas(){
 
 	colaNEW = queue_create();
 	colaREADY = queue_create();
+    colaREADYMAS = queue_create();
 	colaBLOCKED = queue_create();
 	colaFINISHED = queue_create();
+
+    colaGenerica = queue_create();
+    colaSTDIN = queue_create();
+    colaSTDOUT = queue_create();
+    colaDIALFS = queue_create();
 }
 
 void inicializar_semaforos(){
@@ -103,6 +119,8 @@ void inicializar_semaforos(){
 	pthread_mutex_init(&mutex_exec, NULL);
 	pthread_mutex_init(&mutex_pcb_en_ejecucion, NULL);
 	pthread_mutex_init(&mutex_finalizados, NULL);
+    pthread_mutex_init(&mutex_colasIO,NULL);
+    pthread_mutex_init(&mutex_block,NULL);
 	sem_init(&cpu_libre, 0, 1);
 	sem_init(&procesos_en_ready, 0, 0);
 	sem_init(&procesos_NEW, 0, 0);
@@ -111,7 +129,34 @@ void inicializar_semaforos(){
 	sem_init(&procesos_en_exit, 0, 0); //Inicia en 0, posteado por ready_a_exec
     sem_init(&sem_iniciar_quantum, 0, 0);
     sem_init(&sem_reiniciar_quantum, 0, 1);
+    sem_init(&cont_exec, 0, 0);
+    sem_init(&sem_timer, 0, 0);
+    sem_init(&grado_de_multiprogramacion, 0, config_kernel.grado_multiprogramacion);
+    sem_init(&pausar_new_a_ready, 0, 0);
+    sem_init(&pausar_ready_a_exec, 0, 0);
+    sem_init(&pausar_exec_a_finalizado, 0, 0);
+    sem_init(&pausar_exec_a_ready, 0, 0);
+    sem_init(&pausar_exec_a_blocked, 0, 0);
+    sem_init(&pausar_blocked_a_ready, 0, 0);
 }
+
+t_recurso* inicializar_recurso(char* nombre_recurso, int instancias_totales){
+    t_recurso* recurso = malloc(sizeof(t_recurso));
+    
+    int tam = strlen(nombre_recurso);
+
+    recurso->nombre = malloc(tam + 1); // +1 para el carácter nulo
+    strcpy(recurso->nombre, nombre_recurso);
+
+    recurso->instancias = instancias_totales;
+    recurso->procesos_bloqueados = list_create();
+    sem_t sem;
+    sem_init(&sem, instancias_totales, 1);
+    recurso->sem_recurso = sem;
+
+    return recurso;
+}
+
 
 t_list* ejecutar_script(char* pathScript){
 	t_list* scriptProcesos = obtener_lista_script(pathScript);
@@ -152,16 +197,63 @@ void iniciar_proceso(char* path) {
     
 }
 
+void cambiar_grado_multiprogramacion(char* nuevo_grado){
+    //para cambiarlo la planificacion debe estar detendida
+    int grado_a_asignar = atoi(nuevo_grado);
+
+    if(planificacion_detenida == 1){ // se puede cambiar el grado de multiprogramacion
+        
+        grado_de_multiprogramacion.__align = grado_a_asignar - config_kernel.grado_multiprogramacion + grado_de_multiprogramacion.__align - 1;
+        sem_post(&grado_de_multiprogramacion);
+        config_kernel.grado_multiprogramacion = grado_a_asignar; 
+    }
+    else{
+        // no se puede realizar el cambio
+        log_warning(logger_kernel, "La planificacion no se detuvo. No se puede cambiar el grado de multiprogramacion");
+    }
+}
+
+void detenerPlanificacion(){ 
+    planificacion_detenida = 1;
+}
+
+void iniciarPlanificacion(){
+    sem_post(&pausar_new_a_ready);
+    // if(pausar_new_a_ready.__align == 1)
+    //     sem_wait(&pausar_new_a_ready);
+    
+    sem_post(&pausar_ready_a_exec);
+    // if(pausar_ready_a_exec.__align == 1)
+    //     sem_wait(&pausar_ready_a_exec);
+    
+    sem_post(&pausar_exec_a_finalizado);
+    // if(pausar_exec_a_finalizado.__align == 1)
+    //     sem_wait(&pausar_exec_a_finalizado);
+    
+    sem_post(&pausar_exec_a_ready);
+    // if(pausar_exec_a_ready.__align == 1)
+    //     sem_wait(&pausar_exec_a_ready);
+    
+    sem_post(&pausar_exec_a_blocked);
+    // if(pausar_exec_a_blocked.__align == 1)
+    //     sem_wait(&pausar_exec_a_blocked);
+    
+    sem_post(&pausar_blocked_a_ready);
+    // if(pausar_blocked_a_ready.__align == 1)
+    //     sem_wait(&pausar_blocked_a_ready);
+    
+    planificacion_detenida = 0;
+} 
+
+
 t_pcb* crear_PCB(){
 
 	t_pcb* PCB_creado = malloc(sizeof(t_pcb));
 	PCB_creado->cde = malloc(sizeof(t_cde));
 	PCB_creado->cde->registros = malloc(sizeof(t_registros));
+    PCB_creado->quantum = config_kernel.quantum ;
 
-
-	// PCB_creado->path = path; //Path del .txt
 	PCB_creado->cde->pid = pid_a_asignar; 
-	// PCB_creado->quantum=0;
 	PCB_creado->cde->registros->PC= 0;
 	PCB_creado->cde->registros->AX=0;
 	PCB_creado->cde->registros->BX=0;
@@ -174,8 +266,11 @@ t_pcb* crear_PCB(){
 	PCB_creado->cde->registros->SI=0;
 	PCB_creado->cde->registros->DI=0;
 	PCB_creado->estado = NULO;
+    PCB_creado->recursos_asignados = list_create();
+    PCB_creado->recursos_solicitados = list_create();
 
 	pid_a_asignar++; //Aumento en 1 el PID
+    PCB_creado->flag_clock = false;
     PCB_creado->fin_q = false;
 	return PCB_creado;
 }
@@ -247,102 +342,13 @@ void inicializar_corto_plazo(){
 	pthread_detach(planificadorCortoPlazo);
 }
 
-void new_a_ready(){
-	while(1){
-		sem_wait(&procesos_NEW);
-        
-        // sem_wait(&grado_de_multiprogramacion);
+void destruir_pcb(t_pcb* pcb){
+    destruir_cde(pcb->cde);
+    free(pcb);
 
-        // if(planificacion_detenida == 1){ 
-        //     sem_wait(&pausar_new_a_ready);
-        // }
-
-
-        t_pcb* pcb_a_ready = retirar_pcb_de(colaNEW, &mutex_new);
-        agregar_pcb_a(colaREADY, pcb_a_ready, &mutex_ready);
-        pcb_a_ready->estado = READY;
-
-        // Pedir a memoria incializar estructuras
-
-        log_info(logger_kernel, "PID: %d - Estado anterior: %s - Estado actual: %s", pcb_a_ready->cde->pid, "NEW", "READY"); //OBLIGATORIO
-        
-        
-        sem_post(&procesos_en_ready);
-	}
 }
 
-void ready_a_exec(){
-	while(1){
-		// 
-        sem_wait(&cpu_libre);
-		// Espera a que new_a_ready se ejecute
-		sem_wait(&procesos_en_ready);
-		//Actualizar cuando tengamos VRR
-        char* lista_pcbs_en_ready = obtener_elementos_cargados_en(colaREADY);
-        log_info(logger_kernel, "Cola Ready de algoritmo %s: %s", config_kernel.algoritmo_planificacion, lista_pcbs_en_ready); //OBLIGATORIO
-        free(lista_pcbs_en_ready);	
-
-        /* 
-		if(planificacion_detenida == 1){
-            sem_wait(&pausar_ready_a_exec);
-        } 
-		*/
-		
-		pthread_mutex_lock(&mutex_exec);
-		pcb_ejecutando = retirar_pcb_de_ready_segun_algoritmo();
-		pthread_mutex_unlock(&mutex_exec);
-		
-
-		log_info(logger_kernel, "PID: %d - Estado anterior: READY - Estado actual: EXEC", pcb_ejecutando->cde->pid); //OBLIGATORIO
-        pcb_ejecutando->estado = EXEC;
-
-		sem_post(&aviso_exec); 
-        
-        if(strcmp(config_kernel.algoritmo_planificacion, "RR") == 0){
-            pcb_ejecutando->fin_q = false;
-            sem_wait(&sem_reiniciar_quantum);
-            sem_post(&sem_iniciar_quantum);
-        }
-		 
-        enviar_cde_a_cpu();
-	}
-}
-
-void exec_a_finished(){
-	while(1){
-        sem_wait(&procesos_en_exit);
-
-        t_pcb* pcb = retirar_pcb_de(colaFINISHED, &mutex_finalizados); //ok
-
-        pthread_mutex_lock(&mutex_procesos_globales);
-	    list_remove_element(procesos_globales, pcb);
-	    pthread_mutex_unlock(&mutex_procesos_globales);
-        // liberar_recursos_pcb(pcb);
-        // liberar_archivos_pcb(pcb);
-
-        // // Solicitar a memoria liberar estructuras
-        // enviar_codigo(socket_memoria, FINALIZAR_PROCESO_SOLICITUD);
-
-        // t_buffer* buffer = crear_buffer_nuestro();
-        // buffer_write_uint32(buffer, pcb->cde->pid);
-        // enviar_buffer(buffer, socket_memoria);
-        // destruir_buffer_nuestro(buffer);
-
-        // mensajeKernelMem rta_memoria = recibir_codigo(socket_memoria);
-
-        // if(rta_memoria == FINALIZAR_PROCESO_OK){
-        //     log_info(logger_kernel, "PID: %d - Destruir PCB", pcb->cde->pid);
-        //     destruir_pcb(pcb);
-        // }
-        // else{
-        //     log_error(logger_kernel, "Memoria no logró liberar correctamente las estructuras");
-        //     exit(1);
-        // }
-    }
-}
-
-
-char* obtener_elementos_cargados_en(t_queue* cola){ //Hace un string de los pid en ready, de esta manera [1,2,3]
+char* obtener_elementos_cargados_en(t_queue* cola){
     char* aux = string_new();
     string_append(&aux,"[");
     int pid_aux;
@@ -358,34 +364,44 @@ char* obtener_elementos_cargados_en(t_queue* cola){ //Hace un string de los pid 
     }
     string_append(&aux,"]");
     return aux;
+
 }
 
 t_pcb* retirar_pcb_de_ready_segun_algoritmo(){
     if(strcmp(config_kernel.algoritmo_planificacion, "FIFO") == 0 || strcmp(config_kernel.algoritmo_planificacion, "RR") == 0){
         t_pcb* pcb = retirar_pcb_de(colaREADY, &mutex_ready);
         return pcb;
+    }else if (strcmp(config_kernel.algoritmo_planificacion, "VRR") == 0){
+        if(!queue_is_empty(colaREADYMAS)){
+            t_pcb* pcb = retirar_pcb_de(colaREADYMAS, &mutex_ready);
+            return pcb;
+        } else {
+            t_pcb* pcb = retirar_pcb_de(colaREADY, &mutex_ready);
+            return pcb;
+        } 
     }
     else{
         log_info(logger_kernel, "No se reconoce el algoritmo definido en el config_kernel");
     }
     exit(1); 
+
 }
 
 void agregar_pcb_a(t_queue* cola, t_pcb* pcb_a_agregar, pthread_mutex_t* mutex){
-    
     pthread_mutex_lock(mutex);
     queue_push(cola, (void*) pcb_a_agregar);
 	pthread_mutex_unlock(mutex);
 
+
 }
 
 t_pcb* retirar_pcb_de(t_queue* cola, pthread_mutex_t* mutex){
-    
 	pthread_mutex_lock(mutex);
 	t_pcb* pcb = queue_pop(cola);
 	pthread_mutex_unlock(mutex);
     
 	return pcb;
+
 }
 
 char* obtener_nombre_estado(t_estado_proceso estado){
@@ -413,37 +429,43 @@ char* obtener_nombre_estado(t_estado_proceso estado){
     }
 }
 
-void enviar_cde_a_cpu(){
-    
+void enviar_cde_a_cpu() {
 	enviar_codOp(fd_cpu_dis, EJECUTAR_PROCESO);
 
     t_buffer* buffer = crear_buffer();
-    pthread_mutex_lock(&mutex_pcb_en_ejecucion); //ESTE SEMAFORO NI IDEA DONDE MAS ESTÁ
+    pthread_mutex_lock(&mutex_pcb_en_ejecucion); 
 	agregar_buffer_cde(buffer, pcb_ejecutando->cde);
-	// agregar_buffer_uint32(buffer, pcb_ejecutando->cde->pid);
-	// agregar_buffer_registros(buffer, pcb_ejecutando->cde->registros);
     pthread_mutex_unlock(&mutex_pcb_en_ejecucion);
 
-    // if(strcmp(config_kernel.algoritmo, "RR") == 0){
-    //     pcb_en_ejecucion->flag_clock = false;
-    // }
+     if(strcmp(config_kernel.algoritmo_planificacion, "RR") == 0 || strcmp(config_kernel.algoritmo_planificacion, "VRR") == 0 ){
+         pcb_ejecutando->flag_clock = false;
+     }
 
     enviar_buffer(buffer, fd_cpu_dis);
     destruir_buffer(buffer);
 
     sem_post(&bin_recibir_cde); 
+
 }
 
 void recibir_cde_de_cpu(){
 	while(1){
         sem_wait(&bin_recibir_cde);
+
         t_buffer* buffer = recibir_buffer(fd_cpu_dis);
+        
         pthread_mutex_lock(&mutex_exec);
         destruir_cde(pcb_ejecutando->cde);        
         pcb_ejecutando->cde = leer_buffer_cde(buffer);
+        if (pcb_ejecutando->cde == NULL) log_error(logger_kernel, "CDE NULL");
         pthread_mutex_unlock(&mutex_exec);
-
+        //---------------------------------
         t_instruccion* instruccion_actual = leer_buffer_instruccion(buffer);
+        
+        if(strcmp(config_kernel.algoritmo_planificacion, "VRR") == 0){
+            temporal_stop(timer);
+            sem_post(&sem_timer);
+        }
         /*
         if(strcmp(config_kernel.algoritmo, "RR") == 0 && pcb_en_ejecucion->fin_q && (instruccion_actual->codigo == MOV_IN || instruccion_actual->codigo == MOV_OUT)){
             log_info(logger_kernel, "PID: %d - Desalojado por fin de Quantum", pcb_en_ejecucion->cde->pid);
@@ -481,72 +503,8 @@ void recibir_cde_de_cpu(){
         
         
         destruir_buffer(buffer);
+
     }
-}
-
-void recibir_dormirIO() {
-	mensajeKernelCpu codOp = recibir_codOp(fd_cpu_int);
-
-	if (codOp == INTERRUPT) {
-		// Recibir buffer y extraer lo recibido
-		t_buffer* buffer_recibido = recibir_buffer(fd_cpu_int);
-		uint8_t unidadesDeTiempo  = leer_buffer_uint8(buffer_recibido);
-		uint8_t interfaz = leer_buffer_uint8(buffer_recibido);
-		destruir_buffer(buffer_recibido);
-
-		//Mandarlo a IO GENERICA
-		enviar_codOp(fd_IO,SLEEP);
-		t_buffer* buffer_a_enviar = crear_buffer();
-		agregar_buffer_uint8(buffer_a_enviar,unidadesDeTiempo);
-		enviar_buffer(buffer_a_enviar,fd_IO);
-		destruir_buffer(buffer_a_enviar);
-
-		// ¿¿Algo mas??
-	}
-}
-
-
-void evaluar_instruccion(t_instruccion* instruccion_actual){
-    switch(instruccion_actual->codigo){    
-        case EXIT:
-            // if(strcmp(config_kernel.algoritmo, "RR") == 0){
-            //     pcb_en_ejecucion->flag_clock = true;
-            // }
-            agregar_a_cola_finished("SUCCESS");
-            destruir_instruccion(instruccion_actual);
-            break;
-        default: // es por fin de quantum
-            if(strcmp(config_kernel.algoritmo_planificacion, "RR") == 0)
-                log_info(logger_kernel, "PID: %d - Desalojado por fin de Quantum", pcb_ejecutando->cde->pid);
-            else if(strcmp(config_kernel.algoritmo_planificacion, "PRIORIDADES") == 0)
-                log_info(logger_kernel, "PID: %d - Desalojado por un proceso de mayor prioridad", pcb_ejecutando->cde->pid);
-            enviar_de_exec_a_ready();
-            destruir_instruccion(instruccion_actual);
-            break;
-    }
-}
-
-
-void agregar_a_cola_finished(char* razon){
-    // sem_wait(&cont_exec);
-    
-    // if(planificacion_detenida == 1){
-    //     sem_wait(&pausar_exec_a_finalizado);
-    // }
-
-	agregar_pcb_a(colaFINISHED, pcb_ejecutando, &mutex_finalizados);
-    pcb_ejecutando->estado = EXIT;
-
-	log_info(logger_kernel, "PID: %d - Estado anterior: %s - Estado actual: %s", pcb_ejecutando->cde->pid, "EXEC", "FINISHED"); //OBLIGATORIO
-	log_info(logger_kernel, "Finaliza el proceso %d - Motivo: %s", pcb_ejecutando->cde->pid, razon); // OBLIGATORIO
-	
-    pthread_mutex_lock(&mutex_pcb_en_ejecucion);
-    pcb_ejecutando = NULL;
-    pthread_mutex_unlock(&mutex_pcb_en_ejecucion);
-
-    sem_post(&cpu_libre); // se libera el procesador
-	sem_post(&procesos_en_exit); // se agrega uno a procesosExit
-    // sem_post(&grado_de_multiprogramacion); // Se libera 1 grado de multiprog
 }
 
 // Round Robin
@@ -560,42 +518,249 @@ void prender_quantum(){
 void controlar_tiempo_de_ejecucion(){
     while(1){
         sem_wait(&sem_iniciar_quantum);
+        uint32_t pid_pcb_before_start_clock = pcb_ejecutando->cde->pid;
+        bool flag_clock_pcb_before_start_clock = pcb_ejecutando->flag_clock; //aranca en false
+        
+        usleep(pcb_ejecutando->quantum * 1000);
 
-        // uint32_t pid_pcb_before_start_clock = pcb_en_ejecucion->cde->pid;
-        // bool flag_clock_pcb_before_start_clock = pcb_en_ejecucion->flag_clock; //aranca en false
+        if(pcb_ejecutando != NULL) pcb_ejecutando->fin_q = true;
 
-        usleep(config_kernel.quantum * 1000);
-
-        // if(pcb_en_ejecucion != NULL)
-        //     pcb_en_ejecucion->fin_q = true;
-
-        // if(pcb_en_ejecucion != NULL && pid_pcb_before_start_clock == pcb_en_ejecucion->cde->pid && flag_clock_pcb_before_start_clock == pcb_en_ejecucion->flag_clock){
+        if(pcb_ejecutando != NULL && pid_pcb_before_start_clock == pcb_ejecutando->cde->pid && flag_clock_pcb_before_start_clock == pcb_ejecutando->flag_clock){
         enviar_codOp(fd_cpu_int, DESALOJO);
 
         t_buffer* buffer = crear_buffer();
         agregar_buffer_uint32(buffer, pcb_ejecutando->cde->pid); // lo enviamos porque interrupt recibe un buffer, pero no hacemos nada con esto
         enviar_buffer(buffer, fd_cpu_int);
         destruir_buffer(buffer);
-        // }
+        }
         sem_post(&sem_reiniciar_quantum);
+
     }
 
 }
 
-void enviar_de_exec_a_ready(){
-    // sem_wait(&cont_exec);
-    // if(planificacion_detenida == 1){
-    //     sem_wait(&pausar_exec_a_ready);
-    // }
-    agregar_pcb_a(colaREADY, pcb_ejecutando, &mutex_ready);
-    pcb_ejecutando->estado = READY;
-    
-    log_info(logger_kernel, "PID: %d - Estado anterior: %s - Estado actual: %s", pcb_ejecutando->cde->pid, "EXEC", "READY");
+int esta_proceso_en_cola_bloqueados(t_pcb* pcb){
 
-    pthread_mutex_lock(&mutex_pcb_en_ejecucion);
-    pcb_ejecutando = NULL;
-    pthread_mutex_unlock(&mutex_pcb_en_ejecucion);
+    int posicion_pcb = -1;
+    for(int i=0; i < list_size(colaBLOCKED->elements); i++){
+        t_pcb* pcb_get = list_get(colaBLOCKED->elements, i);
+        int pid_pcb = pcb_get->cde->pid;
+        if(pcb->cde->pid == pid_pcb){
+            posicion_pcb = i;
+            break;
+        }
+    }
+
+    return posicion_pcb;
+}
+
+void timer_vrr(){
+    timer = temporal_create(); 
+    sem_wait(&sem_timer);
+    ms_transcurridos = temporal_gettime(timer); 
+    temporal_destroy(timer);
+}
+
+// EVALUAR INSTRUCCIONES
+
+void evaluar_instruccion(t_instruccion* instruccion_actual){
+    switch(instruccion_actual->codigo){
+        case WAIT:
+            if(strcmp(config_kernel.algoritmo_planificacion, "RR" ) == 0 || strcmp(config_kernel.algoritmo_planificacion, "VRR") == 0){
+                pcb_ejecutando->flag_clock = true;
+            } // si se bloquea tengo que reiniciar el clock para el nuevo proceso (RR-VRR)
+            char* nombre_recurso = instruccion_actual->par1;
+            evaluar_wait(nombre_recurso);
+            destruir_instruccion(instruccion_actual);
+            break;
+        case SIGNAL:
+            if(es_RR_o_VRR()){
+                pcb_ejecutando->flag_clock = true;
+            }
+            char* nombre_recurso_signal = instruccion_actual->par1;
+            evaluar_signal(nombre_recurso_signal);
+            destruir_instruccion(instruccion_actual);
+            break;      
+        case IO_GEN_SLEEP:
+            if(strcmp(config_kernel.algoritmo_planificacion, "RR") == 0 || strcmp(config_kernel.algoritmo_planificacion, "VRR") == 0){
+                pcb_ejecutando->flag_clock = true;
+            }
+            io_gen_sleep();
+            destruir_instruccion(instruccion_actual);
+            break;
+        case EXIT:
+            if(strcmp(config_kernel.algoritmo_planificacion, "RR") == 0 || strcmp(config_kernel.algoritmo_planificacion, "VRR") == 0){
+                pcb_ejecutando->flag_clock = true;
+            }
+            agregar_a_cola_finished("SUCCESS");
+            destruir_instruccion(instruccion_actual);
+            break;
+        default: // FIN DE QUANTUM
+        log_info(logger_kernel, "PID: %d - Desalojado por fin de Quantum", pcb_ejecutando->cde->pid);
+        if (strcmp(config_kernel.algoritmo_planificacion,"VRR") == 0) {
+            pcb_ejecutando->quantum = config_kernel.quantum; 
+        }
+        enviar_de_exec_a_ready();
+        destruir_instruccion(instruccion_actual);
+
+        break;
+        
+    }
+}
+
+void io_gen_sleep() {
+	mensajeKernelCpu codOp = recibir_codOp(fd_cpu_int);
+
+	if (codOp == INTERRUPT) {
+		t_buffer* buffer_recibido = recibir_buffer(fd_cpu_int);
+		uint8_t unidadesDeTiempo  = leer_buffer_uint8(buffer_recibido);
+		char* interfaz = leer_buffer_string(buffer_recibido); //Int1 
+		destruir_buffer(buffer_recibido);
+        
+        t_interfaz* aux = queue_pop(colaGenerica);
+        
+        if (strcmp(aux->nombre, interfaz) == 0 ){
+            if (strcmp(aux->tipo , "GENERICA") == 0) {
+		    enviar_codOp(aux->fd,SLEEP);
+		    t_buffer* buffer_a_enviar = crear_buffer();
+		    agregar_buffer_uint8(buffer_a_enviar,unidadesDeTiempo);
+		    enviar_buffer(buffer_a_enviar,aux->fd);
+		    destruir_buffer(buffer_a_enviar);
+            
+            //Bloqueo el proceso
+            t_pcb* pcb_sleep = malloc(sizeof(t_pcb)); 
+            pcb_sleep = pcb_ejecutando;             
+            enviar_de_exec_a_block();
+
+            mensajeKernelIO codigo = recibir_codOp(aux->fd);
+                if(codigo == SLEEP_OK) {
+                    if(strcmp(config_kernel.algoritmo_planificacion,"VRR") == 0 && ms_transcurridos < pcb_sleep->quantum){
+                        pcb_sleep->quantum -= ms_transcurridos;
+                        enviar_pcb_de_block_a_ready_mas(pcb_sleep);
+                    } else {
+                        enviar_pcb_de_block_a_ready(pcb_sleep);
+                    }
+                }
+            
+            } else {
+                agregar_a_cola_finished("INVALID_INTERFACE");
+            }
+        }
+        else if(strcmp(aux->nombre, interfaz) != 0){
+            agregar_a_cola_finished("INVALID_INTERFACE");
+        } else {
+            agregar_a_cola_finished("INVALID_INTERFACE");
+
+        }
+    free(interfaz);
+    queue_push(colaGenerica,aux);
     
-    sem_post(&cpu_libre); // se libera el procesador
-    sem_post(&procesos_en_ready);
+    }
+}
+
+void evaluar_wait(char* nombre_recurso_pedido){
+    int coincidencia = 0;
+    int posicion_recurso;
+    
+    for(int i=0; i < list_size(config_kernel.recursos); i++){
+        t_recurso* recurso = list_get(config_kernel.recursos, i);
+        char* nombre_recurso = recurso->nombre;
+        if(string_equals_ignore_case(nombre_recurso_pedido, nombre_recurso)){
+            coincidencia++;
+            posicion_recurso = i;
+        }
+    }
+    if(coincidencia>0){ // Significa que el recurso existe
+        t_recurso* recurso = list_get(config_kernel.recursos, posicion_recurso);
+        recurso->instancias--;
+        
+        if(recurso->instancias < 0){  // Chequea si debe bloquear al proceso por falta de instancias
+
+            sem_t semaforo_recurso = recurso->sem_recurso;
+        	sem_wait(&semaforo_recurso);
+
+        	list_add(recurso->procesos_bloqueados, pcb_ejecutando);
+        	recurso->instancias = 0;
+        	sem_post(&semaforo_recurso);
+
+            log_info(logger_kernel, "PID: %d - Bloqueado por: %s", pcb_ejecutando->cde->pid, nombre_recurso_pedido);
+
+            list_add(pcb_ejecutando->recursos_solicitados, recurso);
+            
+            enviar_de_exec_a_block();
+        }
+        else{
+            list_add(pcb_ejecutando->recursos_asignados, recurso);
+
+            if(es_RR_o_VRR() && !pcb_ejecutando->fin_q)
+                enviar_cde_a_cpu();
+            else if(es_RR_o_VRR() && pcb_ejecutando->fin_q)
+                enviar_de_exec_a_ready();
+            else
+                enviar_cde_a_cpu();
+        }
+    }
+    else{ // el recurso no existe
+        agregar_a_cola_finished("INVALID_RESOURCE"); //TODO: codigo de inexistencia de recurso
+    }
+}
+
+void evaluar_signal(char* nombre_recurso_pedido) {
+    int coincidencia = 0;
+    int posicion_recurso = -1; // Inicializado a un valor inválido por defecto
+    int asignado = 0;
+
+    // Primer bucle: Buscar el recurso en config_kernel.recursos
+    for (int i = 0; i < list_size(config_kernel.recursos); i++) {
+        t_recurso* recurso = list_get(config_kernel.recursos, i);
+        char* nombre_recurso = recurso->nombre;
+        if (string_equals_ignore_case(nombre_recurso_pedido, nombre_recurso)) {
+            coincidencia++;
+            posicion_recurso = i;
+        }
+    }
+
+    // Segundo bucle: Verificar si el recurso está asignado a pcb_ejecutando
+    for (int i = 0; i < list_size(pcb_ejecutando->recursos_asignados); i++) {
+        t_recurso* recurso = list_get(pcb_ejecutando->recursos_asignados, i);
+        char* nombre_recurso = recurso->nombre;
+        if (string_equals_ignore_case(nombre_recurso_pedido, nombre_recurso)) {
+            asignado++;
+        }
+    }
+
+    if (coincidencia > 0 && asignado > 0) { // el recurso existe y lo tiene asignado
+        t_recurso* recurso = list_get(config_kernel.recursos, posicion_recurso);
+        recurso->instancias++; // Incrementar instancias del recurso
+
+        list_remove_element(pcb_ejecutando->recursos_asignados, recurso); // Remover el recurso de los asignados
+
+        // Enviar señales dependiendo del algoritmo y estado del quantum
+        if (es_RR_o_VRR() && !pcb_ejecutando->fin_q) {
+            enviar_cde_a_cpu();
+        } else if (es_RR_o_VRR() && pcb_ejecutando->fin_q) {
+            enviar_de_exec_a_ready();
+        } else {
+            enviar_cde_a_cpu();
+        }
+
+        // Desbloquear el primer proceso de la cola de bloqueados si existe
+        if (list_size(recurso->procesos_bloqueados) > 0) {
+            t_pcb* pcb = list_remove(recurso->procesos_bloqueados, 0); // Remover el primer proceso bloqueado
+
+            list_remove_element(pcb->recursos_solicitados, recurso); // Remover el recurso solicitado
+
+            list_add(pcb->recursos_asignados, recurso); // Asignar el recurso al proceso desbloqueado
+            recurso->instancias--; // Decrementar instancias del recurso
+            enviar_pcb_de_block_a_ready(pcb); // Mover el proceso de bloqueado a ready
+        }
+    } else if (coincidencia > 0 && asignado == 0) { // el recurso existe y NO lo tiene asignado
+        exec_a_finished("INVALID_RESOURCE");
+    } else if (coincidencia == 0 && asignado == 0) { // el recurso NO existe y NO lo tiene asignado
+        exec_a_finished("INVALID_RESOURCE");
+    }
+}
+
+bool es_RR_o_VRR() {
+    return (strcmp(config_kernel.algoritmo_planificacion, "RR") == 0 || strcmp(config_kernel.algoritmo_planificacion, "VRR") == 0);
 }
