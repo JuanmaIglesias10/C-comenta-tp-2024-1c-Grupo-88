@@ -243,7 +243,33 @@ void iniciarPlanificacion(){
     //     sem_wait(&pausar_blocked_a_ready);
     
     planificacion_detenida = 0;
-} 
+}
+
+void procesosPorEstado(){
+    log_info(logger_kernel, "---------LISTANDO PROCESOS POR ESTADO---------");
+
+    char* procesos_cargados_en_new = obtener_elementos_cargados_en(colaNEW);
+    char* procesos_cargados_en_ready = obtener_elementos_cargados_en(colaREADY);
+    char* procesos_cargados_en_blocked = obtener_elementos_cargados_en(colaBLOCKED);
+    char* procesos_cargados_en_exit = obtener_elementos_cargados_en(colaFINISHED);
+
+    log_info(logger_kernel, "Procesos en NEW: %s", procesos_cargados_en_new);
+    log_info(logger_kernel, "Procesos en READY: %s", procesos_cargados_en_ready);
+    
+     if(pcb_ejecutando != NULL)
+        log_info(logger_kernel, "Proceso en EXEC: [%d]", pcb_ejecutando->cde->pid);
+    else
+        log_info(logger_kernel, "Proceso en EXEC: []");
+    
+    log_info(logger_kernel, "Procesos en BLOCKED: %s", procesos_cargados_en_blocked);
+    log_info(logger_kernel, "Procesos en FINISHED: %s", procesos_cargados_en_exit);
+
+    free(procesos_cargados_en_new);
+    free(procesos_cargados_en_ready);
+    free(procesos_cargados_en_blocked);
+    free(procesos_cargados_en_exit);
+}
+
 
 
 t_pcb* crear_PCB(){

@@ -32,6 +32,7 @@ t_list* obtener_lista_script(char* pathScript);
 void iniciar_proceso(char* path);
 void detenerPlanificacion();
 void iniciarPlanificacion();
+void procesosPorEstado();
 t_pcb* crear_PCB();
 void cambiar_grado_multiprogramacion(char* nuevo_grado);
 void destruir_pcb(t_pcb* pcb);

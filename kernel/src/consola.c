@@ -130,7 +130,7 @@ void switch_comandos(uint8_t codOp, char* lista_mensaje){
 			free(lista_mensaje);
 			break;
 		case PROCESO_ESTADO:
-			// procesosPorEstado();
+			procesosPorEstado();
 			free(lista_mensaje); 
 			break;
 		case E_PARAMETROS:
