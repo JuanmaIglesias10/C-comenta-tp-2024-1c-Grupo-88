@@ -308,10 +308,17 @@ void ejecutar_resize(char* charTamanio){
     enviar_codOp(fd_memoria, RESIZE_SOLICITUD);
     uint32_t tamanio = atoi(charTamanio);
     t_buffer* buffer = crear_buffer();
-    agregar_buffer_uint32(pid_de_cde_ejecutando);
-    agregar_buffer_uint32(tamanio);
+    agregar_buffer_uint32(buffer, pid_de_cde_ejecutando);
+    agregar_buffer_uint32(buffer, tamanio);
     enviar_buffer(buffer,fd_memoria);
     destruir_buffer(buffer);
+
+    mensajeCpuMemoria cod_op = recibir_codOp(fd_memoria);
+    if(cod_op == OUT_OF_MEMORY){
+        interrupcion = 1;
+    } else if (cod_op == RESIZE_OK){
+        log_info(logger_cpu, "soy feliz");
+    }
 
 }
 

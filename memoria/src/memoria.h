@@ -5,6 +5,7 @@
 #include "atender_memoria.h"
 #include "diccionario_memoria.h"
 #include "commons/temporal.h"
+#include "math.h"
 
 // Function declarations
 void inicializar_memoria();
@@ -30,9 +31,26 @@ void ejecutar_MOV_IN();
 
 void resize();
 
+void devolver_nro_marco();
+
 t_proceso* buscarProcesoPorPid(uint32_t pid);
 
 bool hay_marcos_libres(int cantMarcosNecesitada);
 
+t_pagina* buscarPaginaPorNroYPid(uint32_t nroPag, uint32_t pid);
+
+t_pagina* crear_pagina(uint32_t nroPag, uint32_t nroMarco, void* dirreccionInicio, uint32_t pid);
+
+void colocar_pagina_en_marco(uint32_t pid, uint32_t nroPagina);
+
+uint32_t obtener_marco_libre();
+
+uint32_t obtener_pagina_libre();
+
+void escribir_pagina(uint32_t posEnMemoria, void* pagina);
+
+void liberarPaginasDeUnProcesoResize(t_proceso* procesoAReducir, uint32_t nuevoTamaño);
+
+void vaciar_marco(uint32_t nroMarco);
 #endif /* MEMORIA_H_ */
 

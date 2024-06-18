@@ -34,7 +34,7 @@ void inicializar_kernel(){
     enviar_buffer(buffer, fd_cpu_dis);
     destruir_buffer(buffer);
 
-    if(strcmp(config_kernel.algoritmo_planificacion, "RR") == 0 || strcmp(config_kernel.algoritmo_planificacion, "VRR") == 0){
+    if(es_RR_o_VRR()){
         prender_quantum();
     }
 
@@ -437,7 +437,7 @@ void enviar_cde_a_cpu() {
 	agregar_buffer_cde(buffer, pcb_ejecutando->cde);
     pthread_mutex_unlock(&mutex_pcb_en_ejecucion);
 
-     if(strcmp(config_kernel.algoritmo_planificacion, "RR") == 0 || strcmp(config_kernel.algoritmo_planificacion, "VRR") == 0 ){
+     if(es_RR_o_VRR() ){
          pcb_ejecutando->flag_clock = false;
      }
 
@@ -566,7 +566,7 @@ void timer_vrr(){
 void evaluar_instruccion(t_instruccion* instruccion_actual){
     switch(instruccion_actual->codigo){
         case WAIT:
-            if(strcmp(config_kernel.algoritmo_planificacion, "RR" ) == 0 || strcmp(config_kernel.algoritmo_planificacion, "VRR") == 0){
+            if(es_RR_o_VRR()){
                 pcb_ejecutando->flag_clock = true;
             } // si se bloquea tengo que reiniciar el clock para el nuevo proceso (RR-VRR)
             char* nombre_recurso = instruccion_actual->par1;
@@ -582,14 +582,21 @@ void evaluar_instruccion(t_instruccion* instruccion_actual){
             destruir_instruccion(instruccion_actual);
             break;      
         case IO_GEN_SLEEP:
-            if(strcmp(config_kernel.algoritmo_planificacion, "RR") == 0 || strcmp(config_kernel.algoritmo_planificacion, "VRR") == 0){
+            if(es_RR_o_VRR()){
                 pcb_ejecutando->flag_clock = true;
             }
             io_gen_sleep();
             destruir_instruccion(instruccion_actual);
             break;
+        case RESIZE:
+            if(es_RR_o_VRR()){
+                pcb_ejecutando->flag_clock = true;
+            }
+            agregar_a_cola_finished("OUT OF MEMORY");
+            destruir_instruccion(instruccion_actual);
+            break;
         case EXIT:
-            if(strcmp(config_kernel.algoritmo_planificacion, "RR") == 0 || strcmp(config_kernel.algoritmo_planificacion, "VRR") == 0){
+            if(es_RR_o_VRR()){
                 pcb_ejecutando->flag_clock = true;
             }
             agregar_a_cola_finished("SUCCESS");
@@ -762,5 +769,5 @@ void evaluar_signal(char* nombre_recurso_pedido) {
 }
 
 bool es_RR_o_VRR() {
-    return (strcmp(config_kernel.algoritmo_planificacion, "RR") == 0 || strcmp(config_kernel.algoritmo_planificacion, "VRR") == 0);
+    return (strcmp(config_kernel.algoritmo_planificacion,"RR")== 0 || strcmp(config_kernel.algoritmo_planificacion,"VRR")== 0);
 }
