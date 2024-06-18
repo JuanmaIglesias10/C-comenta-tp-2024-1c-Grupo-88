@@ -28,7 +28,8 @@ typedef struct {
     bool bitPresencia;
     char* ultimaReferencia; //LRU
     void* direccionFisicaInicio;
-    uint32_t direccionLogica;
+
+    void* direccionLogica;
 }t_pagina;
 
 
