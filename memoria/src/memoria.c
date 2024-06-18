@@ -432,17 +432,17 @@ void colocar_pagina_en_marco(uint32_t pid, uint32_t nroPagina){
 
 	t_pagina* pagNueva = crear_pagina(nroPagina, numeroMarco, memoriaPrincipal + posEnMemoria, pid);
 	nroPagina++;
-	list_replace(listaMarcos, numeroMarco, pagAPedir);
+	list_replace(listaMarcos, numeroMarco, pagNueva);
 
-	escribir_pagina(posEnMemoria, pagina);
+	escribir_pagina(posEnMemoria, pagNueva);
 	
-	pagAPedir->bitModificado = false;
-	pagAPedir->bitPresencia = true;
-	pagAPedir->direccionInicio = memoriaPrincipal + posEnMemoria;
-	pagAPedir->pidEnUso = pid;
-	pagAPedir->nroMarco = numeroMarco;
+	pagNueva->bitModificado = false;
+	pagNueva->bitPresencia = true;
+	pagNueva->direccionFisicaInicio = memoriaPrincipal + posEnMemoria;
+	pagNueva->pidProcesoCreador = pid;
+	pagNueva->nroMarco = numeroMarco;
 
-	log_info(logger_memoria, "REEMPLAZO - Marco: %d - Page Out: %d-%d - Page In: %d-%d", numeroMarco, pag_a_matar_pid_uso, pag_a_matar_nro_pag, pagAPedir->pidEnUso, pagAPedir->nroPagina);
+	
 	// sem_post(&sem_pagina_cargada);
 }
 
