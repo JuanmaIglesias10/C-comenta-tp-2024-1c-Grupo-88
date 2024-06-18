@@ -304,6 +304,17 @@ void ejecutar_exit(){
     interrupcion = 1;
 }
 
+void ejecutar_resize(char* charTamanio){
+    enviar_codOp(fd_memoria, RESIZE_SOLICITUD);
+    uint32_t tamanio = atoi(charTamanio);
+    t_buffer* buffer = crear_buffer();
+    agregar_buffer_uint32(pid_de_cde_ejecutando);
+    agregar_buffer_uint32(tamanio);
+    enviar_buffer(buffer,fd_memoria);
+    destruir_buffer(buffer);
+
+}
+
 void ejecutar_mov_in(char* registro, char* charDirLogica, t_cde* cde){
     uint32_t dirLogica = atoi(charDirLogica);
     uint32_t dirFisica = calcular_direccion_fisica(dirLogica, cde);

@@ -15,7 +15,7 @@ typedef struct{
 typedef struct{
 	uint32_t pid;
 	t_list* instrucciones;
-	uint32_t cantMaxMarcos;
+	uint32_t cantPaginas;
 }t_proceso;
 
 // variables globales Memoria

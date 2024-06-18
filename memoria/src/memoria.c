@@ -24,8 +24,8 @@ void inicializar_memoria(){
 	cantMarcos = config_memoria.tam_memoria / config_memoria.tam_pagina; //128
 	
 	for(int i = 0; i < cantMarcos; i++)
-		list_add(listaMarcos, NULL);
-		
+		list_add(listaMarcos, NULL); //Inicializo la lista de marcos
+
     return;
 }
 
@@ -107,9 +107,9 @@ void iniciar_proceso(){
 	string_append(&rutaArchivoInstrucciones, nombreArchivoInstrucciones);
 	t_list* listaInstrucciones = obtener_instrucciones(rutaArchivoInstrucciones);
 	
-	t_proceso* procesoNuevo = crear_proceso(listaInstrucciones, pid, 0);
+	t_proceso* procesoNuevo = crear_proceso(listaInstrucciones, pid);
 
-	log_info(logger_memoria, "PID: %d - Tamaño: 0", pid); //LOG OBLIGATORIO, NO QUITAR!!!!!!
+	log_info(logger_memoria, "PID: %d - Tamaño: %d", procesoNuevo->pid , procesoNuevo->cantPaginas); //Este log se repite en terminar_proceso
 
 	pthread_mutex_lock(&mutex_lista_procesos);
 	list_add(listaProcesos, procesoNuevo);
@@ -121,14 +121,15 @@ void iniciar_proceso(){
 	// list_destroy_and_destroy_elements(listaInstrucciones, (void*)instrucciones_destroy);  
 	//Al hacer esto, libero las instrucciones en proceso, aunque ya las pasé en la linea 90 ,1 hora debuggeando para encontrar esta mrd :D
 	free(rutaArchivoInstrucciones);
+
 }
 
-t_proceso* crear_proceso(t_list* listaInstrucciones, uint32_t pid, uint32_t tamanio){
+t_proceso* crear_proceso(t_list* listaInstrucciones, uint32_t pid){
 	t_proceso* proceso = malloc(sizeof(t_proceso));
 
 	proceso->instrucciones = listaInstrucciones;
 	proceso->pid = pid;
-	proceso->cantMaxMarcos = tamanio / config_memoria.tam_pagina;
+	proceso->cantPaginas = 0 ; //El tamaño arranca en 0 y se modifica con resize
 
 	return proceso;
 }
@@ -379,6 +380,74 @@ t_pagina* crear_pagina(uint32_t nroPag, uint32_t nroMarco, void* dirreccionInici
 	// buffer_write_uint32(b, paginaCreada->pidCreador);
 	// enviar_buffer(b, fd_IO);
 	// destruir_buffer_nuestro(b);
-	
 	return paginaCreada;
+}
+
+void resize() {
+	t_buffer* buffer = recibir_buffer(fd_cpu);
+	uint32_t pid     = leer_buffer_uint32(buffer);
+	uint32_t tamaño  = leer_buffer_uint32(buffer);
+	//Aca habria que recorrer la lista global de procesos, para poder modificar el valor anterior del tamaño
+	//Y chequear si el tamaño es menor
+	//En caso de que el tamaño sea menor que el anterior, no llamariamos a colocar_pagina_en_marco, sino remover
+	destruir_buffer(buffer);
+	uint32_t cantMarcosNecesitados = ceil(tamaño / config_memoria.tam_pagina);
+	if(hay_marcos_libres(cantMarcosNecesitados)){
+		while(cantMarcosNecesitados == 0){
+			colocar_pagina_en_marco(pid);
+			cantMarcosNecesitados--;
+			}
+			
+			
+	} else {
+		enviar_codOp(fd_cpu, OUT_OF_MEMORY);
+	}
+}
+
+void colocar_pagina_en_marco(uint32_t pid, uint32_t nroPagina){
+	uint32_t numeroMarco = obtener_marco_libre();
+
+	uint32_t posEnMemoria =  numeroMarco * config_memoria.tam_pagina;
+
+	t_pagina* pagNueva = crear_pagina(nroPagina, numeroMarco, memoriaPrincipal + posEnMemoria, pid);
+	nroPagina++;
+	list_replace(listaMarcos, numeroMarco, pagAPedir);
+
+	escribir_pagina(posEnMemoria, pagina);
+	
+	pagAPedir->bitModificado = false;
+	pagAPedir->bitPresencia = true;
+	pagAPedir->direccionInicio = memoriaPrincipal + posEnMemoria;
+	pagAPedir->pidEnUso = pid;
+	pagAPedir->nroMarco = numeroMarco;
+
+	log_info(logger_memoria, "REEMPLAZO - Marco: %d - Page Out: %d-%d - Page In: %d-%d", numeroMarco, pag_a_matar_pid_uso, pag_a_matar_nro_pag, pagAPedir->pidEnUso, pagAPedir->nroPagina);
+	sem_post(&sem_pagina_cargada);
+}
+
+
+bool hay_marcos_libres(int cantMarcosNecesitada){ //
+	int j = 0;
+	for(int i = 0; i < cantMarcos; i++){
+		t_pagina* pagina = list_get(listaMarcos, i);//no vacia - no vacia - vacia - vacia - vacia
+		if(pagina == NULL) //la pagina esta vacia
+			j++; //aumento el contador
+			if(j == cantMarcosNecesitada){
+				return true;
+			}
+	}
+	return false;
+}
+
+
+uint32_t obtener_marco_libre(){
+	for(int i = 0; i < cantMarcos; i++){
+		t_pagina* pagina = list_get(listaMarcos, i);
+		if(pagina == NULL)
+			return i;
+	}
+}
+
+void escribir_pagina(uint32_t posEnMemoria, void* pagina){
+	memcpy(memoriaPrincipal + posEnMemoria, pagina, config_memoria.tam_pagina);
 }

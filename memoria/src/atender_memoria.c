@@ -13,7 +13,12 @@ void atender_cpu()
 				enviar_instruccion();
 				break;
             case NUMERO_MARCO_SOLICITUD: //Desde calcular_direccion_fisica en mmu.c
+				usleep(config_memoria.retardo_respuesta * 1000);
 				devolver_nro_marco();
+				break;
+			case RESIZE_SOLICITUD:
+				usleep(config_memoria.retardo_respuesta * 1000);
+				resize();
 				break;
 			default:
 				log_info(logger_memoria,"Se desconectó CPU");
