@@ -324,7 +324,7 @@ int ejecutar_resize(char* charTamanio){
     } else if (cod_op == RESIZE_OK){
         return 0;
     }
-
+    return 255; //Esto no deberia suceder
 }
 
 void ejecutar_mov_in(char* registro, char* charDirLogica, t_cde* cde){

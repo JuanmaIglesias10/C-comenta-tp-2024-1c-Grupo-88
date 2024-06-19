@@ -364,19 +364,19 @@ void resize() {
 
 	t_proceso* proceso = buscarProcesoPorPid(pid);
 
-	uint32_t cantMarcosNecesitados = ceil(nuevoTamaño / config_memoria.tam_pagina);
-
-	if(hay_marcos_libres(cantMarcosNecesitados)){ //Tengo marcos disponibles, avanzo con el resize
+	uint32_t cantMarcosNecesitados = (uint32_t)ceil((double)nuevoTamaño / config_memoria.tam_pagina); //129
+	log_info(logger_memoria,"%d",cantMarcosNecesitados);
+	log_info(logger_memoria,"%d",hay_marcos_libres(cantMarcosNecesitados));
+	if(hay_marcos_libres(cantMarcosNecesitados) || nuevoTamaño < proceso->tamaño){ //Tengo marcos disponibles, avanzo con el resize
 
 		if(nuevoTamaño > proceso->tamaño){ //Ampliacion del tamaño del proceso
 			log_info(logger_memoria,"PID: %d - Tamaño Actual: %d - Tamaño a Ampliar: %d", proceso->pid, proceso->tamaño , nuevoTamaño);
-			proceso->cantPaginas = ceil(nuevoTamaño / config_memoria.tam_pagina);
+			proceso->cantPaginas = (uint32_t)ceil((double)nuevoTamaño / config_memoria.tam_pagina);
 			
 			while(cantMarcosNecesitados > 0){
 				
 				uint32_t nroMarcoLibre = obtener_marco_libre();
 				uint32_t nroPaginaLibre = obtener_pagina_libre();
-
 				//La direccion de inicio es void* porque memoriaPrincipal lo es
 				void* direccionInicioPagina = memoriaPrincipal + nroMarcoLibre * config_memoria.tam_pagina;
 
@@ -390,7 +390,7 @@ void resize() {
 		} else if (nuevoTamaño < proceso->tamaño){ //Reduccion del tamaño del proceso
 			log_info(logger_memoria,"PID: %d - Tamaño Actual: %d - Tamaño a Reducir: %d", proceso->pid, proceso->tamaño , nuevoTamaño);
 			liberarPaginasDeUnProcesoResize(proceso, nuevoTamaño);
-			proceso->cantPaginas = ceil(nuevoTamaño / config_memoria.tam_pagina);
+			proceso->cantPaginas = (uint32_t)ceil((double)nuevoTamaño / config_memoria.tam_pagina);
 			proceso->tamaño = nuevoTamaño;
 		} else { //El resize es innecesario, el tamaño es el mismo
 			log_info(logger_memoria, "No es necesario realizar una ampliacion o reduccion de tamaño");
@@ -439,7 +439,7 @@ void colocar_pagina_en_marco(uint32_t pid, uint32_t nroPagina){
 	// sem_post(&sem_pagina_cargada);
 }
 
-bool hay_marcos_libres(int cantMarcosNecesitada){ //
+bool hay_marcos_libres(int cantMarcosNecesitada){ //129
 	int j = 0;
 	for(int i = 0; i < cantMarcos; i++){
 
@@ -451,7 +451,7 @@ bool hay_marcos_libres(int cantMarcosNecesitada){ //
 }
 
 uint32_t obtener_marco_libre(){
-	for(int i = 0; i < cantMarcos; i++){
+	for(int i = 0; i < cantMarcos; i++){ //128
 
 		t_pagina* pagina = list_get(listaMarcos, i);
 		if(pagina == NULL)
@@ -475,7 +475,7 @@ void escribir_pagina(uint32_t posEnMemoria, void* pagina){
 
 
 void liberarPaginasDeUnProcesoResize(t_proceso* procesoAReducir, uint32_t nuevoTamaño){
-	int cantPaginasAEliminar = ceil((procesoAReducir->tamaño - nuevoTamaño)/config_memoria.tam_pagina);
+	uint32_t cantPaginasAEliminar = (uint32_t)ceil((double)(procesoAReducir->tamaño - nuevoTamaño)/config_memoria.tam_pagina);
 
 	for(int j = cantMarcos - 1; j >= 0; j--){
 			
@@ -483,7 +483,8 @@ void liberarPaginasDeUnProcesoResize(t_proceso* procesoAReducir, uint32_t nuevoT
 			if(pagina != NULL){
 				if(pagina->pidProcesoCreador == procesoAReducir->pid){
 					vaciar_marco(pagina->nroMarco);
-					list_remove(tablaGlobalPaginas, j);
+					// list_remove(tablaGlobalPaginas, j);
+					list_replace(tablaGlobalPaginas, j, NULL);
 					free(pagina);
 					cantPaginasAEliminar--;
 					if(cantPaginasAEliminar == 0){
