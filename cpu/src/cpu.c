@@ -264,7 +264,10 @@ void ejecutar_instruccion(t_cde* cde, t_instruccion* instruccion_a_ejecutar){
             break;
         case RESIZE:
             log_info(logger_cpu, "PID: %d - Ejecutando: %s - %s", cde->pid, obtener_nombre_instruccion(instruccion_a_ejecutar), instruccion_a_ejecutar->par1);
-			ejecutar_resize(instruccion_a_ejecutar->par1);
+			int valor = ejecutar_resize(instruccion_a_ejecutar->par1);
+            if (valor == 1){
+                instruccion_a_ejecutar->codigo = OUT_OF_MEMORY_VUELTA;
+            }
             if (interrupcion == 0 && realizar_desalojo == 0)
                 destruir_instruccion(instruccion_a_ejecutar);
             break;

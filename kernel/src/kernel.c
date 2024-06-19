@@ -588,7 +588,7 @@ void evaluar_instruccion(t_instruccion* instruccion_actual){
             io_gen_sleep();
             destruir_instruccion(instruccion_actual);
             break;
-        case RESIZE:
+        case OUT_OF_MEMORY_VUELTA:
             if(es_RR_o_VRR()){
                 pcb_ejecutando->flag_clock = true;
             }

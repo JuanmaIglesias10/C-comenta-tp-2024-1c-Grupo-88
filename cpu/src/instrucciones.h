@@ -17,7 +17,7 @@ void ejecutar_jnz(void* registro, char* char_nro_instruccion);
 void ejecutar_io_gen_sleep(char* nombreInterfaz, char* charUnidadesDeTiempo);
 void ejecutar_wait(char* recurso);
 void ejecutar_signal(char* recurso);
-void ejecutar_resize(char* tamanio);
+int ejecutar_resize(char* tamanio);
 void ejecutar_exit();
 uint8_t obtener_numero_interfaz(char* nombreInterfaz);
 void ejecutar_mov_in(char* registro, char* charDirLogica, t_cde* cde);

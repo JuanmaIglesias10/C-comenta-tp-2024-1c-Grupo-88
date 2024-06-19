@@ -87,6 +87,7 @@ typedef enum{
     SUB, 
     JNZ, 
     RESIZE, 
+    OUT_OF_MEMORY_VUELTA, 
     COPY_STRING, 
 	WAIT, 
 	SIGNAL, 

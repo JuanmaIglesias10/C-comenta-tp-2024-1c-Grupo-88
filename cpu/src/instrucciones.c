@@ -24,6 +24,9 @@ char* obtener_nombre_instruccion(t_instruccion* instruccion) {
 	    case RESIZE:
             return "RESIZE";
             break;
+	    case OUT_OF_MEMORY_VUELTA:
+            return "RESIZE";
+            break;
 	    case COPY_STRING:
             return "COPY_STRING";
             break;
@@ -304,7 +307,7 @@ void ejecutar_exit(){
     interrupcion = 1;
 }
 
-void ejecutar_resize(char* charTamanio){
+int ejecutar_resize(char* charTamanio){
     enviar_codOp(fd_memoria, RESIZE_SOLICITUD);
     uint32_t tamanio = atoi(charTamanio);
     t_buffer* buffer = crear_buffer();
@@ -316,8 +319,10 @@ void ejecutar_resize(char* charTamanio){
     mensajeCpuMemoria cod_op = recibir_codOp(fd_memoria);
     if(cod_op == OUT_OF_MEMORY){
         interrupcion = 1;
+        return 1;
+
     } else if (cod_op == RESIZE_OK){
-        log_info(logger_cpu, "soy feliz");
+        return 0;
     }
 
 }
