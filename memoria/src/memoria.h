@@ -27,6 +27,8 @@ void instrucciones_destroy(t_instruccion* instrucciones_a_destruir);
 
 void enviar_instruccion();
 
+void ejecutar_MOV_OUT();
+
 void ejecutar_MOV_IN();
 
 void resize();

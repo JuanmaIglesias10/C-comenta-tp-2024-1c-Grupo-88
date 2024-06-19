@@ -8,6 +8,9 @@ void atender_cpu()
 			case MOV_IN_SOLICITUD: //Desde ejecutar_mov_in
 				ejecutar_MOV_IN();
 				break;
+			case MOV_OUT_SOLICITUD: //Desde ejecutar_mov_in
+				ejecutar_MOV_OUT();
+				break;
 			case PEDIDO_INSTRUCCION:
 				usleep(config_memoria.retardo_respuesta * 1000);
 				enviar_instruccion();

@@ -20,4 +20,6 @@ void ejecutar_signal(char* recurso);
 int ejecutar_resize(char* tamanio);
 void ejecutar_exit();
 uint8_t obtener_numero_interfaz(char* nombreInterfaz);
-void ejecutar_mov_in(char* registro, char* charDirLogica, t_cde* cde);
+void ejecutar_mov_in(char* registro, char* charDirLogica);
+void ejecutar_mov_out(char* registroDirLogica, char* registro);
+bool es_uint8(char* registro);

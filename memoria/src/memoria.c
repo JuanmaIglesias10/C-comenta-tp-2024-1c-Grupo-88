@@ -290,6 +290,37 @@ void enviar_instruccion(){
 	destruir_buffer(buffer);
 }
 
+void ejecutar_MOV_OUT(){
+	t_buffer* buffer = recibir_buffer(fd_cpu);
+	uint32_t dirFisica = leer_buffer_uint32(buffer);
+	uint32_t tamañoValor = leer_buffer_uint32(buffer);
+	uint8_t valorAEscribir8;
+	uint32_t valorAEscribir32;
+	if(tamañoValor == 8){
+		valorAEscribir8 = leer_buffer_uint8(buffer);
+	} else if (tamañoValor == 32){
+		valorAEscribir32 = leer_buffer_uint32(buffer);
+	}
+	
+	uint32_t pid = leer_buffer_uint32(buffer);
+	uint32_t numPagina = leer_buffer_uint32(buffer);
+	destruir_buffer(buffer);
+
+	if(tamañoValor == 8){
+		memcpy(memoriaPrincipal + dirFisica, &valorAEscribir8, sizeof(uint8_t));
+	} else if (tamañoValor == 32){
+		memcpy(memoriaPrincipal + dirFisica, &valorAEscribir32, sizeof(uint32_t));
+	}
+	
+	t_pagina* pagModificada = buscarPaginaPorNroYPid(numPagina, pid);
+	pagModificada->ultimaReferencia = temporal_get_string_time("%H:%M:%S:%MS");
+	pagModificada->bitModificado = true;
+	
+	enviar_codOp(fd_cpu, MOV_OUT_OK);
+
+	log_info(logger_memoria, "PID: %d - Acción: ESCRIBIR - Dirección física: %d", pid, dirFisica);
+}
+
 void ejecutar_MOV_IN(){
 	t_buffer* buffer = recibir_buffer(fd_cpu); 
 	uint32_t dirFisica = leer_buffer_uint32(buffer);
@@ -346,9 +377,10 @@ t_pagina* buscarPaginaPorNroYPid(uint32_t nroPag, uint32_t pid){
 	for(int i = 0; i < list_size(tablaGlobalPaginas); i++){
 
 		t_pagina* pag = list_get(tablaGlobalPaginas, i);
-
-		if(pag->nroPagina == nroPag && pag->pidProcesoCreador == pid)
-			return pag;
+		if(pag != NULL){
+			if(pag->nroPagina == nroPag && pag->pidProcesoCreador == pid)
+				return pag;
+		}
 	}
 
 	return NULL;
@@ -365,8 +397,6 @@ void resize() {
 	t_proceso* proceso = buscarProcesoPorPid(pid);
 
 	uint32_t cantMarcosNecesitados = (uint32_t)ceil((double)nuevoTamaño / config_memoria.tam_pagina); //129
-	log_info(logger_memoria,"%d",cantMarcosNecesitados);
-	log_info(logger_memoria,"%d",hay_marcos_libres(cantMarcosNecesitados));
 	if(hay_marcos_libres(cantMarcosNecesitados) || nuevoTamaño < proceso->tamaño){ //Tengo marcos disponibles, avanzo con el resize
 
 		if(nuevoTamaño > proceso->tamaño){ //Ampliacion del tamaño del proceso

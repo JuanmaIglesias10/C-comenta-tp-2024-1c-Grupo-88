@@ -41,9 +41,9 @@ typedef enum{
 
 typedef enum{
 	MOV_IN_SOLICITUD,
-	MOV_IN_OK, // Cuando no hay pageFault
+	MOV_IN_OK, 
 	MOV_OUT_SOLICITUD,
-	MOV_OUT_OK, // Cuando no hay pageFault
+	MOV_OUT_OK, 
 	PAGE_FAULT,
 	NUMERO_MARCO_SOLICITUD,
 	NUMERO_MARCO_OK,
