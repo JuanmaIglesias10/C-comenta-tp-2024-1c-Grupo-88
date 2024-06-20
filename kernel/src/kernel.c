@@ -459,7 +459,6 @@ void recibir_cde_de_cpu(){
         pcb_ejecutando->cde = leer_buffer_cde(buffer);
         if (pcb_ejecutando->cde == NULL) log_error(logger_kernel, "CDE NULL");
         pthread_mutex_unlock(&mutex_exec);
-        //---------------------------------
         t_instruccion* instruccion_actual = leer_buffer_instruccion(buffer);
         
         if(strcmp(config_kernel.algoritmo_planificacion, "VRR") == 0){

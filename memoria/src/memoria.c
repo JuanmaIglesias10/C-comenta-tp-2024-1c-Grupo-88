@@ -337,21 +337,24 @@ void ejecutar_MOV_IN(){
 	uint8_t valorLeido8 = 0;
 	uint32_t valorLeido32 = 0;
 
-	if (tamanio == 8) memcpy(&valorLeido8, memoriaPrincipal + dirFisica, sizeof(uint8_t));
-	else memcpy(&valorLeido32, memoriaPrincipal + dirFisica, sizeof(uint32_t));
+	if (tamanio == 8) {
+		memcpy(&valorLeido8, memoriaPrincipal + dirFisica, sizeof(uint8_t));
+	} else { 
+	  	memcpy(&valorLeido32, memoriaPrincipal + dirFisica, sizeof(uint32_t));
+	}
 
+	t_pagina* pagLeida = buscarPaginaPorNroYPid(nroPag, pid);
+	pagLeida->ultimaReferencia = temporal_get_string_time("%H:%M:%S:%MS"); //LRU
 
-	//t_pagina* pagLeida = buscarPaginaPorNroYPid(nroPag, pid);
-	//pagLeida->ultimaReferencia = temporal_get_string_time("%H:%M:%S:%MS"); //LRU
-//
-
-	//log_warning(logger_memoria, "Valor leido: %d", valorLeido);
 	
 	enviar_codOp(fd_cpu, MOV_IN_OK); //Hacia ejecutar_mov_in en instrucciones.c
 	log_info(logger_memoria, "PID: %d - Acción: LEER - Dirección física: %d", pid, dirFisica);
 	buffer = crear_buffer();
-	if (tamanio == 8) agregar_buffer_uint8(buffer, valorLeido8);
-	else agregar_buffer_uint32(buffer, valorLeido32);
+	if (tamanio == 8) {
+		agregar_buffer_uint8(buffer, valorLeido8);
+	} else { 
+		agregar_buffer_uint32(buffer, valorLeido32);
+	}
 	enviar_buffer(buffer, fd_cpu);
 	destruir_buffer(buffer);
 }
@@ -383,12 +386,13 @@ void devolver_nro_marco(){
 }
 
 t_pagina* buscarPaginaPorNroYPid(uint32_t nroPag, uint32_t pid){
-
+	log_warning(logger_memoria, "%d", pid);
 	for(int i = 0; i < list_size(tablaGlobalPaginas); i++){
 
 		t_pagina* pag = list_get(tablaGlobalPaginas, i);
 		if(pag != NULL){
 			if(pag->nroPagina == nroPag && pag->pidProcesoCreador == pid)
+				log_warning(logger_memoria, "---------------%d", pag->pidProcesoCreador);
 				return pag;
 		}
 	}
@@ -450,6 +454,7 @@ t_pagina* crear_pagina(uint32_t nroPag, uint32_t nroMarco, void* dirreccionInici
 	paginaCreada->direccionFisicaInicio = dirreccionInicio;
 	paginaCreada->nroMarco = nroMarco;
 	paginaCreada->nroPagina = nroPag;
+	log_warning(logger_memoria,"//////////////////////////////////////%d - %d", nroPag , pid);
 	paginaCreada->pidProcesoCreador = pid;
 	paginaCreada->ultimaReferencia = temporal_get_string_time("%H:%M:%S:%MS");
 
