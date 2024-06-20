@@ -322,26 +322,36 @@ void ejecutar_MOV_OUT(){
 }
 
 void ejecutar_MOV_IN(){
-	t_buffer* buffer = recibir_buffer(fd_cpu); 
-	uint32_t dirFisica = leer_buffer_uint32(buffer);
-	uint32_t pid = leer_buffer_uint32(buffer);
-	uint32_t nroPag = leer_buffer_uint32(buffer);
+	uint32_t tamanio;
+	uint32_t dirFisica;
+	uint32_t pid;
+	uint32_t nroPag;
+	
+	t_buffer* buffer = recibir_buffer(fd_cpu);
+	tamanio = leer_buffer_uint32(buffer);
+	dirFisica = leer_buffer_uint32(buffer);
+	pid = leer_buffer_uint32(buffer);
+	nroPag = leer_buffer_uint32(buffer);
 	destruir_buffer(buffer);
 
-	uint32_t valorLeido = 0;
+	uint8_t valorLeido8 = 0;
+	uint32_t valorLeido32 = 0;
 
-	memcpy(&valorLeido, memoriaPrincipal + dirFisica, sizeof(uint32_t));
+	if (tamanio == 8) memcpy(&valorLeido8, memoriaPrincipal + dirFisica, sizeof(uint8_t));
+	else memcpy(&valorLeido32, memoriaPrincipal + dirFisica, sizeof(uint32_t));
 
-	enviar_codOp(fd_cpu, MOV_IN_OK); //Hacia ejecutar_mov_in en instrucciones.c
 
-	t_pagina* pagLeida = buscarPaginaPorNroYPid(nroPag, pid);
-	pagLeida->ultimaReferencia = temporal_get_string_time("%H:%M:%S:%MS"); //LRU
-
-	log_info(logger_memoria, "PID: %d - Acción: LEER - Dirección física: %d", pid, dirFisica);
+	//t_pagina* pagLeida = buscarPaginaPorNroYPid(nroPag, pid);
+	//pagLeida->ultimaReferencia = temporal_get_string_time("%H:%M:%S:%MS"); //LRU
+//
 
 	//log_warning(logger_memoria, "Valor leido: %d", valorLeido);
+	
+	enviar_codOp(fd_cpu, MOV_IN_OK); //Hacia ejecutar_mov_in en instrucciones.c
+	log_info(logger_memoria, "PID: %d - Acción: LEER - Dirección física: %d", pid, dirFisica);
 	buffer = crear_buffer();
-	agregar_buffer_uint32(buffer, valorLeido);
+	if (tamanio == 8) agregar_buffer_uint8(buffer, valorLeido8);
+	else agregar_buffer_uint32(buffer, valorLeido32);
 	enviar_buffer(buffer, fd_cpu);
 	destruir_buffer(buffer);
 }

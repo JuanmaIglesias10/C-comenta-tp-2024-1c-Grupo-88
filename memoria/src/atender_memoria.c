@@ -6,9 +6,11 @@ void atender_cpu()
 		mensajeCpuMemoria cod_op = recibir_codOp(fd_cpu);
 		switch (cod_op) {
 			case MOV_IN_SOLICITUD: //Desde ejecutar_mov_in
+				usleep(config_memoria.retardo_respuesta * 1000);
 				ejecutar_MOV_IN();
 				break;
 			case MOV_OUT_SOLICITUD: //Desde ejecutar_mov_in
+				usleep(config_memoria.retardo_respuesta * 1000);
 				ejecutar_MOV_OUT();
 				break;
 			case PEDIDO_INSTRUCCION:

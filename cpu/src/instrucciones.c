@@ -327,14 +327,48 @@ int ejecutar_resize(char* charTamanio){
     return 255; //Esto no deberia suceder
 }
 
-void ejecutar_mov_in(char* registro, char* charDirLogica){
-    uint32_t dirLogica = atoi(charDirLogica);
+//void ejecutar_mov_in(char* registro, char* charDirLogica){
+//    uint32_t dirLogica = atoi(charDirLogica);
+//    uint32_t dirFisica = calcular_direccion_fisica(dirLogica);
+//    uint32_t numPagina = obtener_numero_pagina(dirLogica);
+//
+//    enviar_codOp(fd_memoria, MOV_IN_SOLICITUD);
+//    
+//    t_buffer* buffer = crear_buffer();
+//    agregar_buffer_uint32(buffer, dirFisica);
+//    agregar_buffer_uint32(buffer, pid_de_cde_ejecutando);
+//    agregar_buffer_uint32(buffer, numPagina);
+//    enviar_buffer(buffer, fd_memoria);
+//    destruir_buffer(buffer);
+//    
+//    mensajeCpuMemoria codigoMemoria = recibir_codOp(fd_memoria);
+//
+//    if(codigoMemoria == MOV_IN_OK){
+//        buffer = recibir_buffer(fd_memoria);
+//        uint32_t valorLeido = leer_buffer_uint32(buffer);
+//        ejecutar_set32(registro, valorLeido);
+//        destruir_buffer(buffer);
+//        log_info(logger_cpu,"PID: %d - Acción: LEER - Dirección Física: %d - Valor: %d", pid_de_cde_ejecutando, dirFisica, valorLeido);
+//    }
+//}
+
+void ejecutar_mov_in(char* registroDirLogica, char* registro){
+    uint32_t dirLogica;
+
+    if (es_uint8(registroDirLogica)){
+        dirLogica = (uint32_t)buscar_valor_registro8(registroDirLogica);
+    } else {
+        dirLogica = buscar_valor_registro32(registroDirLogica);
+    }
+
     uint32_t dirFisica = calcular_direccion_fisica(dirLogica);
     uint32_t numPagina = obtener_numero_pagina(dirLogica);
 
     enviar_codOp(fd_memoria, MOV_IN_SOLICITUD);
     
     t_buffer* buffer = crear_buffer();
+    if (es_uint8(registro)) agregar_buffer_uint32(buffer,8);
+    else agregar_buffer_uint32(buffer,32);
     agregar_buffer_uint32(buffer, dirFisica);
     agregar_buffer_uint32(buffer, pid_de_cde_ejecutando);
     agregar_buffer_uint32(buffer, numPagina);
@@ -342,14 +376,22 @@ void ejecutar_mov_in(char* registro, char* charDirLogica){
     destruir_buffer(buffer);
     
     mensajeCpuMemoria codigoMemoria = recibir_codOp(fd_memoria);
+    uint8_t valorLeido8;
+    uint32_t valorLeido32;
 
-    if(codigoMemoria == MOV_IN_OK){
-        buffer = recibir_buffer(fd_memoria);
-        uint32_t valorLeido = leer_buffer_uint32(buffer);
-        ejecutar_set32(registro, valorLeido);
+    buffer = crear_buffer();
+    buffer = recibir_buffer(fd_memoria);
+    if(es_uint8(registro)) valorLeido8 = leer_buffer_uint8(buffer);
+    else valorLeido32 = leer_buffer_uint32(buffer);
+    
+    if(codigoMemoria == MOV_IN_OK) log_info(logger_cpu,"PID: %d - Acción: LEER - Dirección Física: %d - Valor: %d", pid_de_cde_ejecutando, dirFisica, es_uint8(registro) ? valorLeido8 : valorLeido32);
+
+        if (es_uint8(registro)){
+            ejecutar_set8(registro, valorLeido8);
+        } else {
+            ejecutar_set32(registro, valorLeido32);
+        }
         destruir_buffer(buffer);
-        log_info(logger_cpu,"PID: %d - Acción: LEER - Dirección Física: %d - Valor: %d", pid_de_cde_ejecutando, dirFisica, valorLeido);
-    }
 }
 
 void ejecutar_mov_out(char* registroDirLogica, char* registro){ //direcion y valor a guardar en dicha direccion
