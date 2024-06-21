@@ -68,7 +68,7 @@ void inicializar_config_IO_DIALFS(){
 	config_IO_DIALFS.retraso_compactacion = config_get_int_value(config,"RETRASO_COMPACTACION"); 
 }
 
-void inicializar_IO_generica(char* nombre_interfaz, char* tipo) {
+void inicializar_IO_generica() {
 	fd_kernel = conectarse(config_IO_GENERICA.ip_kernel,config_IO_GENERICA.puerto_kernel, "KERNEL", logger_IO);
 }
 
@@ -125,4 +125,36 @@ void exec_IO_Generica() {
 		
 	
 	// }
+}
+
+void exec_IO_Stdin_read(){
+	uint8_t tam_reg8 = 0;
+	uint32_t tam_reg32 = 0;
+
+
+	t_buffer* buffer_recibido = recibir_buffer(fd_kernel);
+    uint32_t dir_fisica= leer_buffer_uint32(buffer_recibido);
+	uint32_t tam = leer_buffer_uint32(buffer_recibido);
+	if(tam == 8){
+		tam_reg8 = leer_buffer_uint8(buffer_recibido);
+	}else {
+		tam_reg32 = leer_buffer_uint32(buffer_recibido);
+	}
+
+	destruir_buffer(buffer_recibido);
+
+	char* valor_Ingresado = readline("Ingrese algo: ");
+
+	t_buffer* buffer_a_enviar = crear_buffer();
+    agregar_buffer_uint32(buffer_a_enviar,dir_fisica);
+    agregar_buffer_string(buffer_a_enviar,valor_Ingresado);
+
+	if(tam_reg8 != 0){
+		agregar_buffer_uint32(buffer_a_enviar,8);
+	} else{
+		agregar_buffer_uint32(buffer_a_enviar,32);
+	}
+
+    enviar_buffer(buffer_a_enviar,fd_kernel);
+    destruir_buffer(buffer_a_enviar);
 }

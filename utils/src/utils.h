@@ -50,12 +50,15 @@ typedef enum{
 	PEDIDO_INSTRUCCION,
 	RESIZE_SOLICITUD,
 	RESIZE_OK,
-	OUT_OF_MEMORY
+	OUT_OF_MEMORY,
+	ESCRIBIR_EN_MEMORIA
 }mensajeCpuMemoria;
 
 typedef enum{
 	SLEEP,
-	SLEEP_OK
+	SLEEP_OK,
+	STDIN_READ,
+	STDIN_READ_OK
 } mensajeKernelIO;
 
 

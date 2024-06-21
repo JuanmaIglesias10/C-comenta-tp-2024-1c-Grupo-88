@@ -20,6 +20,6 @@ t_list* listaMarcos;
 pthread_mutex_t mutex_lista_procesos;
 
 //Memoria principal
-void* memoriaPrincipal;
+ void* memoriaPrincipal;
 int cantMarcos;
 

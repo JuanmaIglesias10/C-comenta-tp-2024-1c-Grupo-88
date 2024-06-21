@@ -17,4 +17,5 @@ void inicializar_IO_DIALFS();
 void inicializar_conexiones();
 void enviar_info_kernel(char* nombre_interfaz, char* tipo);
 void exec_IO_Generica(); 
+void exec_IO_Stdin_read();
 #endif /* IO_H_ */

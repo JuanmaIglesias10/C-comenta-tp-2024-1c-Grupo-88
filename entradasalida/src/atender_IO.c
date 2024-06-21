@@ -31,6 +31,12 @@ void atender_kernel()
                     destruir_buffer(buffer_recibido);
                     enviar_codOp(fd_kernel,SLEEP_OK);
                     break;
+                 case STDIN_READ:
+                    exec_io_stdin_read();
+                    usleep(unidadesDeTiempo * 1000);
+                    enviar_codOp(fd_kernel,STDIN_READ_OK);
+                    break;
+
                  default:
                      return;
                  }

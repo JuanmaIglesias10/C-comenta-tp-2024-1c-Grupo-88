@@ -23,3 +23,4 @@ uint8_t obtener_numero_interfaz(char* nombreInterfaz);
 void ejecutar_mov_in(char* registro, char* charDirLogica);
 void ejecutar_mov_out(char* registroDirLogica, char* registro);
 bool es_uint8(char* registro);
+void ejecutar_io_stdin_read(char* interfaz, char* dir_logica, char* tam_registro);

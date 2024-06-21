@@ -292,7 +292,11 @@ void ejecutar_instruccion(t_cde* cde, t_instruccion* instruccion_a_ejecutar){
                     destruir_instruccion(instruccion_a_ejecutar);
                 break;
         case IO_STDIN_READ:
-            // 
+            log_info(logger_cpu, "PID: %d - Ejecutando: %s - %s %s", cde->pid, obtener_nombre_instruccion(instruccion_a_ejecutar), instruccion_a_ejecutar->par1, instruccion_a_ejecutar->par2);
+            ejecutar_io_stdin_read(instruccion_a_ejecutar->par1,instruccion_a_ejecutar->par2, instruccion_a_ejecutar->par3);
+            if (interrupcion == 0 && realizar_desalojo == 0)
+                    destruir_instruccion(instruccion_a_ejecutar);
+                break;
         case IO_STDOUT_WRITE:
 			//
             break;

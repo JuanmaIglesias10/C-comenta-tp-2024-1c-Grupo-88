@@ -54,5 +54,8 @@ void escribir_pagina(uint32_t posEnMemoria, void* pagina);
 void liberarPaginasDeUnProcesoResize(t_proceso* procesoAReducir, uint32_t nuevoTamaño);
 
 void vaciar_marco(uint32_t nroMarco);
+
+void escribiendoMemoria();
+
 #endif /* MEMORIA_H_ */
 

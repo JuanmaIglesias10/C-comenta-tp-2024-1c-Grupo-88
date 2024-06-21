@@ -431,3 +431,35 @@ void ejecutar_mov_out(char* registroDirLogica, char* registro){ //MOV_OUT EAX AX
 bool es_uint8(char* registro){
     return (strcmp(registro, "AX") == 0 || strcmp(registro, "BX") == 0 || strcmp(registro, "CX") == 0 || strcmp(registro, "DX") == 0);
 }
+
+void ejecutar_io_stdin_read(char* interfaz, char* dir_logica, char* tam_registro){
+    
+    uint32_t direccion_Logica;
+    uint32_t direccion_Fisica;
+    enviar_codOp(fd_kernel_int, INTERRUPT);
+
+    t_buffer* buffer_a_enviar = crear_buffer();
+    
+     if (es_uint8(tam_registro)){
+        agregar_buffer_uint32(buffer_a_enviar,8);
+        agregar_buffer_uint8(buffer_a_enviar, tam_registro);
+    } else {
+        agregar_buffer_uint32(buffer_a_enviar,32);
+        agregar_buffer_uint32(buffer_a_enviar,tam_registro);
+    }
+
+    if (es_uint8(dir_logica)){
+        direccion_Logica = (uint32_t)buscar_valor_registro8(dir_logica);
+        direccion_Fisica = calcular_direccion_fisica(direccion_Logica);
+        agregar_buffer_uint32(buffer_a_enviar,direccion_Fisica);
+    } else {
+        direccion_Logica  = buscar_valor_registro32(dir_logica);
+        direccion_Fisica = calcular_direccion_fisica(direccion_Logica);
+        agregar_buffer_uint32(buffer_a_enviar,direccion_Fisica);
+    }
+    agregar_buffer_string(buffer_a_enviar,interfaz);
+    
+    enviar_buffer(buffer_a_enviar,fd_kernel_int);
+    destruir_buffer(buffer_a_enviar);
+    interrupcion = 1;
+}

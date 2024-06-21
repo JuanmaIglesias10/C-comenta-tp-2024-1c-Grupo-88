@@ -19,6 +19,7 @@ void inicializar_largo_plazo();
 void inicializar_corto_plazo();
 t_recurso* inicializar_recurso(char* nombre_recurso, int instancias_totales);
 
+
 // CONSOLA
 void iniciar_consola();
 void mostrar_opciones_consola();
@@ -44,6 +45,7 @@ void agregar_pcb_a(t_queue* cola, t_pcb* pcb_a_agregar, pthread_mutex_t* mutex);
 char* obtener_elementos_cargados_en(t_queue* );
 int esta_proceso_en_cola_bloqueados(t_pcb* pcb);
 bool es_RR_o_VRR();
+void enviarEscribirMemoria();
 
 // INTERACCIONES CON CPU
 void enviar_cde_a_cpu();

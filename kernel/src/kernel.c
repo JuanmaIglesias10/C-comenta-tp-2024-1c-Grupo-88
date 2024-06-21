@@ -587,6 +587,14 @@ void evaluar_instruccion(t_instruccion* instruccion_actual){
             io_gen_sleep();
             destruir_instruccion(instruccion_actual);
             break;
+        case IO_STDIN_READ:
+            if(es_RR_o_VRR()){
+                pcb_ejecutando->flag_clock = true;
+            }
+            io_stdin_read();
+            destruir_instruccion(instruccion_actual);
+            break;
+
         case OUT_OF_MEMORY_VUELTA:
             if(es_RR_o_VRR()){
                 pcb_ejecutando->flag_clock = true;
@@ -769,4 +777,112 @@ void evaluar_signal(char* nombre_recurso_pedido) {
 
 bool es_RR_o_VRR() {
     return (strcmp(config_kernel.algoritmo_planificacion,"RR")== 0 || strcmp(config_kernel.algoritmo_planificacion,"VRR")== 0);
+}
+
+void io_stdin_read() {
+	mensajeKernelCpu codOp = recibir_codOp(fd_cpu_int);
+
+    uint32_t posible_tamaño;
+
+    uint32_t registro_tam_32 = 0;
+    uint8_t registro_tam_8 = 0;
+
+	if (codOp == INTERRUPT) {
+		t_buffer* buffer_recibido = recibir_buffer(fd_cpu_int);
+        posible_tamaño =leer_buffer_uint32(buffer_recibido);
+
+        if(posible_tamaño == 8){
+            registro_tam_8 =leer_buffer_uint8(buffer_recibido);
+        } else {
+            registro_tam_32 =leer_buffer_uint32(buffer_recibido);
+        }
+        
+		uint32_t direccion_fisica = leer_buffer_uint32(buffer_recibido);
+
+		char* interfaz = leer_buffer_string(buffer_recibido); 
+
+		destruir_buffer(buffer_recibido);
+        
+        t_interfaz* aux = queue_pop(colaSTDIN);
+        
+        if (strcmp(aux->nombre, interfaz) == 0 ){
+            if (strcmp(aux->tipo , "STDIN") == 0) {
+		    enviar_codOp(aux->fd,"STDIN_READ");
+		    t_buffer* buffer_a_enviar = crear_buffer();
+
+		    agregar_buffer_uint32(buffer_a_enviar,direccion_fisica);
+
+            if(registro_tam_8 != 0){
+                    agregar_buffer_uint32(buffer_a_enviar,8);
+                    agregar_buffer_uint8(buffer_a_enviar,registro_tam_8);
+            } else {
+                    agregar_buffer_uint32(buffer_a_enviar,32);
+                    agregar_buffer_uint32(buffer_a_enviar,registro_tam_32);
+            }
+
+		    enviar_buffer(buffer_a_enviar,aux->fd);
+		    destruir_buffer(buffer_a_enviar);
+            
+            //Bloqueo el proceso
+            t_pcb* pcb_read_stdin= malloc(sizeof(t_pcb)); 
+            pcb_read_stdin = pcb_ejecutando;             
+            enviar_de_exec_a_block();
+
+            mensajeKernelIO codigo = recibir_codOp(aux->fd);
+                if(codigo == STDIN_READ_OK) {
+                    enviarEscribirMemoria();
+                    if(strcmp(config_kernel.algoritmo_planificacion,"VRR") == 0 && ms_transcurridos < pcb_read_stdin->quantum){
+                        pcb_read_stdin->quantum -= ms_transcurridos;
+                        enviar_pcb_de_block_a_ready_mas(pcb_read_stdin);
+                    } else {
+                        enviar_pcb_de_block_a_ready(pcb_read_stdin);
+                    }
+                }
+            
+            } else {
+                agregar_a_cola_finished("INVALID_INTERFACE");
+            }
+        }
+        else if(strcmp(aux->nombre, interfaz) != 0){
+            agregar_a_cola_finished("INVALID_INTERFACE");
+        } else {
+            agregar_a_cola_finished("INVALID_INTERFACE");
+
+        }
+    free(interfaz);
+    queue_push(colaSTDIN,aux);
+    
+    }
+}
+
+void enviarEscribirMemoria(){
+  
+    t_buffer* buffer_recibido = recibir_buffer(fd_IO);
+    uint32_t dirFisica = leer_buffer_uint32(buffer_recibido);
+    char* valor_ingresado = leer_buffer_string(buffer_recibido);
+    uint32_t tamaño = leer_buffer_uint32(buffer_recibido);
+
+    destruir_buffer(buffer_recibido);
+
+    enviar_codOp(fd_memoria,"ESCRIBIR_EN_MEMORIA");
+
+    t_buffer* buffer_a_enviar = crear_buffer();
+    agregar_buffer_uint32(buffer_a_enviar,dirFisica);
+
+    agregar_buffer_string(buffer_a_enviar,valor_ingresado);
+
+    if(tamaño == 8){
+        agregar_buffer_uint32(buffer_a_enviar,8);
+    } else {
+        agregar_buffer_uint32(buffer_a_enviar,32);
+       
+    }
+
+    
+    
+    enviar_buffer(buffer_a_enviar,fd_memoria);
+	destruir_buffer(buffer_a_enviar);
+
+
+
 }

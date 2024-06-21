@@ -547,3 +547,20 @@ void vaciar_marco(uint32_t nroMarco){
 
 
 // log_info(logger_memoria, "Destrucción: PID: %d - Tamaño: %d", procesoAEliminar->pid, cantPaginas);
+
+void escribiendoMemoria(){
+
+
+    t_buffer* buffer_recibido = recibir_buffer(fd_IO);
+    uint32_t dirFisica = leer_buffer_uint32(buffer_recibido);
+    char* valor_ingresado = leer_buffer_string(buffer_recibido);
+    uint32_t tamanio = leer_buffer_uint32(buffer_recibido);
+    destruir_buffer(buffer_recibido);
+
+	if (tamanio == 8) {
+		memcpy(&valor_ingresado, memoriaPrincipal + dirFisica, sizeof(uint8_t));
+	} else { 
+	  	memcpy(&valor_ingresado, memoriaPrincipal + dirFisica, sizeof(uint32_t));
+	}
+	
+}
