@@ -24,7 +24,6 @@ void atender_kernel()
              mensajeKernelIO cod_op = recibir_codOp(fd_kernel);
              switch (cod_op) {
                  case SLEEP:
-                    //  exec_IO_Generica();
                     t_buffer* buffer_recibido = recibir_buffer(fd_kernel);
                     uint8_t unidadesDeTiempo = leer_buffer_uint8(buffer_recibido);
                     usleep(unidadesDeTiempo * 1000);
@@ -32,7 +31,7 @@ void atender_kernel()
                     enviar_codOp(fd_kernel,SLEEP_OK);
                     break;
                  case STDIN_READ:
-                    exec_io_stdin_read();
+                    exec_IO_STDIN_READ();
                     usleep(unidadesDeTiempo * 1000);
                     enviar_codOp(fd_kernel,STDIN_READ_OK);
                     break;

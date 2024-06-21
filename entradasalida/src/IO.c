@@ -15,7 +15,6 @@ void inicializar_IO(char* nombre_interfaz, char* path_archivo_config){
 		inicializar_config_IO_GENERICA();
 		inicializar_IO_generica();
 		enviar_info_kernel(nombre_interfaz,tipo_interfaz);
-		// exec_IO_Generica();
 	} else if (strcmp(tipo_interfaz,"STDIN") == 0){
 		inicializar_config_IO_STDIN();
 		inicializar_IO_STDIN();
@@ -116,18 +115,7 @@ void enviar_info_kernel(char* nombre_interfaz, char* tipo){
 	destruir_buffer(buffer);
 }
 
-
-void exec_IO_Generica() {
-
-	// mensajeKernelIO codigo = recibir_codOp(fd_kernel);
-	
-	// if (codigo == SLEEP) { 
-		
-	
-	// }
-}
-
-void exec_IO_Stdin_read(){
+void exec_IO_STDIN_READ(){
 	uint8_t tam_reg8 = 0;
 	uint32_t tam_reg32 = 0;
 

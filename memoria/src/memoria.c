@@ -392,7 +392,6 @@ t_pagina* buscarPaginaPorNroYPid(uint32_t nroPag, uint32_t pid){
 		t_pagina* pag = list_get(tablaGlobalPaginas, i);
 		if(pag != NULL){
 			if(pag->nroPagina == nroPag && pag->pidProcesoCreador == pid)
-				log_warning(logger_memoria, "---------------%d", pag->pidProcesoCreador);
 				return pag;
 		}
 	}
@@ -454,7 +453,6 @@ t_pagina* crear_pagina(uint32_t nroPag, uint32_t nroMarco, void* dirreccionInici
 	paginaCreada->direccionFisicaInicio = dirreccionInicio;
 	paginaCreada->nroMarco = nroMarco;
 	paginaCreada->nroPagina = nroPag;
-	log_warning(logger_memoria,"//////////////////////////////////////%d - %d", nroPag , pid);
 	paginaCreada->pidProcesoCreador = pid;
 	paginaCreada->ultimaReferencia = temporal_get_string_time("%H:%M:%S:%MS");
 
