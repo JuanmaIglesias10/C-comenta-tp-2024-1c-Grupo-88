@@ -61,6 +61,7 @@ void timer_vrr();
 // EVALUAR INSTRUCCIONES
 void evaluar_instruccion(t_instruccion* instruccion_actual);
 void io_gen_sleep();
+void io_stdin_read();
 void evaluar_wait(char* nombre_recurso_pedido);
 void evaluar_signal(char* nombre_recurso_pedido);
 

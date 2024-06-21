@@ -782,46 +782,32 @@ bool es_RR_o_VRR() {
 void io_stdin_read() {
 	mensajeKernelCpu codOp = recibir_codOp(fd_cpu_int);
 
-    uint32_t posible_tamaño;
-
-    uint32_t registro_tam_32 = 0;
-    uint8_t registro_tam_8 = 0;
-
 	if (codOp == INTERRUPT) {
-		t_buffer* buffer_recibido = recibir_buffer(fd_cpu_int);
-        posible_tamaño =leer_buffer_uint32(buffer_recibido);
-
-        if(posible_tamaño == 8){
-            registro_tam_8 =leer_buffer_uint8(buffer_recibido);
-        } else {
-            registro_tam_32 =leer_buffer_uint32(buffer_recibido);
-        }
-        
-		uint32_t direccion_fisica = leer_buffer_uint32(buffer_recibido);
+		t_buffer* buffer_recibido   = recibir_buffer(fd_cpu_int);
+        uint32_t tamaño             = leer_buffer_uint32(buffer_recibido);
+		uint32_t direccion_fisica   = leer_buffer_uint32(buffer_recibido);
 
 		char* interfaz = leer_buffer_string(buffer_recibido); 
 
 		destruir_buffer(buffer_recibido);
         
         t_interfaz* aux = queue_pop(colaSTDIN);
-        
+        log_info(logger_kernel, "Llegue a recibir el buffer de CPU_INT");
+        log_warning(logger_kernel, "%s", aux->nombre);
+
+
         if (strcmp(aux->nombre, interfaz) == 0 ){
             if (strcmp(aux->tipo , "STDIN") == 0) {
-		    enviar_codOp(aux->fd,"STDIN_READ");
+		    enviar_codOp(aux->fd, STDIN_READ);
 		    t_buffer* buffer_a_enviar = crear_buffer();
 
 		    agregar_buffer_uint32(buffer_a_enviar,direccion_fisica);
 
-            if(registro_tam_8 != 0){
-                    agregar_buffer_uint32(buffer_a_enviar,8);
-                    agregar_buffer_uint8(buffer_a_enviar,registro_tam_8);
-            } else {
-                    agregar_buffer_uint32(buffer_a_enviar,32);
-                    agregar_buffer_uint32(buffer_a_enviar,registro_tam_32);
-            }
+            agregar_buffer_uint32(buffer_a_enviar,tamaño);
 
 		    enviar_buffer(buffer_a_enviar,aux->fd);
-		    destruir_buffer(buffer_a_enviar);
+            		    
+            destruir_buffer(buffer_a_enviar);
             
             //Bloqueo el proceso
             t_pcb* pcb_read_stdin= malloc(sizeof(t_pcb)); 
@@ -830,6 +816,7 @@ void io_stdin_read() {
 
             mensajeKernelIO codigo = recibir_codOp(aux->fd);
                 if(codigo == STDIN_READ_OK) {
+                    log_info(logger_kernel, "Llegue a STDIN_READ_OK");
                     enviarEscribirMemoria();
                     if(strcmp(config_kernel.algoritmo_planificacion,"VRR") == 0 && ms_transcurridos < pcb_read_stdin->quantum){
                         pcb_read_stdin->quantum -= ms_transcurridos;
@@ -856,7 +843,6 @@ void io_stdin_read() {
 }
 
 void enviarEscribirMemoria(){
-  
     t_buffer* buffer_recibido = recibir_buffer(fd_IO);
     uint32_t dirFisica = leer_buffer_uint32(buffer_recibido);
     char* valor_ingresado = leer_buffer_string(buffer_recibido);
@@ -864,7 +850,7 @@ void enviarEscribirMemoria(){
 
     destruir_buffer(buffer_recibido);
 
-    enviar_codOp(fd_memoria,"ESCRIBIR_EN_MEMORIA");
+    enviar_codOp(fd_memoria, ESCRIBIR_EN_MEMORIA);
 
     t_buffer* buffer_a_enviar = crear_buffer();
     agregar_buffer_uint32(buffer_a_enviar,dirFisica);
@@ -875,14 +861,8 @@ void enviarEscribirMemoria(){
         agregar_buffer_uint32(buffer_a_enviar,8);
     } else {
         agregar_buffer_uint32(buffer_a_enviar,32);
-       
     }
 
-    
-    
     enviar_buffer(buffer_a_enviar,fd_memoria);
 	destruir_buffer(buffer_a_enviar);
-
-
-
 }

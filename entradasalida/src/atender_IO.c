@@ -32,7 +32,6 @@ void atender_kernel()
                     break;
                  case STDIN_READ:
                     exec_IO_STDIN_READ();
-                    usleep(unidadesDeTiempo * 1000);
                     enviar_codOp(fd_kernel,STDIN_READ_OK);
                     break;
 

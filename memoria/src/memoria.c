@@ -547,8 +547,6 @@ void vaciar_marco(uint32_t nroMarco){
 // log_info(logger_memoria, "Destrucción: PID: %d - Tamaño: %d", procesoAEliminar->pid, cantPaginas);
 
 void escribiendoMemoria(){
-
-
     t_buffer* buffer_recibido = recibir_buffer(fd_IO);
     uint32_t dirFisica = leer_buffer_uint32(buffer_recibido);
     char* valor_ingresado = leer_buffer_string(buffer_recibido);
@@ -560,5 +558,5 @@ void escribiendoMemoria(){
 	} else { 
 	  	memcpy(&valor_ingresado, memoriaPrincipal + dirFisica, sizeof(uint32_t));
 	}
-	
+	log_warning(logger_memoria, "juanma se la come");
 }

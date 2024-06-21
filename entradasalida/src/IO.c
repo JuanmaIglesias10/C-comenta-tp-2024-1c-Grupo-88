@@ -74,8 +74,6 @@ void inicializar_IO_generica() {
 void inicializar_IO_STDIN(){
 	fd_memoria = conectarse(config_IO_STDIN.ip_memoria,config_IO_STDIN.puerto_memoria, "MEMORIA", logger_IO);
 	fd_kernel = conectarse(config_IO_STDIN.ip_kernel,config_IO_STDIN.puerto_kernel, "KERNEL", logger_IO);
-	if(fd_kernel == -1) exit(1);
-	while(1);
 }
 
 void inicializar_IO_STDOUT() {
@@ -116,33 +114,38 @@ void enviar_info_kernel(char* nombre_interfaz, char* tipo){
 }
 
 void exec_IO_STDIN_READ(){
-	uint8_t tam_reg8 = 0;
-	uint32_t tam_reg32 = 0;
-
 
 	t_buffer* buffer_recibido = recibir_buffer(fd_kernel);
     uint32_t dir_fisica= leer_buffer_uint32(buffer_recibido);
 	uint32_t tam = leer_buffer_uint32(buffer_recibido);
-	if(tam == 8){
-		tam_reg8 = leer_buffer_uint8(buffer_recibido);
-	}else {
-		tam_reg32 = leer_buffer_uint32(buffer_recibido);
-	}
 
 	destruir_buffer(buffer_recibido);
+	int contador = 0;
+	while(contador != tam){
+		char* valor_ingresado = readline("Ingrese algo:");
 
-	char* valor_Ingresado = readline("Ingrese algo: ");
+		contador = strlen(valor_ingresado);
 
-	t_buffer* buffer_a_enviar = crear_buffer();
-    agregar_buffer_uint32(buffer_a_enviar,dir_fisica);
-    agregar_buffer_string(buffer_a_enviar,valor_Ingresado);
+		if(contador < tam){
+			log_warning(logger_IO, "El texto debe ser mas largo");
+		} else if (contador > tam){
+			log_warning(logger_IO, "El texto debe ser mas corto");
+		}
 
-	if(tam_reg8 != 0){
-		agregar_buffer_uint32(buffer_a_enviar,8);
-	} else{
-		agregar_buffer_uint32(buffer_a_enviar,32);
 	}
 
-    enviar_buffer(buffer_a_enviar,fd_kernel);
-    destruir_buffer(buffer_a_enviar);
+	// ACA HAY QUE MANDAR A MEMORIA! Que memoria haga todo lo que tiene que hacer, que vuelva a 
+	// mandar el OK a io, y ahi io manda el ok a kernel para pasar de block a ready!
+
+	// t_buffer* buffer_a_enviar = crear_buffer();
+    //  agregar_buffer_uint32(buffer_a_enviar,dir_fisica);
+    //  agregar_buffer_string(buffer_a_enviar,valor_Ingresado;
+	//  if(tam_reg8 != 0){
+	//  	agregar_buffer_uint32(buffer_a_enviar,8);
+	//  } else{
+	//  	agregar_buffer_uint32(buffer_a_enviar,32);
+	//  }
+
+    // enviar_buffer(buffer_a_enviar,fd_kernel);
+    // destruir_buffer(buffer_a_enviar);
 }
