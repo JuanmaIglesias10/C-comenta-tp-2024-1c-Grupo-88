@@ -31,11 +31,5 @@ uint32_t calcular_direccion_fisica(int direccion_logica){
 		log_info(logger_cpu, "PID: %d - OBTENER MARCO - Página: %d - Marco: %d", pid_de_cde_ejecutando, nro_pagina, nro_marco_recibido); //log_obligatorio
 		return nro_marco_recibido * tam_pagina + desplazamiento; // retorna la direccion_fisica
 	}
-	// else if(codigo_recibido == PAGE_FAULT){
-	// 	log_info(logger_cpu, "Page Fault PID: %d - Página: %d", cde->pid, nro_pagina);
-    //     // interruption = 1; // devolvemos a kernel el cde del proceso en ejecucion 
-	// 	cde->registros->PC--;
-	// 	return -1;
-	// }	
 	return -1; //Chequear, no deberia llegar hasta aquí, es para evitar el WARNING
 }
