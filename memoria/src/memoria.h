@@ -39,7 +39,7 @@ t_proceso* buscarProcesoPorPid(uint32_t pid);
 
 bool hay_marcos_libres(int cantMarcosNecesitada);
 
-t_pagina* buscarPaginaPorNroYPid(uint32_t nroPag, uint32_t pid);
+t_pagina* buscarPaginaPorNroYPid(t_proceso* proceso , uint32_t nroPag);
 
 t_pagina* crear_pagina(uint32_t nroPag, uint32_t nroMarco, void* dirreccionInicio, uint32_t pid);
 

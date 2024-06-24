@@ -135,6 +135,7 @@ t_proceso* crear_proceso(t_list* listaInstrucciones, uint32_t pid){
 	proceso->pid = pid;
 	proceso->cantPaginas = 0 ; //El tamaño arranca en 0 y se modifica con resize
 	proceso->tamaño = 0;
+	proceso->listaPaginasProceso = list_create(); //Tabla de Paginas del Proceso
 
 	return proceso;
 }
@@ -312,8 +313,8 @@ void ejecutar_MOV_OUT(){
 	} else if (tamañoValor == 32){
 		memcpy(memoriaPrincipal + dirFisica, &valorAEscribir32, sizeof(uint32_t));
 	}
-	
-	t_pagina* pagModificada = buscarPaginaPorNroYPid(numPagina, pid);
+	t_proceso* proceso  = buscarProcesoPorPid(pid);
+	t_pagina* pagModificada = buscarPaginaPorNroYPid(proceso , numPagina);
 	pagModificada->ultimaReferencia = temporal_get_string_time("%H:%M:%S:%MS");
 	pagModificada->bitModificado = true;
 	
@@ -350,10 +351,10 @@ void ejecutar_MOV_IN(){
 	} else {
 		log_warning(logger_memoria, "tamanio invalido del valor a leer");
 	}
-	
-	t_pagina* pagLeida = buscarPaginaPorNroYPid(nroPag, pid);
-	pagLeida->ultimaReferencia = temporal_get_string_time("%H:%M:%S:%MS"); //LRU
+	t_proceso* proceso  = buscarProcesoPorPid(pid);
+	t_pagina* pagLeida = buscarPaginaPorNroYPid(proceso, nroPag);
 
+	pagLeida->ultimaReferencia = temporal_get_string_time("%H:%M:%S:%MS"); //LRU
 	
 	enviar_codOp(fd_cpu, MOV_IN_OK); // Lo recibe ejecutar_mov_in() en instrucciones.c en CPU
 	log_info(logger_memoria, "PID: %d - Acción: LEER - Dirección física: %d", pid, dirFisica);
@@ -383,8 +384,9 @@ void devolver_nro_marco(){
 	uint32_t nro_pagina = leer_buffer_uint32(buffer);
 	uint32_t pid = leer_buffer_uint32(buffer);
 	destruir_buffer(buffer);
-	
-	t_pagina* pagina = buscarPaginaPorNroYPid(nro_pagina, pid);
+	t_proceso* proceso = buscarProcesoPorPid(pid);
+
+	t_pagina* pagina = buscarPaginaPorNroYPid(proceso,nro_pagina);
 	
 	enviar_codOp(fd_cpu, NUMERO_MARCO_OK);  //Hacia calcular_direccion_fisica en mmu.c
 	buffer = crear_buffer();
@@ -393,21 +395,17 @@ void devolver_nro_marco(){
 	destruir_buffer(buffer);
 }
 
-t_pagina* buscarPaginaPorNroYPid(uint32_t nroPag, uint32_t pid){
-	log_warning(logger_memoria, "%d", pid);
-	for(int i = 0; i < list_size(tablaGlobalPaginas); i++){
+t_pagina* buscarPaginaPorNroYPid(t_proceso* proceso , uint32_t nroPag){
+	for(int i = 0; i < list_size(proceso->listaPaginasProceso); i++){
 
-		t_pagina* pag = list_get(tablaGlobalPaginas, i);
-		if(pag != NULL){
-			if(pag->nroPagina == nroPag && pag->pidProcesoCreador == pid)
-				return pag;
-		}
-	}
-
+		t_pagina* pag = list_get(proceso->listaPaginasProceso, i);
+		if(pag->nroPagina == nroPag)
+			return pag;
+}
 	return NULL;
 }
 
-
+	
 
 void resize() {
 	t_buffer* buffer = recibir_buffer(fd_cpu);
@@ -417,25 +415,35 @@ void resize() {
 
 	t_proceso* proceso = buscarProcesoPorPid(pid);
 
-	uint32_t cantMarcosNecesitados = (uint32_t)ceil((double)nuevoTamaño / config_memoria.tam_pagina); //129
+	int nro_pagina_nueva = proceso->cantPaginas;
+	/*
+	 Inicializo el contador en la cant de paginas anterior
+	 Si proceso->CantPaginas tenia 4 paginas, entonces voy a empezar a añadir en la tabla a partir de la pagina 4 (0,1,2,3 ya estan ocupadas)
+	*/
+	uint32_t cantMarcosNecesitados = (uint32_t)ceil((double)nuevoTamaño / config_memoria.tam_pagina) - proceso->cantPaginas;
+
 	if(hay_marcos_libres(cantMarcosNecesitados) || nuevoTamaño < proceso->tamaño){ //Tengo marcos disponibles, avanzo con el resize
 
 		if(nuevoTamaño > proceso->tamaño){ //Ampliacion del tamaño del proceso
 			log_info(logger_memoria,"PID: %d - Tamaño Actual: %d - Tamaño a Ampliar: %d", proceso->pid, proceso->tamaño , nuevoTamaño);
-			proceso->cantPaginas = (uint32_t)ceil((double)nuevoTamaño / config_memoria.tam_pagina);
+			proceso->cantPaginas = (uint32_t)ceil((double)nuevoTamaño / config_memoria.tam_pagina); //Son lo mismo
 			
 			while(cantMarcosNecesitados > 0){
-				
+	
 				uint32_t nroMarcoLibre = obtener_marco_libre();
-				uint32_t nroPaginaLibre = obtener_pagina_libre();
-				//La direccion de inicio es void* porque memoriaPrincipal lo es
+				// uint32_t nroPaginaLibre = obtener_pagina_libre(); HAY QUE SACARLA
+
 				void* direccionInicioPagina = memoriaPrincipal + nroMarcoLibre * config_memoria.tam_pagina;
 
-				t_pagina* paginaCreada = crear_pagina(nroPaginaLibre, nroMarcoLibre, direccionInicioPagina, proceso->pid);
+				t_pagina* paginaCreada = crear_pagina(nro_pagina_nueva, nroMarcoLibre, direccionInicioPagina, proceso->pid);
+				log_warning(logger_memoria, "El PID %d con el nro de Pagina %d ocupa el marco %d", proceso->pid, paginaCreada->nroPagina, paginaCreada->nroMarco);
+				list_add(proceso->listaPaginasProceso, paginaCreada);
 
-				list_replace(listaMarcos, nroMarcoLibre, paginaCreada); // Coloco la pagina en el marco libre
-
+				list_replace(listaMarcos , nroMarcoLibre ,paginaCreada);
+				
 				cantMarcosNecesitados--;
+
+				nro_pagina_nueva++; 
 			}
 			proceso->tamaño = nuevoTamaño;
 		} else if (nuevoTamaño < proceso->tamaño){ //Reduccion del tamaño del proceso
@@ -450,7 +458,6 @@ void resize() {
 	} else {
 		enviar_codOp(fd_cpu, OUT_OF_MEMORY);
 	}
-
 }
 
 t_pagina* crear_pagina(uint32_t nroPag, uint32_t nroMarco, void* dirreccionInicio, uint32_t pid){
@@ -464,7 +471,8 @@ t_pagina* crear_pagina(uint32_t nroPag, uint32_t nroMarco, void* dirreccionInici
 	paginaCreada->pidProcesoCreador = pid;
 	paginaCreada->ultimaReferencia = temporal_get_string_time("%H:%M:%S:%MS");
 
-	list_replace(tablaGlobalPaginas, nroPag , paginaCreada);
+	// list_replace(tablaGlobalPaginas, nroPag , paginaCreada);
+
 
 	return paginaCreada;
 }
@@ -503,10 +511,9 @@ bool hay_marcos_libres(int cantMarcosNecesitada){ //129
 
 uint32_t obtener_marco_libre(){
 	for(int i = 0; i < cantMarcos; i++){ //128
-
-		t_pagina* pagina = list_get(listaMarcos, i);
-		if(pagina == NULL)
+		if(list_get(listaMarcos, i) == NULL){
 			return i;
+		}
 	}
 	return -1;
 }
@@ -527,23 +534,18 @@ void escribir_pagina(uint32_t posEnMemoria, void* pagina){
 
 void liberarPaginasDeUnProcesoResize(t_proceso* procesoAReducir, uint32_t nuevoTamaño){
 	uint32_t cantPaginasAEliminar = (uint32_t)ceil((double)(procesoAReducir->tamaño - nuevoTamaño)/config_memoria.tam_pagina);
-
-	for(int j = cantMarcos - 1; j >= 0; j--){
-			
-			t_pagina* pagina = list_get(tablaGlobalPaginas, j);
-			if(pagina != NULL){
-				if(pagina->pidProcesoCreador == procesoAReducir->pid){
-					vaciar_marco(pagina->nroMarco);
-					// list_remove(tablaGlobalPaginas, j);
-					list_replace(tablaGlobalPaginas, j, NULL);
-					free(pagina);
-					cantPaginasAEliminar--;
-					if(cantPaginasAEliminar == 0){
-						break;
-					}
-				}
-			}
-		}	
+	log_warning(logger_memoria, "///////////////////77");
+	for(int j = list_size(procesoAReducir->listaPaginasProceso) - 1; j >= 0; j--){		
+		t_pagina* pagina = list_get(procesoAReducir->listaPaginasProceso, j);
+		vaciar_marco(pagina->nroMarco);
+		// list_remove(tablaGlobalPaginas, j);
+		list_remove(procesoAReducir->listaPaginasProceso, j);
+		free(pagina);
+		cantPaginasAEliminar--;
+		if(cantPaginasAEliminar == 0){
+			break;
+		}
+	}	
 }
 
 void vaciar_marco(uint32_t nroMarco){

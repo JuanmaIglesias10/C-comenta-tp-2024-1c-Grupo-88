@@ -17,6 +17,7 @@ typedef struct{
 	t_list* instrucciones;
 	uint32_t cantPaginas;
     uint32_t tamaño;
+    t_list* listaPaginasProceso;
 }t_proceso;
 
 // variables globales Memoria
