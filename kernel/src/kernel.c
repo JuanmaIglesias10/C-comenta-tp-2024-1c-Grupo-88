@@ -840,6 +840,8 @@ void io_stdin_read() {
     queue_push(colaSTDIN,aux);
     
     }
+
+    // TODO: falta un else
 }
 
 void enviarEscribirMemoria(){
@@ -850,7 +852,7 @@ void enviarEscribirMemoria(){
 
     destruir_buffer(buffer_recibido);
 
-    enviar_codOp(fd_memoria, ESCRIBIR_EN_MEMORIA);
+    enviar_codOp(fd_memoria, ESCRIBIR_EN_MEMORIA); // TODO: este codOp es de CPU-MEMORIA
 
     t_buffer* buffer_a_enviar = crear_buffer();
     agregar_buffer_uint32(buffer_a_enviar,dirFisica);
@@ -865,4 +867,4 @@ void enviarEscribirMemoria(){
 
     enviar_buffer(buffer_a_enviar,fd_memoria);
 	destruir_buffer(buffer_a_enviar);
-}
+} // TODO: deberia estar en IO esto

@@ -44,7 +44,7 @@ void inicializar_conexiones(){
 
 	fd_kernel_int = esperar_cliente(fd_cpu_int, logger_cpu,"KERNEL(INTERRUPT)"); 
 	
-	//Esto posiblemente haya que quitarlo
+	// TODO: Este hilo no esta siendo usado
 	pthread_t hilo_cpu_memoria;
 	pthread_create(&hilo_cpu_memoria, NULL, (void*)atender_memoria, NULL);
 	pthread_detach(hilo_cpu_memoria);
@@ -56,15 +56,6 @@ void inicializar_conexiones(){
 	pthread_t hilo_kernel_int;
 	pthread_create(&hilo_kernel_int, NULL, (void*)atender_kernel_int, NULL);
 	pthread_join(hilo_kernel_int, NULL);
-
-
-	// close(fd_memoria);
-	// close(fd_cpu_dis);
-	// close(fd_cpu_int);
-	// close(fd_kernel_dis);
-	// close(fd_kernel_int);
-
-	// log_destroy(logger_cpu);
 }
 
 void recibir_tamaño_pagina(){
@@ -72,11 +63,7 @@ void recibir_tamaño_pagina(){
     tam_pagina = leer_buffer_uint32(buffer);
     destruir_buffer(buffer);
 }
-/*
-	TO DO -> Creo que conviene hacerla despues de codear el ciclo basico de instruccion
-			 y las operaciones para este check. Tambien despues de tener en claro como 
-			 funcionan las interrupciones
-*/
+
 void inicializar_registros(){
     registros_cpu = malloc(sizeof(t_registros));
     
@@ -131,6 +118,8 @@ void* atender_kernel_int()
             case DESALOJO:
                 t_buffer* buffer = recibir_buffer(fd_kernel_int); // recibe pid o lo que necesite
                 uint32_t pid_recibido = leer_buffer_uint32(buffer);
+                destruir_buffer(buffer);
+
                 // se desaloja proceso en ejecucion
                 if(algoritmo_planificacion == 1 && pid_de_cde_ejecutando != pid_recibido){
                     break;

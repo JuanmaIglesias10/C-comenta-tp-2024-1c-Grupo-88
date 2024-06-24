@@ -79,13 +79,13 @@ void* atender_IO(void* fd_IO_ptr) {
         }
     }
     return NULL;
-}
+} // TODO: va a tener que recibir mensajes de STDIN, STDOUT y DIALFS
 
 void* aceptar_conexiones_IO(void* arg) {
     int fd_memoria = *(int*)arg;
 
     while (1) {
-        int fd_IO = esperar_cliente(fd_memoria, logger_memoria, "IO");
+        int fd_IO = esperar_cliente(fd_memoria, logger_memoria, "una interfaz de IO");
         if (fd_IO != -1) {
             pthread_t hilo_IO;
             int* fd_IO_ptr = malloc(sizeof(int));

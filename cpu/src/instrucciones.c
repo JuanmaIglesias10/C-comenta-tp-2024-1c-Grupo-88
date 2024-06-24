@@ -359,20 +359,23 @@ void ejecutar_mov_in(char* registro, char* registroDirLogica){ //MOV_IN BX EAX -
     uint8_t valorLeido8;
     uint32_t valorLeido32;
 
-    buffer = crear_buffer();
     buffer = recibir_buffer(fd_memoria);
-    if(es_uint8(registro)) valorLeido8 = leer_buffer_uint8(buffer);
-    else valorLeido32 = leer_buffer_uint32(buffer);
+    if (es_uint8(registro)) {
+        valorLeido8 = leer_buffer_uint8(buffer);
+    } else {
+        valorLeido32 = leer_buffer_uint32(buffer);
+    }
+    destruir_buffer(buffer);
     
-    if(codigoMemoria == MOV_IN_OK) log_info(logger_cpu,"PID: %d - Acción: LEER - Dirección Física: %d - Valor: %d", pid_de_cde_ejecutando, dirFisica, es_uint8(registro) ? valorLeido8 : valorLeido32);
+    if (codigoMemoria == MOV_IN_OK) 
+        log_info(logger_cpu,"PID: %d - Acción: LEER - Dirección Física: %d - Valor: %d", pid_de_cde_ejecutando, dirFisica, es_uint8(registro) ? valorLeido8 : valorLeido32);
 
-        if (es_uint8(registro)){
-            ejecutar_set8(registro, valorLeido8);
-            log_warning(logger_cpu, "%d", valorLeido8);
-        } else {
-            ejecutar_set32(registro, valorLeido32);
-        }
-        destruir_buffer(buffer);
+    if (es_uint8(registro)) {
+        ejecutar_set8(registro, valorLeido8);
+        log_warning(logger_cpu, "%d", valorLeido8);
+    } else {
+        ejecutar_set32(registro, valorLeido32);
+    }
 }
 
 void ejecutar_mov_out(char* registroDirLogica, char* registro){ //MOV_OUT EAX AX -> MOV_OUT 0 42
@@ -421,9 +424,9 @@ void ejecutar_mov_out(char* registroDirLogica, char* registro){ //MOV_OUT EAX AX
     if(codigoMemoria == MOV_OUT_OK){
 
         if(es_uint8(registro)){
-        log_info(logger_cpu,"PID: %d - Acción: ESCRIBIR - Dirección Física: %d - Valor: %d", pid_de_cde_ejecutando, dirFisica, valorAEscribir8);
+            log_info(logger_cpu,"PID: %d - Acción: ESCRIBIR - Dirección Física: %d - Valor: %d", pid_de_cde_ejecutando, dirFisica, valorAEscribir8);
         }else {
-        log_info(logger_cpu,"PID: %d - Acción: ESCRIBIR - Dirección Física: %d - Valor: %d", pid_de_cde_ejecutando, dirFisica, valorAEscribir32);
+            log_info(logger_cpu,"PID: %d - Acción: ESCRIBIR - Dirección Física: %d - Valor: %d", pid_de_cde_ejecutando, dirFisica, valorAEscribir32);
         }
     }
 }

@@ -2,10 +2,6 @@
 
 int main(void) {
     inicializar_memoria();
-    // Mantener el main en ejecución
-    while (1) {
-        sleep(1);
-    }
     return 0;
 }
 
@@ -73,7 +69,10 @@ void inicializar_conexiones() {
     }
 
 	pthread_t hilo_IO_accept;
-    pthread_create(&hilo_IO_accept, NULL, (void*)aceptar_conexiones_IO, (void*)&fd_memoria);
+	if (pthread_create(&hilo_IO_accept, NULL, (void*)aceptar_conexiones_IO, (void*)&fd_memoria) != 0){
+        log_error(logger_memoria, "Error al crear hilo de IO");
+        return;
+    }
     pthread_detach(hilo_IO_accept);
 
     pthread_t hilo_memoria_cpu;
@@ -88,7 +87,7 @@ void inicializar_conexiones() {
         log_error(logger_memoria, "Error al crear hilo de Kernel");
         return;
     }
-    pthread_detach(hilo_memoria_kernel);
+    pthread_join(hilo_memoria_kernel, NULL);
 
 }
 
@@ -100,13 +99,13 @@ void enviar_tamanio_pagina(){
 	}
 
 void iniciar_proceso(){
-	//Recibo el buffer 
+	// Recibo el PID y el path del .txt
 	t_buffer* bufferMemoria = recibir_buffer(fd_kernel);
-	//Recibo el PID y el path del .txt
 	uint32_t pid = leer_buffer_uint32(bufferMemoria);
 	char* nombreArchivoInstrucciones = leer_buffer_string(bufferMemoria);
 	destruir_buffer(bufferMemoria);
-	//Combino el path del .txt con el path del config
+
+	// Combino el path del .txt con el path del config
 	char* rutaArchivoInstrucciones = string_new();
 	string_append(&rutaArchivoInstrucciones, config_memoria.path_instrucciones); 
 	string_append(&rutaArchivoInstrucciones, nombreArchivoInstrucciones);
@@ -274,8 +273,8 @@ void enviar_instruccion(){
 	uint32_t pc = leer_buffer_uint32(buffer);
 
 	destruir_buffer(buffer);
-	// Suponemos que si se consulta por un proceso es porque ya existe
 
+	// Suponemos que si se consulta por un proceso es porque ya existe
 	pthread_mutex_lock(&mutex_lista_procesos);
 	t_proceso* proceso = buscarProcesoPorPid(pid);
 	pthread_mutex_unlock(&mutex_lista_procesos);
@@ -290,6 +289,8 @@ void enviar_instruccion(){
 	destruir_buffer(buffer);
 }
 
+// luego de recibir MOV_OUT_SOLICITUD del CPU
+// escribe un valor de 8 o 32 bits en memoria
 void ejecutar_MOV_OUT(){
 	t_buffer* buffer = recibir_buffer(fd_cpu);
 	uint32_t dirFisica = leer_buffer_uint32(buffer);
@@ -321,6 +322,8 @@ void ejecutar_MOV_OUT(){
 	log_info(logger_memoria, "PID: %d - Acción: ESCRIBIR - Dirección física: %d", pid, dirFisica);
 }
 
+// luego de recibir MOV_IN_SOLICITUD del CPU
+// lee un valor de 8 o 32 bits en memoria
 void ejecutar_MOV_IN(){
 	uint32_t tamanio;
 	uint32_t dirFisica;
@@ -328,26 +331,31 @@ void ejecutar_MOV_IN(){
 	uint32_t nroPag;
 	
 	t_buffer* buffer = recibir_buffer(fd_cpu);
+
 	tamanio = leer_buffer_uint32(buffer);
 	dirFisica = leer_buffer_uint32(buffer);
 	pid = leer_buffer_uint32(buffer);
 	nroPag = leer_buffer_uint32(buffer);
+
 	destruir_buffer(buffer);
 
-	uint8_t valorLeido8 = 0;
+	// aca voy a guardar lo que lea en memoria
+	uint8_t valorLeido8 = 0; 
 	uint32_t valorLeido32 = 0;
 
 	if (tamanio == 8) {
 		memcpy(&valorLeido8, memoriaPrincipal + dirFisica, sizeof(uint8_t));
-	} else { 
+	} else if (tamanio == 32) { 
 	  	memcpy(&valorLeido32, memoriaPrincipal + dirFisica, sizeof(uint32_t));
+	} else {
+		log_warning(logger_memoria, "tamanio invalido del valor a leer");
 	}
-
+	
 	t_pagina* pagLeida = buscarPaginaPorNroYPid(nroPag, pid);
 	pagLeida->ultimaReferencia = temporal_get_string_time("%H:%M:%S:%MS"); //LRU
 
 	
-	enviar_codOp(fd_cpu, MOV_IN_OK); //Hacia ejecutar_mov_in en instrucciones.c
+	enviar_codOp(fd_cpu, MOV_IN_OK); // Lo recibe ejecutar_mov_in() en instrucciones.c en CPU
 	log_info(logger_memoria, "PID: %d - Acción: LEER - Dirección física: %d", pid, dirFisica);
 	buffer = crear_buffer();
 	if (tamanio == 8) {
@@ -369,6 +377,7 @@ t_proceso* buscarProcesoPorPid(uint32_t pid){
 	return NULL; 
 }
 
+// Luego de recibir el codOp: NUMERO_MARCO_SOLICITUD - desde CPU
 void devolver_nro_marco(){
 	t_buffer* buffer = recibir_buffer(fd_cpu); //Desde calcular_direccion_fisica en mmu.c
 	uint32_t nro_pagina = leer_buffer_uint32(buffer);
@@ -376,7 +385,6 @@ void devolver_nro_marco(){
 	destruir_buffer(buffer);
 	
 	t_pagina* pagina = buscarPaginaPorNroYPid(nro_pagina, pid);
-	
 	
 	enviar_codOp(fd_cpu, NUMERO_MARCO_OK);  //Hacia calcular_direccion_fisica en mmu.c
 	buffer = crear_buffer();
@@ -546,6 +554,7 @@ void vaciar_marco(uint32_t nroMarco){
 
 // log_info(logger_memoria, "Destrucción: PID: %d - Tamaño: %d", procesoAEliminar->pid, cantPaginas);
 
+// TODO: revisar esta funcion que esta mal
 void escribiendoMemoria(){
     t_buffer* buffer_recibido = recibir_buffer(fd_IO);
     uint32_t dirFisica = leer_buffer_uint32(buffer_recibido);
@@ -558,5 +567,4 @@ void escribiendoMemoria(){
 	} else { 
 	  	memcpy(&valor_ingresado, memoriaPrincipal + dirFisica, sizeof(uint32_t));
 	}
-	log_warning(logger_memoria, "juanma se la come");
 }
