@@ -97,7 +97,7 @@ void inicializar_conexiones(){
 
 void inicializar_listas_colas(){
     procesos_globales = list_create();
-	// procesosBloqueadosPageFault = list_create();
+	
     // tablaArchivosAbiertos = list_create();
     // listaArchivosGlobales = list_create();
 

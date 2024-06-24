@@ -335,7 +335,7 @@ bool es_bloqueante(t_codigo_instruccion instruccion){
         return false;
         break;
     case RESIZE:
-        //
+        return true;
         break;
     case COPY_STRING:
         //
@@ -347,7 +347,7 @@ bool es_bloqueante(t_codigo_instruccion instruccion){
         return true;
         break;
     case IO_STDIN_READ:
-        //
+        return true;
         break;
     case IO_STDOUT_WRITE:
         //
