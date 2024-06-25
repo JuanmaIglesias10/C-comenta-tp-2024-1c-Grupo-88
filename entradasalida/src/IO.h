@@ -1,21 +1,19 @@
 #ifndef IO_H_
 #define IO_H_
 
-#include "atender_IO.h"
 #include "utils.h"
 #include "diccionario_IO.h"
+#include "atender_IO_generica_std.h"
+#include "atender_IO_dialFS.h"
+
 #include "readline/readline.h"
 
-void inicializar_IO(char* nombre_interfaz, char* path_archivo_config);
-void inicializar_config_IO_GENERICA();
-void inicializar_config_IO_STDIN();
-void inicializar_config_IO_STDOUT();
-void inicializar_config_IO_DIALFS();
-void inicializar_IO_generica();
-void inicializar_IO_STDIN();
-void inicializar_IO_STDOUT();
-void inicializar_IO_DIALFS();
-void inicializar_conexiones();
+void seleccionar_tipo_interfaz(char* nombre_interfaz, char* path_archivo_config);
+
+void inicializar_IO_GENERICA(char* nombre_interfaz);
+void inicializar_IO_STDIN(char* nombre_interfaz);
+void inicializar_IO_STDOUT(char* nombre_interfaz);
+void inicializar_IO_DIALFS(char* nombre_interfaz);
 void enviar_info_kernel(char* nombre_interfaz, char* tipo);
-void exec_IO_STDIN_READ();
+
 #endif /* IO_H_ */

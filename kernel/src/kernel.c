@@ -623,11 +623,11 @@ void evaluar_instruccion(t_instruccion* instruccion_actual){
 }
 
 void io_gen_sleep() {
-	mensajeKernelCpu codOp = recibir_codOp(fd_cpu_int);
+	mensajeKernelCpu codOp = recibir_codOp(fd_cpu_int); // TODO: se supone CPU no puede enviar mediante Interrupt
 
-	if (codOp == INTERRUPT) {
+	if (codOp == INTERRUPT) { // TODO: este interrupt esta bien aca?
 		t_buffer* buffer_recibido = recibir_buffer(fd_cpu_int);
-		uint8_t unidadesDeTiempo  = leer_buffer_uint8(buffer_recibido);
+		uint8_t unidadesDeTrabajo  = leer_buffer_uint8(buffer_recibido);
 		char* interfaz = leer_buffer_string(buffer_recibido); //Int1 
 		destruir_buffer(buffer_recibido);
         
@@ -637,7 +637,7 @@ void io_gen_sleep() {
             if (strcmp(aux->tipo , "GENERICA") == 0) {
 		    enviar_codOp(aux->fd,SLEEP);
 		    t_buffer* buffer_a_enviar = crear_buffer();
-		    agregar_buffer_uint8(buffer_a_enviar,unidadesDeTiempo);
+		    agregar_buffer_uint8(buffer_a_enviar,unidadesDeTrabajo);
 		    enviar_buffer(buffer_a_enviar,aux->fd);
 		    destruir_buffer(buffer_a_enviar);
             

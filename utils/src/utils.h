@@ -55,13 +55,25 @@ typedef enum{
 }mensajeCpuMemoria;
 
 typedef enum{
+	// Kernel -> IO
 	SLEEP,
-	SLEEP_OK,
 	STDIN_READ,
-	STDIN_READ_OK
+	STDOUT_WRITE,
+	FS_CREATE,
+	FS_DELETE,
+	FS_TRUNCATE,
+	FS_WRITE,
+	FS_READ,
+	// IO -> Kernel
+	SLEEP_OK,
+	STDIN_READ_OK,
+	STDOUT_WRITE_OK,
+	FS_CREATE_OK,
+	FS_DELETE_OK,
+	FS_TRUNCATE_OK,
+	FS_WRITE_OK,
+	FS_READ_OK
 } mensajeKernelIO;
-
-
 
 typedef struct{
 	uint32_t PC; ////indica la próxima instrucción a ejecutar

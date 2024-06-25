@@ -282,12 +282,12 @@ void ejecutar_jnz(void* registro, char* char_nro_instruccion) {
         log_warning(logger_cpu, "Registro no valido");
 }
 
-void ejecutar_io_gen_sleep(char* nombreInterfaz, char* charUnidadesDeTiempo) {
-    uint32_t unidadesDeTiempo = atoi(charUnidadesDeTiempo);
-    // log_info(logger_cpu, unidadesDeTiempo);
+void ejecutar_io_gen_sleep(char* nombreInterfaz, char* charUnidadesDeTrabajo) {
+    uint32_t unidadesDeTrabajo = atoi(charUnidadesDeTrabajo);
+    // log_info(logger_cpu, unidadesDeTrabajo);
     enviar_codOp(fd_kernel_int, INTERRUPT);
     t_buffer* buffer_a_enviar = crear_buffer();
-    agregar_buffer_uint8(buffer_a_enviar,unidadesDeTiempo);
+    agregar_buffer_uint8(buffer_a_enviar,unidadesDeTrabajo);
     agregar_buffer_string(buffer_a_enviar,nombreInterfaz);
     enviar_buffer(buffer_a_enviar,fd_kernel_int);
     destruir_buffer(buffer_a_enviar);
