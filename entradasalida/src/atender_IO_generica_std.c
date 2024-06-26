@@ -94,13 +94,14 @@ void ejecutar_IO_STDIN_READ(){
 
 	t_buffer* buffer = crear_buffer();
     agregar_buffer_uint32(buffer,dir_fisica);
+    agregar_buffer_uint32(buffer,tamMaximo);
     agregar_buffer_string(buffer,valor_ingresado);
 	//if(tam_reg8 != 0){                   ESTO DEL TAMAÑO LO VOLAMOS, NO?  
 	//	agregar_buffer_uint32(buffer,8);    
 	//} else{                                 
 	//	agregar_buffer_uint32(buffer,32);
 	//}
-    enviar_buffer(buffer,fd_kernel); 
+    enviar_buffer(buffer,fd_memoria); 
     destruir_buffer(buffer);
     
     //TODO: Falta la parte de memoria, recibir el buffer y hacer lo que tiene que hacer
