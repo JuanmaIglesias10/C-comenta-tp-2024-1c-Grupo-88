@@ -47,6 +47,7 @@ void inicializar_variables(){
 
 
 	memoriaPrincipal = malloc(config_memoria.tam_memoria);
+	memset(memoriaPrincipal, 0, config_memoria.tam_memoria);
 	
 	// indicePorFifo = 0;
 }
@@ -295,12 +296,12 @@ void enviar_instruccion(){
 void ejecutar_MOV_OUT(){
 	t_buffer* buffer = recibir_buffer(fd_cpu);
 	uint32_t dirFisica = leer_buffer_uint32(buffer);
-	uint32_t tamañoValor = leer_buffer_uint32(buffer);
+	uint32_t tamValor = leer_buffer_uint32(buffer);
 	uint8_t valorAEscribir8;
 	uint32_t valorAEscribir32;
-	if(tamañoValor == 8){
+	if(tamValor == 8){
 		valorAEscribir8 = leer_buffer_uint8(buffer);
-	} else if (tamañoValor == 32){
+	} else if (tamValor == 32){
 		valorAEscribir32 = leer_buffer_uint32(buffer);
 	}
 	
@@ -308,9 +309,9 @@ void ejecutar_MOV_OUT(){
 	uint32_t numPagina = leer_buffer_uint32(buffer);
 	destruir_buffer(buffer);
 
-	if(tamañoValor == 8){
+	if(tamValor == 8){
 		memcpy(memoriaPrincipal + dirFisica, &valorAEscribir8, sizeof(uint8_t));
-	} else if (tamañoValor == 32){
+	} else if (tamValor == 32){
 		memcpy(memoriaPrincipal + dirFisica, &valorAEscribir32, sizeof(uint32_t));
 	}
 	t_proceso* proceso  = buscarProcesoPorPid(pid);
@@ -319,8 +320,27 @@ void ejecutar_MOV_OUT(){
 	pagModificada->bitModificado = true;
 	
 	enviar_codOp(fd_cpu, MOV_OUT_OK);
+	estoNoVaAFuncar();
 
-	log_info(logger_memoria, "PID: %d - Acción: ESCRIBIR - Dirección física: %d", pid, dirFisica);
+
+	// // log_info(logger_memoria, "PID: %d - Acción: ESCRIBIR - Dirección física: %d", pid, dirFisica);
+	// // Simulación de recibir y procesar el buffer
+    // // Supongamos que valorAEscribir es 10 y dirFisica es 0 en este ejemplo
+    // // Simulación de recibir y procesar el buffer
+    // uint8_t valorAEscribir = 10; // Aquí está el valor que queremos escribir (10 en este caso)
+    // uint32_t dirFisica = 0; // Supongamos que la dirección física es 0 en este ejemplo
+
+    // // Copiar el valor a memoriaPrincipal en la dirección especificada
+    // memcpy(memoriaPrincipal + dirFisica, &valorAEscribir, sizeof(uint8_t));
+
+    // // Simulación de otras operaciones
+    // // Supongamos que estos son ejemplos de las funciones reales
+    // // enviar_codOp(fd_cpu, MOV_OUT_OK);
+    // // log_info(logger_memoria, "Acción: ESCRIBIR - Dirección física: %d", dirFisica);
+
+    // // Llamada a la función para imprimir el contenido de memoriaPrincipal
+    // estoNoVaAFuncar();
+
 }
 
 // luego de recibir MOV_IN_SOLICITUD del CPU
@@ -570,3 +590,21 @@ void escribiendoMemoria(){
 	  	memcpy(&valor_ingresado, memoriaPrincipal + dirFisica, sizeof(uint32_t));
 	}
 }
+
+
+void estoNoVaAFuncar() {
+    int nroMarcoVariable = 0;
+    int i = 0;
+
+    while (nroMarcoVariable * config_memoria.tam_pagina < config_memoria.tam_memoria) {
+        printf("Nro Marco %d, contenido:", nroMarcoVariable);
+        for (i = 0; i < config_memoria.tam_pagina; i++) {
+            unsigned char obtenido;
+            memcpy(&obtenido, (unsigned char *)memoriaPrincipal + nroMarcoVariable * config_memoria.tam_pagina + i, 1);
+            printf(" %02X", obtenido); // Imprimir cada byte en formato hexadecimal
+        }
+        printf("\n");
+        nroMarcoVariable++;
+    }
+}
+

@@ -843,28 +843,3 @@ void io_stdin_read() {
 
     // TODO: falta un else
 }
-
-void enviarEscribirMemoria(){
-    t_buffer* buffer_recibido = recibir_buffer(fd_IO);
-    uint32_t dirFisica = leer_buffer_uint32(buffer_recibido);
-    char* valor_ingresado = leer_buffer_string(buffer_recibido);
-    uint32_t tamaño = leer_buffer_uint32(buffer_recibido);
-
-    destruir_buffer(buffer_recibido);
-
-    enviar_codOp(fd_memoria, ESCRIBIR_EN_MEMORIA); // TODO: este codOp es de CPU-MEMORIA
-
-    t_buffer* buffer_a_enviar = crear_buffer();
-    agregar_buffer_uint32(buffer_a_enviar,dirFisica);
-
-    agregar_buffer_string(buffer_a_enviar,valor_ingresado);
-
-    if(tamaño == 8){
-        agregar_buffer_uint32(buffer_a_enviar,8);
-    } else {
-        agregar_buffer_uint32(buffer_a_enviar,32);
-    }
-
-    enviar_buffer(buffer_a_enviar,fd_memoria);
-	destruir_buffer(buffer_a_enviar);
-} // TODO: deberia estar en IO esto

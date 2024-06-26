@@ -57,5 +57,7 @@ void vaciar_marco(uint32_t nroMarco);
 
 void escribiendoMemoria();
 
+void estoNoVaAFuncar();
+
 #endif /* MEMORIA_H_ */
 
