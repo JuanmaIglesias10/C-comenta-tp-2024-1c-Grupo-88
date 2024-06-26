@@ -41,20 +41,44 @@ typedef enum{
 
 typedef enum{
 	MOV_IN_SOLICITUD,
-	MOV_IN_OK, // Cuando no hay pageFault
+	MOV_IN_OK, 
 	MOV_OUT_SOLICITUD,
-	MOV_OUT_OK, // Cuando no hay pageFault
+	MOV_OUT_OK, 
 	PAGE_FAULT,
 	NUMERO_MARCO_SOLICITUD,
 	NUMERO_MARCO_OK,
-	PEDIDO_INSTRUCCION
+	PEDIDO_INSTRUCCION,
+	RESIZE_SOLICITUD,
+	RESIZE_OK,
+	OUT_OF_MEMORY,
+	ESCRIBIR_EN_MEMORIA
 }mensajeCpuMemoria;
 
 typedef enum{
+	// Kernel -> IO
 	SLEEP,
-	SLEEP_OK
+	STDIN_READ,
+	STDOUT_WRITE,
+	FS_CREATE,
+	FS_DELETE,
+	FS_TRUNCATE,
+	FS_WRITE,
+	FS_READ,
+	// IO -> Kernel
+	SLEEP_OK,
+	STDIN_READ_OK,
+	STDOUT_WRITE_OK,
+	FS_CREATE_OK,
+	FS_DELETE_OK,
+	FS_TRUNCATE_OK,
+	FS_WRITE_OK,
+	FS_READ_OK
 } mensajeKernelIO;
 
+typedef enum{
+	READ_OK,
+	WRITE_OK
+} mensajeIOMemoria;
 
 
 typedef struct{
@@ -84,6 +108,7 @@ typedef enum{
     SUB, 
     JNZ, 
     RESIZE, 
+    OUT_OF_MEMORY_VUELTA, 
     COPY_STRING, 
 	WAIT, 
 	SIGNAL, 
@@ -126,5 +151,6 @@ void enviar_codOp(int fd_cliente , uint8_t codOp);
 void destruir_cde(t_cde* cde);
 
 void destruir_instruccion(t_instruccion* instruccion);
+char* uint32_a_string(uint32_t num);
 
 #endif /* UTILS_H_ */

@@ -16,6 +16,8 @@ void inicializar_semaforos();
 
 void inicializar_conexiones();
 
+void recibir_tamaño_pagina();
+
 void inicializar_registros();
 
 void cargar_registros();

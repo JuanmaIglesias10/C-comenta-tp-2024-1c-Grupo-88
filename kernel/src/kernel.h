@@ -19,6 +19,7 @@ void inicializar_largo_plazo();
 void inicializar_corto_plazo();
 t_recurso* inicializar_recurso(char* nombre_recurso, int instancias_totales);
 
+
 // CONSOLA
 void iniciar_consola();
 void mostrar_opciones_consola();
@@ -59,6 +60,7 @@ void timer_vrr();
 // EVALUAR INSTRUCCIONES
 void evaluar_instruccion(t_instruccion* instruccion_actual);
 void io_gen_sleep();
+void io_stdin_read();
 void evaluar_wait(char* nombre_recurso_pedido);
 void evaluar_signal(char* nombre_recurso_pedido);
 

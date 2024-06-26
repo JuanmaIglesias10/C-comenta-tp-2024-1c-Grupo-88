@@ -24,6 +24,9 @@ char* obtener_nombre_instruccion(t_instruccion* instruccion) {
 	    case RESIZE:
             return "RESIZE";
             break;
+	    case OUT_OF_MEMORY_VUELTA:
+            return "RESIZE";
+            break;
 	    case COPY_STRING:
             return "COPY_STRING";
             break;
@@ -68,8 +71,7 @@ char* obtener_nombre_instruccion(t_instruccion* instruccion) {
 
 // FUNCIONALIDAD DE LAS INSTRUCCIONES
 
-void ejecutar_set8(char* registro, char* char_valor_recibido) {
-    uint8_t valor_recibido = atoi(char_valor_recibido);
+void ejecutar_set8(char* registro, uint8_t valor_recibido) {
     if (strcmp(registro, "AX") == 0) {
         registros_cpu->AX = valor_recibido;
     }
@@ -87,8 +89,7 @@ void ejecutar_set8(char* registro, char* char_valor_recibido) {
     }
 }
 
-void ejecutar_set32(char* registro, char* char_valor_recibido){
-    uint32_t valor_recibido = atoi(char_valor_recibido);
+void ejecutar_set32(char* registro, uint32_t valor_recibido){
      if (strcmp(registro, "PC") == 0) { 
         registros_cpu->PC = valor_recibido;
     }
@@ -114,7 +115,6 @@ void ejecutar_set32(char* registro, char* char_valor_recibido){
         log_error(logger_cpu, "No se reconoce el registro %s", registro);
     }
 }
-
 
 uint8_t  buscar_valor_registro8(void* registro) {
 	uint8_t  valorLeido8;
@@ -162,6 +162,7 @@ uint32_t  buscar_valor_registro32(void* registro){
 
 
 }
+
 void ejecutar_sum(char* reg_dest, char* reg_origen) {
     if(strcmp(reg_dest, "AX") == 0){
         uint8_t  valor_reg_origen = buscar_valor_registro8(reg_origen);
@@ -281,13 +282,12 @@ void ejecutar_jnz(void* registro, char* char_nro_instruccion) {
         log_warning(logger_cpu, "Registro no valido");
 }
 
-
-void ejecutar_io_gen_sleep(char* nombreInterfaz, char* charUnidadesDeTiempo) {
-    uint32_t unidadesDeTiempo = atoi(charUnidadesDeTiempo);
-    // log_info(logger_cpu, unidadesDeTiempo);
+void ejecutar_io_gen_sleep(char* nombreInterfaz, char* charUnidadesDeTrabajo) {
+    uint32_t unidadesDeTrabajo = atoi(charUnidadesDeTrabajo);
+    // log_info(logger_cpu, unidadesDeTrabajo);
     enviar_codOp(fd_kernel_int, INTERRUPT);
     t_buffer* buffer_a_enviar = crear_buffer();
-    agregar_buffer_uint8(buffer_a_enviar,unidadesDeTiempo);
+    agregar_buffer_uint8(buffer_a_enviar,unidadesDeTrabajo);
     agregar_buffer_string(buffer_a_enviar,nombreInterfaz);
     enviar_buffer(buffer_a_enviar,fd_kernel_int);
     destruir_buffer(buffer_a_enviar);
@@ -307,3 +307,163 @@ void ejecutar_exit(){
     interrupcion = 1;
 }
 
+int ejecutar_resize(char* charTamanio){
+    enviar_codOp(fd_memoria, RESIZE_SOLICITUD);
+    uint32_t tamanio = atoi(charTamanio);
+    t_buffer* buffer = crear_buffer();
+    agregar_buffer_uint32(buffer, pid_de_cde_ejecutando);
+    agregar_buffer_uint32(buffer, tamanio);
+    enviar_buffer(buffer,fd_memoria);
+    destruir_buffer(buffer);
+
+    mensajeCpuMemoria cod_op = recibir_codOp(fd_memoria);
+    if(cod_op == OUT_OF_MEMORY){
+        interrupcion = 1;
+        return 1;
+
+    } else if (cod_op == RESIZE_OK){
+        return 0;
+    }
+    return 255; //Esto no deberia suceder
+}
+
+
+void ejecutar_mov_in(char* registro, char* registroDirLogica){ //MOV_IN BX EAX -> EN BX ME PONE EL VALOR DE DIR LOGICA 0 (42)
+    uint32_t dirLogica;
+
+    if (es_uint8(registroDirLogica)){
+        dirLogica = (uint32_t)buscar_valor_registro8(registroDirLogica);
+    } else {
+        dirLogica = buscar_valor_registro32(registroDirLogica);
+    }
+
+    uint32_t dirFisica = calcular_direccion_fisica(dirLogica);
+    uint32_t numPagina = obtener_numero_pagina(dirLogica);
+
+    enviar_codOp(fd_memoria, MOV_IN_SOLICITUD);
+    
+    t_buffer* buffer = crear_buffer();
+
+    if (es_uint8(registro)){ //Envio primero el tamaño del registro
+        agregar_buffer_uint32(buffer,8);
+    }else {
+        agregar_buffer_uint32(buffer,32);
+    }
+    agregar_buffer_uint32(buffer, dirFisica);
+    agregar_buffer_uint32(buffer, pid_de_cde_ejecutando);
+    agregar_buffer_uint32(buffer, numPagina);
+    enviar_buffer(buffer, fd_memoria);
+    destruir_buffer(buffer);
+    
+    mensajeCpuMemoria codigoMemoria = recibir_codOp(fd_memoria);
+    uint8_t valorLeido8;
+    uint32_t valorLeido32;
+
+    buffer = recibir_buffer(fd_memoria);
+    if (es_uint8(registro)) {
+        valorLeido8 = leer_buffer_uint8(buffer);
+    } else {
+        valorLeido32 = leer_buffer_uint32(buffer);
+    }
+    destruir_buffer(buffer);
+    
+    if (codigoMemoria == MOV_IN_OK) 
+        log_info(logger_cpu,"PID: %d - Acción: LEER - Dirección Física: %d - Valor: %d", pid_de_cde_ejecutando, dirFisica, es_uint8(registro) ? valorLeido8 : valorLeido32);
+
+    if (es_uint8(registro)) {
+        ejecutar_set8(registro, valorLeido8);
+        log_warning(logger_cpu, "%d", valorLeido8);
+    } else {
+        ejecutar_set32(registro, valorLeido32);
+    }
+}
+
+void ejecutar_mov_out(char* registroDirLogica, char* registro){ //MOV_OUT EAX AX -> MOV_OUT 0 42
+    uint32_t dirLogica;
+    if (es_uint8(registroDirLogica)){
+        dirLogica = (uint32_t)buscar_valor_registro8(registroDirLogica);
+    } else {
+        dirLogica = buscar_valor_registro32(registroDirLogica); //0
+    }
+
+    uint8_t valorAEscribir8;
+    uint32_t valorAEscribir32;
+
+    if (es_uint8(registro)){
+        valorAEscribir8 = buscar_valor_registro8(registro); //42
+    } else {
+        valorAEscribir32 = buscar_valor_registro32(registro);
+    }
+    
+    uint32_t dirFisica = calcular_direccion_fisica(dirLogica); //0
+    uint32_t numPagina = obtener_numero_pagina(dirLogica); //0
+
+    enviar_codOp(fd_memoria, MOV_OUT_SOLICITUD);
+    
+    // Le manda a memoria la df y el valor del registro encontrado
+    t_buffer* buffer = crear_buffer();
+    agregar_buffer_uint32(buffer, dirFisica);
+
+    if (es_uint8(registro)){
+        agregar_buffer_uint32(buffer,8);
+        agregar_buffer_uint8(buffer, valorAEscribir8); //42
+    
+    }else{
+        agregar_buffer_uint32(buffer,32);
+        agregar_buffer_uint32(buffer, valorAEscribir32);
+    }
+
+    agregar_buffer_uint32(buffer, pid_de_cde_ejecutando);
+    agregar_buffer_uint32(buffer, numPagina);
+    enviar_buffer(buffer, fd_memoria);
+    destruir_buffer(buffer);
+
+    // Memoria escribe lo que le llego en la df
+    mensajeCpuMemoria codigoMemoria = recibir_codOp(fd_memoria);
+
+    if(codigoMemoria == MOV_OUT_OK){
+
+        if(es_uint8(registro)){
+            log_info(logger_cpu,"PID: %d - Acción: ESCRIBIR - Dirección Física: %d - Valor: %d", pid_de_cde_ejecutando, dirFisica, valorAEscribir8);
+        }else {
+            log_info(logger_cpu,"PID: %d - Acción: ESCRIBIR - Dirección Física: %d - Valor: %d", pid_de_cde_ejecutando, dirFisica, valorAEscribir32);
+        }
+    }
+}
+
+bool es_uint8(char* registro){
+    return (strcmp(registro, "AX") == 0 || strcmp(registro, "BX") == 0 || strcmp(registro, "CX") == 0 || strcmp(registro, "DX") == 0);
+}
+
+void ejecutar_io_stdin_read(char* interfaz, char* dir_logica, char* registro_tamaño){
+    
+    uint32_t direccion_Logica;
+    uint32_t direccion_Fisica;
+    uint32_t tamaño_registro;
+    enviar_codOp(fd_kernel_dis, INTERRUPT);
+
+    t_buffer* buffer_a_enviar = crear_buffer();
+    
+    if (es_uint8(registro_tamaño)){
+        tamaño_registro = (uint32_t)buscar_valor_registro8(registro_tamaño);
+    } else {
+        tamaño_registro = buscar_valor_registro32(registro_tamaño);
+    }
+    agregar_buffer_uint32(buffer_a_enviar, tamaño_registro);
+
+
+    if (es_uint8(dir_logica)){
+        direccion_Logica = (uint32_t)buscar_valor_registro8(dir_logica);
+    } else {
+        direccion_Logica  = buscar_valor_registro32(dir_logica);
+    }
+    direccion_Fisica = calcular_direccion_fisica(direccion_Logica);
+    
+    agregar_buffer_uint32(buffer_a_enviar,direccion_Fisica);
+
+    agregar_buffer_string(buffer_a_enviar,interfaz);
+    
+    enviar_buffer(buffer_a_enviar,fd_kernel_dis);
+    destruir_buffer(buffer_a_enviar);
+    interrupcion = 1;
+}

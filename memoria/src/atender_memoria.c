@@ -1,17 +1,33 @@
 #include "atender_memoria.h"
 
-void* atender_cpu()
+void atender_cpu()
 {	
 	while (1) {
 		mensajeCpuMemoria cod_op = recibir_codOp(fd_cpu);
-		
 		switch (cod_op) {
+			case MOV_IN_SOLICITUD: //Desde ejecutar_mov_in
+				usleep(config_memoria.retardo_respuesta * 1000);
+				ejecutar_MOV_IN();
+				break;
+			case MOV_OUT_SOLICITUD: //Desde ejecutar_mov_in
+				usleep(config_memoria.retardo_respuesta * 1000);
+				ejecutar_MOV_OUT();
+				break;
 			case PEDIDO_INSTRUCCION:
 				usleep(config_memoria.retardo_respuesta * 1000);
 				enviar_instruccion();
 				break;
-            case NUMERO_MARCO_SOLICITUD:
+            case NUMERO_MARCO_SOLICITUD: //Desde calcular_direccion_fisica en mmu.c
+				usleep(config_memoria.retardo_respuesta * 1000);
 				devolver_nro_marco();
+				break;
+			case RESIZE_SOLICITUD:
+				usleep(config_memoria.retardo_respuesta * 1000);
+				resize();
+				break;
+			case ESCRIBIR_EN_MEMORIA:
+				usleep(config_memoria.retardo_respuesta * 1000);
+				escribiendoMemoria();
 				break;
 			default:
 				log_info(logger_memoria,"Se desconectó CPU");
@@ -21,7 +37,7 @@ void* atender_cpu()
 }
 
 
-void* atender_kernel()
+void atender_kernel()
 {
 	while(1){
 		mensajeKernelMem codigoDeKernel = recibir_codOp(fd_kernel);
@@ -63,13 +79,13 @@ void* atender_IO(void* fd_IO_ptr) {
         }
     }
     return NULL;
-}
+} // TODO: va a tener que recibir mensajes de STDIN, STDOUT y DIALFS
 
 void* aceptar_conexiones_IO(void* arg) {
     int fd_memoria = *(int*)arg;
 
     while (1) {
-        int fd_IO = esperar_cliente(fd_memoria, logger_memoria, "IO");
+        int fd_IO = esperar_cliente(fd_memoria, logger_memoria, "una interfaz de IO");
         if (fd_IO != -1) {
             pthread_t hilo_IO;
             int* fd_IO_ptr = malloc(sizeof(int));
