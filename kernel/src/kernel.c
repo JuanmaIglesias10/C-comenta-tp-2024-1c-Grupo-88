@@ -780,10 +780,10 @@ bool es_RR_o_VRR() {
 }
 
 void io_stdin_read() {
-	mensajeKernelCpu codOp = recibir_codOp(fd_cpu_int);
+	mensajeKernelCpu codOp = recibir_codOp(fd_cpu_dis);
 
 	if (codOp == INTERRUPT) {
-		t_buffer* buffer_recibido   = recibir_buffer(fd_cpu_int);
+		t_buffer* buffer_recibido   = recibir_buffer(fd_cpu_dis);
         uint32_t tamaño             = leer_buffer_uint32(buffer_recibido);
 		uint32_t direccion_fisica   = leer_buffer_uint32(buffer_recibido);
 
@@ -817,7 +817,7 @@ void io_stdin_read() {
             mensajeKernelIO codigo = recibir_codOp(aux->fd);
                 if(codigo == STDIN_READ_OK) {
                     log_info(logger_kernel, "Llegue a STDIN_READ_OK");
-                    enviarEscribirMemoria();
+                    //enviarEscribirMemoria();
                     if(strcmp(config_kernel.algoritmo_planificacion,"VRR") == 0 && ms_transcurridos < pcb_read_stdin->quantum){
                         pcb_read_stdin->quantum -= ms_transcurridos;
                         enviar_pcb_de_block_a_ready_mas(pcb_read_stdin);

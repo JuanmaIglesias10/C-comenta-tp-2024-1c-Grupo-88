@@ -76,39 +76,39 @@ void ejecutar_IO_STDIN_READ(){
 
 	destruir_buffer(buffer_recibido);
 	int contador = 0;
+    char* valor_ingresado;
 	while(contador != tamMaximo){
-		char* valor_ingresado = readline("Ingrese algo:");
+		valor_ingresado = readline("Ingrese algo:");
 
 		contador = strlen(valor_ingresado);
 
 		if(contador < tamMaximo){
-			log_warning(logger_IO, "El texto debe ser mas largo");
-		} else if (contador > tamMaximo){
+			log_warning(logger_IO, "El texto debe ser mas largo"); // Modificarlo en base a lo que dijeron en el soporte
+		} else if (contador > tamMaximo){                          // O lo dejamos asi como vimos en un issue?
 			log_warning(logger_IO, "El texto debe ser mas corto");
 		}
 
 	}
 
-    // TODO
+    enviar_codOp(fd_memoria, STDIN_READ);
 
-	// ACA HAY QUE MANDAR A MEMORIA! Que memoria haga todo lo que tiene que hacer, que vuelva a 
-	// mandar el OK a io, y ahi io manda el ok a kernel para pasar de block a ready!
+	t_buffer* buffer = crear_buffer();
+    agregar_buffer_uint32(buffer,dir_fisica);
+    agregar_buffer_string(buffer,valor_ingresado);
+	//if(tam_reg8 != 0){                   ESTO DEL TAMAÑO LO VOLAMOS, NO?  
+	//	agregar_buffer_uint32(buffer,8);    
+	//} else{                                 
+	//	agregar_buffer_uint32(buffer,32);
+	//}
+    enviar_buffer(buffer,fd_kernel); 
+    destruir_buffer(buffer);
+    
+    //TODO: Falta la parte de memoria, recibir el buffer y hacer lo que tiene que hacer
 
-	// t_buffer* buffer_a_enviar = crear_buffer();
-    //  agregar_buffer_uint32(buffer_a_enviar,dir_fisica);
-    //  agregar_buffer_string(buffer_a_enviar,valor_Ingresado;
-	//  if(tam_reg8 != 0){
-	//  	agregar_buffer_uint32(buffer_a_enviar,8);
-	//  } else{
-	//  	agregar_buffer_uint32(buffer_a_enviar,32);
-	//  }
+    mensajeIOMemoria cod_op = recibir_codOp(fd_memoria);
 
-    // enviar_buffer(buffer_a_enviar,fd_kernel);
-    // destruir_buffer(buffer_a_enviar);
-
-    enviar_codOp(fd_kernel,STDIN_READ_OK);
+    if(cod_op == READ_OK) enviar_codOp(fd_kernel,STDIN_READ_OK); // si esta todo ok desde memoria, enviamos el ok a kernel.
 }
-
 // FIN FUNCIONES STDIN
 
 // FUNCIONES STDOUT

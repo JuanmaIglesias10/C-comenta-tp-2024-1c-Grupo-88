@@ -440,7 +440,7 @@ void ejecutar_io_stdin_read(char* interfaz, char* dir_logica, char* registro_tam
     uint32_t direccion_Logica;
     uint32_t direccion_Fisica;
     uint32_t tamaño_registro;
-    enviar_codOp(fd_kernel_int, INTERRUPT);
+    enviar_codOp(fd_kernel_dis, INTERRUPT);
 
     t_buffer* buffer_a_enviar = crear_buffer();
     
@@ -463,7 +463,7 @@ void ejecutar_io_stdin_read(char* interfaz, char* dir_logica, char* registro_tam
 
     agregar_buffer_string(buffer_a_enviar,interfaz);
     
-    enviar_buffer(buffer_a_enviar,fd_kernel_int);
+    enviar_buffer(buffer_a_enviar,fd_kernel_dis);
     destruir_buffer(buffer_a_enviar);
     interrupcion = 1;
 }

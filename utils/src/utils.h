@@ -75,6 +75,12 @@ typedef enum{
 	FS_READ_OK
 } mensajeKernelIO;
 
+typedef enum{
+	READ_OK,
+	WRITE_OK
+} mensajeIOMemoria;
+
+
 typedef struct{
 	uint32_t PC; ////indica la próxima instrucción a ejecutar
     uint8_t AX;
