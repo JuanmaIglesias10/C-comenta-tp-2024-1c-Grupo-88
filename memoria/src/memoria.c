@@ -325,7 +325,7 @@ void ejecutar_MOV_OUT(){
 
 }
 
-void escribirValorEnMemoria(uint32_t valor, size_t dirFisica, int cantBytes, t_proceso* proceso) {
+void escribirValorEnMemoria(uint32_t valor, size_t dirFisica, int cantBytes, t_proceso* proceso){
     uint8_t bytesValor[cantBytes];
     memcpy(bytesValor, &valor, cantBytes);
 
@@ -392,15 +392,15 @@ void ejecutar_MOV_IN(){
 	// aca voy a guardar lo que lea en memoria
 	uint8_t valorLeido8 = 0; 
 	uint32_t valorLeido32 = 0;
+	t_proceso* proceso  = buscarProcesoPorPid(pid);
 
 	if (tamanio == 8) {
 		memcpy(&valorLeido8, memoriaPrincipal + dirFisica, sizeof(uint8_t));
 	} else if (tamanio == 32) { 
-	  	memcpy(&valorLeido32, memoriaPrincipal + dirFisica, sizeof(uint32_t));
+	  	valorLeido32 = leerValorEnMemoria(dirFisica, 4, proceso);
 	} else {
 		log_warning(logger_memoria, "tamanio invalido del valor a leer");
 	}
-	t_proceso* proceso  = buscarProcesoPorPid(pid);
 	t_pagina* pagLeida = buscarPaginaPorNroYPid(proceso, nroPag);
 
 	pagLeida->ultimaReferencia = temporal_get_string_time("%H:%M:%S:%MS"); //LRU
@@ -415,6 +415,51 @@ void ejecutar_MOV_IN(){
 	}
 	enviar_buffer(buffer, fd_cpu);
 	destruir_buffer(buffer);
+}
+
+uint32_t leerValorEnMemoria(size_t dirFisica, int cantBytes, t_proceso* proceso){
+	void* valorARetornar = malloc(cantBytes); 
+
+    size_t bytesRestantesPorLeer = cantBytes;
+    size_t bytesLeidos = 0;
+
+    // Inicializar el primer marco y el offset inicial
+    size_t offsetActual = dirFisica % config_memoria.tam_pagina;
+	size_t nroMarcoActual  = (dirFisica - offsetActual)/config_memoria.tam_pagina;
+	uint32_t siguientePagina = 0;
+	for (size_t i = 0; i < list_size(proceso->listaPaginasProceso); i++)
+	{
+    	t_pagina* pagina = list_get(proceso->listaPaginasProceso, i);
+		if(pagina->nroMarco == nroMarcoActual){
+			siguientePagina = i + 1;
+			if(siguientePagina == list_size(proceso->listaPaginasProceso)){
+				siguientePagina = 0;
+			}
+		}
+	}
+	
+    while (bytesRestantesPorLeer > 0) {
+        // Calcular la cantidad de bytes a escribir en el marco actual
+        size_t espacioDisponible = config_memoria.tam_pagina - offsetActual;
+        size_t bytesALeer = (bytesRestantesPorLeer < espacioDisponible) ? bytesRestantesPorLeer : espacioDisponible;
+
+        memcpy(valorARetornar + bytesLeidos, memoriaPrincipal + nroMarcoActual * config_memoria.tam_pagina + offsetActual, bytesALeer);
+
+		t_pagina* pagina = list_get(proceso->listaPaginasProceso, siguientePagina);
+		nroMarcoActual = pagina->nroMarco;
+
+		siguientePagina++;
+		if(siguientePagina == list_size(proceso->listaPaginasProceso)){
+			siguientePagina = 0;
+		}
+        bytesRestantesPorLeer -= bytesALeer;
+        bytesLeidos += bytesALeer;
+
+        offsetActual = 0;  // Después del primer marco, el offset es 0
+    }
+	uint32_t* uint32_valorARetornar = (uint32_t*)valorARetornar;
+    uint32_t valor = *uint32_valorARetornar;
+	return valor;
 }
 
 t_proceso* buscarProcesoPorPid(uint32_t pid){

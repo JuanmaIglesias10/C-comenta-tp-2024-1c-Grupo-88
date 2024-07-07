@@ -600,6 +600,7 @@ void evaluar_instruccion(t_instruccion* instruccion_actual){
                 pcb_ejecutando->flag_clock = true;
             }
             agregar_a_cola_finished("OUT OF MEMORY");
+            log_warning(logger_kernel, "PID: %d - OUT OF MEMORY", pcb_ejecutando->cde->pid);
             destruir_instruccion(instruccion_actual);
             break;
         case EXIT:
