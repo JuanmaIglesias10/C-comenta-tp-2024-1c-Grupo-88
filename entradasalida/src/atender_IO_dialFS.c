@@ -71,12 +71,12 @@ void inicializar_archivos_FS(){
 
     // testing
     bitarray_set_bit(bitarray, 0);
-    bool valor0 = bitarray_test_bit(bitarray, 0);
-    bool valor1 = bitarray_test_bit(bitarray, 1);
-    const char* bit0 = bool_to_string(valor0);
-    const char* bit1 = bool_to_string(valor1);
-    log_info(logger_IO, bit0); // true: esta ocupado
-    log_info(logger_IO, bit1); // false: esta libre
+    // bool valor0 = bitarray_test_bit(bitarray, 0);
+    // bool valor1 = bitarray_test_bit(bitarray, 1);
+    // const char* bit0 = bool_to_string(valor0);
+    // const char* bit1 = bool_to_string(valor1);
+    // log_info(logger_IO, bit0); // true: esta ocupado
+    // log_info(logger_IO, bit1); // false: esta libre
     // fin testing
 
     // bitarray_clean(bitarray);

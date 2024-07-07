@@ -285,7 +285,7 @@ void ejecutar_instruccion(t_cde* cde, t_instruccion* instruccion_a_ejecutar){
             ejecutar_io_stdin_read(instruccion_a_ejecutar->par1,instruccion_a_ejecutar->par2, instruccion_a_ejecutar->par3);
             if (interrupcion == 0 && realizar_desalojo == 0)
                     destruir_instruccion(instruccion_a_ejecutar);
-                break;
+            break;
         case IO_STDOUT_WRITE:
 			//
             break;

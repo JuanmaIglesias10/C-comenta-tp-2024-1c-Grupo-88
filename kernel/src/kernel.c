@@ -591,6 +591,7 @@ void evaluar_instruccion(t_instruccion* instruccion_actual){
             if(es_RR_o_VRR()){
                 pcb_ejecutando->flag_clock = true;
             }
+            log_warning(logger_kernel, "/////////////////////////////////");
             io_stdin_read();
             destruir_instruccion(instruccion_actual);
             break;
@@ -781,10 +782,11 @@ bool es_RR_o_VRR() {
 }
 
 void io_stdin_read() {
-	mensajeKernelCpu codOp = recibir_codOp(fd_cpu_dis);
-
+    log_warning(logger_kernel, "XDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD");
+	mensajeKernelCpu codOp = recibir_codOp(fd_cpu_int);
+    
 	if (codOp == INTERRUPT) {
-		t_buffer* buffer_recibido   = recibir_buffer(fd_cpu_dis);
+		t_buffer* buffer_recibido   = recibir_buffer(fd_cpu_int);
         uint32_t tamaño             = leer_buffer_uint32(buffer_recibido);
 		uint32_t direccion_fisica   = leer_buffer_uint32(buffer_recibido);
 
@@ -806,6 +808,8 @@ void io_stdin_read() {
 
             agregar_buffer_uint32(buffer_a_enviar,tamaño);
 
+            agregar_buffer_uint32(buffer_a_enviar,pcb_ejecutando->cde->pid);
+
 		    enviar_buffer(buffer_a_enviar,aux->fd);
             		    
             destruir_buffer(buffer_a_enviar);
@@ -818,7 +822,6 @@ void io_stdin_read() {
             mensajeKernelIO codigo = recibir_codOp(aux->fd);
                 if(codigo == STDIN_READ_OK) {
                     log_info(logger_kernel, "Llegue a STDIN_READ_OK");
-                    //enviarEscribirMemoria();
                     if(strcmp(config_kernel.algoritmo_planificacion,"VRR") == 0 && ms_transcurridos < pcb_read_stdin->quantum){
                         pcb_read_stdin->quantum -= ms_transcurridos;
                         enviar_pcb_de_block_a_ready_mas(pcb_read_stdin);

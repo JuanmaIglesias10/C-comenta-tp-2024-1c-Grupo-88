@@ -57,9 +57,13 @@ void vaciar_marco(uint32_t nroMarco);
 
 void escribirValorEnMemoria(uint32_t valor, size_t dirFisica, int cantBytes, t_proceso* proceso);
 
+void escribirValorEnMemoriaString(char* valor, size_t dirFisica, int tamString, t_proceso* proceso);
+
 uint32_t leerValorEnMemoria(size_t dirFisica, int cantBytes, t_proceso* proceso);
 
 void imprimir_memoria();
+
+void escribir_stdin_read(int fd_IO);
 
 #endif /* MEMORIA_H_ */
 

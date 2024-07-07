@@ -436,10 +436,10 @@ bool es_uint8(char* registro){
 
 void ejecutar_io_stdin_read(char* interfaz, char* dir_logica, char* registro_tamaño){
     
-    uint32_t direccion_Logica;
-    uint32_t direccion_Fisica;
+    uint32_t direccion_logica;
+    uint32_t direccion_fisica;
     uint32_t tamaño_registro;
-    enviar_codOp(fd_kernel_dis, INTERRUPT);
+    enviar_codOp(fd_kernel_int, INTERRUPT);
 
     t_buffer* buffer_a_enviar = crear_buffer();
     
@@ -452,17 +452,17 @@ void ejecutar_io_stdin_read(char* interfaz, char* dir_logica, char* registro_tam
 
 
     if (es_uint8(dir_logica)){
-        direccion_Logica = (uint32_t)buscar_valor_registro8(dir_logica);
+        direccion_logica = (uint32_t)buscar_valor_registro8(dir_logica);
     } else {
-        direccion_Logica  = buscar_valor_registro32(dir_logica);
+        direccion_logica  = buscar_valor_registro32(dir_logica);
     }
-    direccion_Fisica = calcular_direccion_fisica(direccion_Logica);
+    direccion_fisica = calcular_direccion_fisica(direccion_logica);
     
-    agregar_buffer_uint32(buffer_a_enviar,direccion_Fisica);
+    agregar_buffer_uint32(buffer_a_enviar,direccion_fisica);
 
     agregar_buffer_string(buffer_a_enviar,interfaz);
     
-    enviar_buffer(buffer_a_enviar,fd_kernel_dis);
-    destruir_buffer(buffer_a_enviar);
     interrupcion = 1;
+    enviar_buffer(buffer_a_enviar,fd_kernel_int);
+    destruir_buffer(buffer_a_enviar);
 }

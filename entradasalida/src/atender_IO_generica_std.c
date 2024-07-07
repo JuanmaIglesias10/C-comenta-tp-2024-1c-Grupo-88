@@ -73,42 +73,49 @@ void ejecutar_IO_STDIN_READ(){
 	t_buffer* buffer_recibido = recibir_buffer(fd_kernel);
     uint32_t dir_fisica = leer_buffer_uint32(buffer_recibido); // la direccion donde se va a guardar el valor
 	uint32_t tamMaximo = leer_buffer_uint32(buffer_recibido); // tamanio maximo del valor a leer
+    uint32_t pid = leer_buffer_uint32(buffer_recibido); // pid del proceso que solicita la lectura
 
 	destruir_buffer(buffer_recibido);
 	int contador = 0;
     char* valor_ingresado;
-	while(contador != tamMaximo){
+    char* valor_truncado = malloc(tamMaximo + 1); 
+
+
+	while(1){
 		valor_ingresado = readline("Ingrese algo:");
 
 		contador = strlen(valor_ingresado);
 
 		if(contador < tamMaximo){
-			log_warning(logger_IO, "El texto debe ser mas largo"); // Modificarlo en base a lo que dijeron en el soporte
-		} else if (contador > tamMaximo){                          // O lo dejamos asi como vimos en un issue?
+			log_warning(logger_IO, "Se corto el texto por superar el tamaño");
+		} else if (contador > tamMaximo){
 			log_warning(logger_IO, "El texto debe ser mas corto");
-		}
+            strncpy(valor_truncado, valor_ingresado, tamMaximo);
+            valor_truncado[tamMaximo] = '\0';
+            break;
+		} else {
+            strncpy(valor_truncado, valor_ingresado, tamMaximo);
+            valor_truncado[tamMaximo] = '\0';
+            break;
+        }
 
 	}
-
-    enviar_codOp(fd_memoria, STDIN_READ);
+    log_warning(logger_IO, "%s", valor_truncado);
+    enviar_codOp(fd_memoria, IO_M_STDIN_READ_SOLICITUD);
 
 	t_buffer* buffer = crear_buffer();
     agregar_buffer_uint32(buffer,dir_fisica);
+    agregar_buffer_uint32(buffer,pid);
+    agregar_buffer_string(buffer,valor_truncado);
     agregar_buffer_uint32(buffer,tamMaximo);
-    agregar_buffer_string(buffer,valor_ingresado);
-	//if(tam_reg8 != 0){                   ESTO DEL TAMAÑO LO VOLAMOS, NO?  
-	//	agregar_buffer_uint32(buffer,8);    
-	//} else{                                 
-	//	agregar_buffer_uint32(buffer,32);
-	//}
     enviar_buffer(buffer,fd_memoria); 
     destruir_buffer(buffer);
-    
-    //TODO: Falta la parte de memoria, recibir el buffer y hacer lo que tiene que hacer
 
     mensajeIOMemoria cod_op = recibir_codOp(fd_memoria);
 
-    if(cod_op == READ_OK) enviar_codOp(fd_kernel,STDIN_READ_OK); // si esta todo ok desde memoria, enviamos el ok a kernel.
+    if(cod_op == IO_M_STDIN_READ_OK) {
+        enviar_codOp(fd_kernel,STDIN_READ_OK);
+    } 
 }
 // FIN FUNCIONES STDIN
 

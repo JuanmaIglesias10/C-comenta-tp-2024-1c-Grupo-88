@@ -76,8 +76,10 @@ typedef enum{
 } mensajeKernelIO;
 
 typedef enum{
-	READ_OK,
-	WRITE_OK
+	IO_M_STDIN_READ_SOLICITUD,
+	IO_M_STDOUT_WRITE_SOLICITUD,
+	IO_M_STDIN_READ_OK,
+	IO_M_STDOUT_WRITE_OK
 } mensajeIOMemoria;
 
 

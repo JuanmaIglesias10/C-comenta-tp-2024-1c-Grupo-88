@@ -64,14 +64,14 @@ void* atender_IO(void* fd_IO_ptr) {
     free(fd_IO_ptr); // Liberamos la memoria alocada para el descriptor de archivo
 
     while (1) {
-        uint8_t cod_op = recibir_codOp(fd_IO);
+        mensajeIOMemoria cod_op = recibir_codOp(fd_IO);
         switch (cod_op) {
-            case MENSAJE:
-                // Manejo del mensaje
+            case IO_M_STDIN_READ_SOLICITUD:
+				escribir_stdin_read(fd_IO);
                 break;
-            case PAQUETE:
-                // Manejo del paquete
-                break;
+            // case PAQUETE:
+            //     // Manejo del paquete
+            //     break;
             default:
                 log_info(logger_memoria, "Se desconectó IO");
                 close(fd_IO); // Cerramos la conexión
