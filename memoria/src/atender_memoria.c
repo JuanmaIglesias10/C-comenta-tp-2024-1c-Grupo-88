@@ -27,7 +27,7 @@ void atender_cpu()
 				break;
 			case ESCRIBIR_EN_MEMORIA:
 				usleep(config_memoria.retardo_respuesta * 1000);
-				escribiendoMemoria();
+				// escribiendoMemoria();
 				break;
 			default:
 				log_info(logger_memoria,"Se desconectó CPU");

@@ -1,1 +1,52 @@
-Se esta desconectando
+
+
+cantidad_particiones_necesitadas = ceil(tamañoBytes/tam_pagina);
+parteCritica = leer_buffer_uint32(buffer);
+void* registro_ecx_parte_1 = malloc(2);
+
+
+
+
+    memcpy(memoriaPrincipal + dirFisica, &valorAEscribir32, sizeof(uint32_t));
+
+
+
+
+
+
+int main()
+{
+    
+    uint32_t registro_ecx = 64;
+    uint32_t registro_ecx_reconstruido = 0;
+    
+    void* registro_ecx_parte_2 = malloc(2);
+    
+    void* registro_ecx_puntero = &registro_ecx;
+    void* registro_ecx_reconstruido_puntero = &registro_ecx_reconstruido;
+    
+    memcpy(registro_ecx_parte_1, registro_ecx_puntero, 2);
+    memcpy(registro_ecx_parte_2, registro_ecx_puntero + 2, 2);
+    
+    printf("El valor de ECX completo es: %d \n", registro_ecx);
+    printf("El valor de ECX antes de reconstruirlo: %d \n", registro_ecx_reconstruido);
+    
+    memcpy(registro_ecx_reconstruido_puntero, registro_ecx_parte_1, 2);
+    memcpy(registro_ecx_reconstruido_puntero + 2, registro_ecx_parte_2, 2);
+    
+    printf("El valor de ECX despues de reconstruirlo: %d \n", registro_ecx_reconstruido);
+
+    return 0;
+}
+
+
+
+
+
+
+
+
+
+
+
+

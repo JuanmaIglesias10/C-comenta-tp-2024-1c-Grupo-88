@@ -19,7 +19,6 @@ uint32_t calcular_direccion_fisica(int direccion_logica){
     t_buffer* buffer = crear_buffer();
 	agregar_buffer_uint32(buffer, nro_pagina); //0
 	agregar_buffer_uint32(buffer, pid_de_cde_ejecutando);
-	log_warning(logger_cpu, "-------------%d", pid_de_cde_ejecutando);
 	enviar_buffer(buffer, fd_memoria);
 	destruir_buffer(buffer);
 
