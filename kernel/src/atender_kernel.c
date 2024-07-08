@@ -47,8 +47,8 @@ void* atender_IO(void* arg) {
         queue_push(colaDIALFS, interfaz);
     }
     pthread_mutex_unlock(&mutex_colasIO);
-    // free(nombre);
-    // free(tipo);
+    free(nombre);
+    free(tipo);
     while (1) {
         // uint8_t cod_op = recibir_codOp(fd_IO);
         // switch (cod_op) {

@@ -156,10 +156,18 @@ uint32_t  buscar_valor_registro32(void* registro){
     else if(strcmp(registro, "EDX") == 0){
         valorLeido32 = registros_cpu->EDX;
         return valorLeido32;
-    } else{
+    }
+    else if(strcmp(registro, "SI") == 0 ) {
+        valorLeido32 = registros_cpu->SI;
+        return valorLeido32;
+    }
+    else if(strcmp(registro, "DI") == 0 ) {
+        valorLeido32 = registros_cpu->DI;
+        return valorLeido32;
+    }
+    else{
         return 1000;
     }
-
 
 }
 
@@ -438,17 +446,17 @@ void ejecutar_io_stdin_read(char* interfaz, char* dir_logica, char* registro_tam
     
     uint32_t direccion_logica;
     uint32_t direccion_fisica;
-    uint32_t tamaño_registro;
+    uint32_t tamaño_a_escribir;
     enviar_codOp(fd_kernel_int, INTERRUPT);
 
     t_buffer* buffer_a_enviar = crear_buffer();
     
     if (es_uint8(registro_tamaño)){
-        tamaño_registro = (uint32_t)buscar_valor_registro8(registro_tamaño);
+        tamaño_a_escribir = (uint32_t)buscar_valor_registro8(registro_tamaño);
     } else {
-        tamaño_registro = buscar_valor_registro32(registro_tamaño);
+        tamaño_a_escribir = buscar_valor_registro32(registro_tamaño);
     }
-    agregar_buffer_uint32(buffer_a_enviar, tamaño_registro);
+    agregar_buffer_uint32(buffer_a_enviar, tamaño_a_escribir);
 
 
     if (es_uint8(dir_logica)){
@@ -465,4 +473,60 @@ void ejecutar_io_stdin_read(char* interfaz, char* dir_logica, char* registro_tam
     interrupcion = 1;
     enviar_buffer(buffer_a_enviar,fd_kernel_int);
     destruir_buffer(buffer_a_enviar);
+}
+
+void ejecutar_io_stdout_write(char* interfaz, char* dir_logica, char* registro_tamaño){ 
+    uint32_t direccion_logica;
+    uint32_t direccion_fisica;
+    uint32_t tamaño_a_leer;
+    enviar_codOp(fd_kernel_int, INTERRUPT);
+
+    t_buffer* buffer_a_enviar = crear_buffer();
+    
+    if (es_uint8(registro_tamaño)){
+        tamaño_a_leer = (uint32_t)buscar_valor_registro8(registro_tamaño);
+    } else {
+        tamaño_a_leer = buscar_valor_registro32(registro_tamaño);
+    }
+    agregar_buffer_uint32(buffer_a_enviar, tamaño_a_leer);
+
+
+    if (es_uint8(dir_logica)){
+        direccion_logica = (uint32_t)buscar_valor_registro8(dir_logica);
+    } else {
+        direccion_logica  = buscar_valor_registro32(dir_logica);
+    }
+    direccion_fisica = calcular_direccion_fisica(direccion_logica);
+    
+    agregar_buffer_uint32(buffer_a_enviar,direccion_fisica);
+
+    agregar_buffer_string(buffer_a_enviar,interfaz);
+    
+    interrupcion = 1;
+    enviar_buffer(buffer_a_enviar,fd_kernel_int);
+    destruir_buffer(buffer_a_enviar);
+}
+
+void ejecutar_copy_string(char* char_tamanio){
+    uint32_t tamanio = atoi(char_tamanio);
+    uint32_t SI = buscar_valor_registro32("SI");
+    uint32_t DI = buscar_valor_registro32("DI");
+
+    uint32_t direccion_fisica_si = calcular_direccion_fisica(SI);
+    uint32_t direccion_fisica_di = calcular_direccion_fisica(DI);
+
+    enviar_codOp(fd_memoria, COPY_STRING_SOLICITUD);
+    t_buffer* buffer = crear_buffer();
+
+    agregar_buffer_uint32(buffer, tamanio);
+    agregar_buffer_uint32(buffer, direccion_fisica_si);
+    agregar_buffer_uint32(buffer, direccion_fisica_di);
+    agregar_buffer_uint32(buffer, pid_de_cde_ejecutando);
+    enviar_buffer(buffer, fd_memoria);
+    destruir_buffer(buffer);
+
+    mensajeCpuMemoria codOp = recibir_codOp(fd_memoria);
+    if (codOp == COPY_STRING_OK){
+        log_warning(logger_cpu, "Copie bien el string :D");
+    }
 }

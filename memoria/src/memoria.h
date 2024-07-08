@@ -59,11 +59,16 @@ void escribirValorEnMemoria(uint32_t valor, size_t dirFisica, int cantBytes, t_p
 
 void escribirValorEnMemoriaString(char* valor, size_t dirFisica, int tamString, t_proceso* proceso);
 
+char* leerValorEnMemoriaString(size_t dirFisica, int tamString, t_proceso* proceso);
+
 uint32_t leerValorEnMemoria(size_t dirFisica, int cantBytes, t_proceso* proceso);
 
 void imprimir_memoria();
 
 void escribir_stdin_read(int fd_IO);
 
+void leer_stdout_write(int fd_IO);
+
+void ejecutar_copy_string();
 #endif /* MEMORIA_H_ */
 

@@ -58,7 +58,7 @@ void atender_kernel_IO_STDOUT()
             mensajeKernelIO cod_op = recibir_codOp(fd_kernel);
             switch (cod_op) {
                 case STDOUT_WRITE:
-                    // TODO
+                    ejecutar_IO_STDOUT_WRITE();
                     break;
                 default:
                     return;
@@ -123,6 +123,33 @@ void ejecutar_IO_STDIN_READ(){
 
 void ejecutar_IO_STDOUT_WRITE(){
 
+	t_buffer* buffer_recibido = recibir_buffer(fd_kernel);
+    uint32_t dir_fisica       = leer_buffer_uint32(buffer_recibido); 
+	uint32_t tamaño_a_leer     = leer_buffer_uint32(buffer_recibido); 
+    uint32_t pid              = leer_buffer_uint32(buffer_recibido);
+
+	destruir_buffer(buffer_recibido);
+
+    enviar_codOp(fd_memoria, IO_M_STDOUT_WRITE_SOLICITUD);
+
+	t_buffer* buffer = crear_buffer();
+    agregar_buffer_uint32(buffer,dir_fisica);
+    agregar_buffer_uint32(buffer,pid);
+    agregar_buffer_uint32(buffer,tamaño_a_leer);
+    enviar_buffer(buffer,fd_memoria); 
+    destruir_buffer(buffer);
+
+    mensajeIOMemoria cod_op = recibir_codOp(fd_memoria);
+
+    if(cod_op == IO_M_STDOUT_WRITE_OK) {
+        t_buffer* buffer_string = recibir_buffer(fd_memoria);
+        char* string_a_imprimir = leer_buffer_string(buffer_string);
+        destruir_buffer(buffer_string);
+
+        log_warning(logger_IO, "%s" , string_a_imprimir);
+
+        enviar_codOp(fd_kernel,STDOUT_WRITE_OK);
+    } 
 }
 
 // FIN FUNCIONES STDOUT

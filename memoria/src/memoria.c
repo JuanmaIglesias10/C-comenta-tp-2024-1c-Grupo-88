@@ -124,8 +124,9 @@ void iniciar_proceso(){
 	enviar_codOp(fd_kernel,INICIAR_PROCESO_OK);
 	
 	// list_destroy_and_destroy_elements(listaInstrucciones, (void*)instrucciones_destroy);  
-	//Al hacer esto, libero las instrucciones en proceso, aunque ya las pasé en la linea 90 ,1 hora debuggeando para encontrar esta mrd :D
+
 	free(rutaArchivoInstrucciones);
+	free(nombreArchivoInstrucciones);
 
 }
 
@@ -176,6 +177,7 @@ t_list* obtener_instrucciones(char* pathArchivo){
     }
 
     fclose(archivo);
+	free(parametros);
     return listaInstrucciones;
 }
 
@@ -665,6 +667,32 @@ void escribir_stdin_read(int fd_IO){
 	
 	enviar_codOp(fd_IO, IO_M_STDIN_READ_OK);
 	imprimir_memoria();
+	free(valor_ingresado);
+}
+
+void leer_stdout_write(int fd_IO){
+    t_buffer* buffer_recibido = recibir_buffer(fd_IO);
+    uint32_t dirFisica 		  = leer_buffer_uint32(buffer_recibido);
+	uint32_t pid 			  = leer_buffer_uint32(buffer_recibido);
+    uint32_t tamanio          = leer_buffer_uint32(buffer_recibido);
+
+    destruir_buffer(buffer_recibido);
+	
+	t_proceso* proceso = buscarProcesoPorPid(pid);
+	
+	char* string_leido = leerValorEnMemoriaString(dirFisica, tamanio, proceso);
+	// t_pagina* pagModificada = buscarPaginaPorNroYPid(proceso , numPagina);
+	// pagModificada->ultimaReferencia = temporal_get_string_time("%H:%M:%S:%MS");
+	// pagModificada->bitModificado = true;
+	
+	enviar_codOp(fd_IO, IO_M_STDOUT_WRITE_OK);
+	t_buffer* buffer_a_enviar = crear_buffer();
+	agregar_buffer_string(buffer_a_enviar, string_leido);
+	enviar_buffer(buffer_a_enviar,fd_IO);
+    destruir_buffer(buffer_a_enviar);
+	free(string_leido);
+
+	imprimir_memoria();
 }
 
 void imprimir_memoria() {
@@ -730,4 +758,74 @@ void escribirValorEnMemoriaString(char* valor, size_t dirFisica, int tamString, 
         // Pasar al siguiente marco y reiniciar el offset
         offsetActual = 0;  // Después del primer marco, el offset es 0
     }
+}
+
+char* leerValorEnMemoriaString(size_t dirFisica, int tamString, t_proceso* proceso) {
+    // Convertir el string a bytes individuales
+	char* stringARetornar = malloc(tamString);
+
+    size_t bytesRestantesPorLeer = tamString;
+    size_t bytesLeidos = 0;
+
+    size_t offsetActual = dirFisica % config_memoria.tam_pagina;
+    size_t nroMarcoActual = (dirFisica - offsetActual) / config_memoria.tam_pagina;
+    uint32_t siguientePagina = 0;
+
+    // Iterar sobre las páginas del proceso para determinar la siguiente página
+    for (size_t i = 0; i < list_size(proceso->listaPaginasProceso); i++) {
+        t_pagina* pagina = list_get(proceso->listaPaginasProceso, i);
+        if (pagina->nroMarco == nroMarcoActual) {
+            siguientePagina = i + 1;
+            if (siguientePagina == list_size(proceso->listaPaginasProceso)) {
+                siguientePagina = 0;
+            }
+        }
+    }
+
+    while (bytesRestantesPorLeer > 0) {
+        // Calcular la cantidad de bytes a escribir en el marco actual
+        size_t espacioDisponible = config_memoria.tam_pagina - offsetActual;
+        size_t bytesALeer = (bytesRestantesPorLeer < espacioDisponible) ? bytesRestantesPorLeer : espacioDisponible;
+
+        // Escribir los bytes correspondientes en el marco actual
+        memcpy(stringARetornar + bytesLeidos, memoriaPrincipal + nroMarcoActual * config_memoria.tam_pagina + offsetActual, bytesALeer);
+
+
+        // Actualizar contadores
+        t_pagina* pagina = list_get(proceso->listaPaginasProceso, siguientePagina);
+        nroMarcoActual = pagina->nroMarco;
+
+        siguientePagina++;
+        if (siguientePagina == list_size(proceso->listaPaginasProceso)) {
+            siguientePagina = 0;
+        }
+
+        bytesRestantesPorLeer -= bytesALeer;
+        bytesLeidos += bytesALeer;
+
+        // Pasar al siguiente marco y reiniciar el offset
+        offsetActual = 0;  // Después del primer marco, el offset es 0
+    }
+	return stringARetornar;
+}
+
+void ejecutar_copy_string(){
+	
+	t_buffer* buffer_recibido = recibir_buffer(fd_cpu);
+
+    uint32_t tamString = leer_buffer_uint32(buffer_recibido);
+    uint32_t direccion_fisica_si = leer_buffer_uint32(buffer_recibido);
+    uint32_t direccion_fisica_di = leer_buffer_uint32(buffer_recibido);
+    uint32_t pid = leer_buffer_uint32(buffer_recibido);
+    destruir_buffer(buffer_recibido);
+	t_proceso* proceso = buscarProcesoPorPid(pid);
+	char* string_a_escribir = leerValorEnMemoriaString(direccion_fisica_si, tamString, proceso);
+	
+	escribirValorEnMemoriaString(string_a_escribir, direccion_fisica_di, tamString, proceso);
+
+	enviar_codOp(fd_cpu, COPY_STRING_OK);
+
+	imprimir_memoria();
+	free(string_a_escribir);
+
 }

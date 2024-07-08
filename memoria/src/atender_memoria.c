@@ -25,9 +25,9 @@ void atender_cpu()
 				usleep(config_memoria.retardo_respuesta * 1000);
 				resize();
 				break;
-			case ESCRIBIR_EN_MEMORIA:
+			case COPY_STRING_SOLICITUD:
 				usleep(config_memoria.retardo_respuesta * 1000);
-				// escribiendoMemoria();
+				ejecutar_copy_string();
 				break;
 			default:
 				log_info(logger_memoria,"Se desconectó CPU");
@@ -69,9 +69,10 @@ void* atender_IO(void* fd_IO_ptr) {
             case IO_M_STDIN_READ_SOLICITUD:
 				escribir_stdin_read(fd_IO);
                 break;
-            // case PAQUETE:
-            //     // Manejo del paquete
-            //     break;
+            case IO_M_STDOUT_WRITE_SOLICITUD:
+				leer_stdout_write(fd_IO);
+                break;
+
             default:
                 log_info(logger_memoria, "Se desconectó IO");
                 close(fd_IO); // Cerramos la conexión
