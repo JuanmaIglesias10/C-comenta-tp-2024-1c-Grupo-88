@@ -25,7 +25,7 @@ uint32_t calcular_direccion_fisica(int direccion_logica){
 
 	uint32_t nro_marco_tlb = consultar_TLB(nro_pagina);
 
-	if (nro_marco_tlb != -1) {
+	if (nro_marco_tlb != 1000) {
 		log_info(logger_cpu, "PID: %d - TLB HIT - Pagina: %d", pid_de_cde_ejecutando, nro_pagina); //log_obligatorio
 		log_info(logger_cpu, "PID: %d - OBTENER MARCO - Página: %d - Marco: %d", pid_de_cde_ejecutando, nro_pagina, nro_marco_tlb); //log_obligatorio
 		return nro_marco_tlb * tam_pagina + desplazamiento; // retorna la direccion_fisica
@@ -73,10 +73,10 @@ uint32_t pedir_marco_memoria(uint32_t nro_pagina){
 }
 
 uint32_t consultar_TLB(uint32_t nro_pagina) {
-	// variables globales: cont_lru
-	int indice = 0;
-	while(indice != list_size(lista_TLB)){
-		t_entrada_tlb* entrada_tlb = list_get(lista_TLB, indice);
+	log_warning(logger_cpu, "%d" , cont_lru);
+	for (size_t i = 0; i < list_size(lista_TLB); i++)
+	{
+		t_entrada_tlb* entrada_tlb = list_get(lista_TLB, i);
 		if(nro_pagina  == entrada_tlb->nro_pagina){
 				//ACTUALIZAR CONTADOR LRU EN HIT
 				if(es_lru()){
@@ -85,7 +85,6 @@ uint32_t consultar_TLB(uint32_t nro_pagina) {
 				}
 				return entrada_tlb->nro_marco;
 			}
-		indice++;
 	}
 	return 1000;
 }
@@ -103,12 +102,14 @@ void actualizar_TLB(uint32_t nro_pagina,uint32_t nro_marco) {
 
 	else {
 		if(es_fifo()){
+			log_warning(logger_cpu, "hubo un reemplazo wachin");
 			t_entrada_tlb* xd = list_remove(lista_TLB,0);
 			list_add(lista_TLB,entrada_TLB_nueva);
 			// free(xd);
 		} 
 		
 		if(es_lru()) {
+			log_warning(logger_cpu, "hubo un reemplazo wachin");
 			int primer_contador = 100000;
 			int indice_a_reemplazar;
 			for (size_t i = 0; i < list_size(lista_TLB); i++)

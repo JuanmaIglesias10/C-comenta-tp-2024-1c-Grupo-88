@@ -7,15 +7,15 @@ int main(void) {
 }
 
 void inicializar_cpu() {
+    lista_TLB = list_create(); //No mover de aca :) ¿Por qué? Ni idea
+    cont_lru = 0;
 
 	logger_cpu = iniciar_logger("logCPU.log","CPU",LOG_LEVEL_INFO);
 	inicializar_config();
     inicializar_registros();
-	inicializar_conexiones();
     inicializar_semaforos();
+	inicializar_conexiones();
 
-    lista_TLB = list_create();
-    cont_lru = 0;
 
 }
 

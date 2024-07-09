@@ -1,5 +1,6 @@
 #include "utils.h"
 #include "math.h"
+#include "cpu.h"
 #include "diccionario_cpu.h"
 
 int obtener_numero_pagina(int direccionLogica);
