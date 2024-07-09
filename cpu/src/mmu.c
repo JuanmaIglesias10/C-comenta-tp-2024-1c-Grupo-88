@@ -14,16 +14,20 @@ uint32_t calcular_direccion_fisica(int direccion_logica){
 	int nro_pagina = obtener_numero_pagina(direccion_logica); //floor(dir_logica/tam_pagina)   				0
 	int desplazamiento = obtener_desplazamiento_pagina(direccion_logica); //direccionLogica - numero_pagina * tam_pagina                0
 	uint32_t nro_marco_memoria;
-	// si no esta activada la TLB
+
+	// si no esta activada la TLB:
+
 	if(config_cpu.cantidad_entradas_tlb == 0){
 		nro_marco_memoria = pedir_marco_memoria(nro_pagina);
 		log_info(logger_cpu, "PID: %d - OBTENER MARCO - Página: %d - Marco: %d", pid_de_cde_ejecutando, nro_pagina, nro_marco_memoria); //log_obligatorio
 		return nro_marco_memoria * tam_pagina + desplazamiento; // retorna la direccion_fisica
 	}
 
-	// si esta activada la TLB
+	// si esta activada la TLB:
 
 	uint32_t nro_marco_tlb = consultar_TLB(nro_pagina);
+
+	// si esta la pag en la TLB:
 
 	if (nro_marco_tlb != 1000) {
 		log_info(logger_cpu, "PID: %d - TLB HIT - Pagina: %d", pid_de_cde_ejecutando, nro_pagina); //log_obligatorio
@@ -31,20 +35,13 @@ uint32_t calcular_direccion_fisica(int direccion_logica){
 		return nro_marco_tlb * tam_pagina + desplazamiento; // retorna la direccion_fisica
 	}
 
-	log_info(logger_cpu, "PID: %d - TLB MISS - Pagina: %d", pid_de_cde_ejecutando, nro_pagina); //log_obligatorio
+	// si no esta la pag en la TLB:
 
-	// si no está en la TLB, pido el marco a Memoria
+	log_info(logger_cpu, "PID: %d - TLB MISS - Pagina: %d", pid_de_cde_ejecutando, nro_pagina); //log_obligatorio
 	nro_marco_memoria = pedir_marco_memoria(nro_pagina);
 	log_info(logger_cpu, "PID: %d - OBTENER MARCO - Página: %d - Marco: %d", pid_de_cde_ejecutando, nro_pagina, nro_marco_memoria); //log_obligatorio
 
-	// se activan los algoritmos
-
-	// dependiendo el algoritmo
-	
-	//si hay lugar:
 	actualizar_TLB(nro_pagina , nro_marco_memoria);
-
-	// si esta llena
 
 	return nro_marco_memoria * tam_pagina + desplazamiento; // retorna la direccion_fisica
 
@@ -98,18 +95,17 @@ void actualizar_TLB(uint32_t nro_pagina,uint32_t nro_marco) {
 
 	if(list_size(lista_TLB) < config_cpu.cantidad_entradas_tlb){
 		list_add(lista_TLB,entrada_TLB_nueva);
+		log_warning(logger_cpu, "se agrego una entrada nueva a la TLB");
 	}
 
 	else {
 		if(es_fifo()){
-			log_warning(logger_cpu, "hubo un reemplazo wachin");
 			t_entrada_tlb* xd = list_remove(lista_TLB,0);
 			list_add(lista_TLB,entrada_TLB_nueva);
-			// free(xd);
+			log_warning(logger_cpu, "hubo un reemplazo por FIFO");
 		} 
 		
 		if(es_lru()) {
-			log_warning(logger_cpu, "hubo un reemplazo wachin");
 			int primer_contador = 100000;
 			int indice_a_reemplazar;
 			for (size_t i = 0; i < list_size(lista_TLB); i++)
@@ -122,6 +118,7 @@ void actualizar_TLB(uint32_t nro_pagina,uint32_t nro_marco) {
 			}
 			entrada_TLB_nueva->cont_lru = cont_lru++;
 			list_replace(lista_TLB, indice_a_reemplazar, entrada_TLB_nueva);
+			log_warning(logger_cpu, "hubo un reemplazo por LRU");
 		}
 	}
 }
@@ -134,6 +131,3 @@ bool es_lru(){
 bool es_fifo(){
 	return strcmp(config_cpu.algoritmo_tlb,"FIFO") == 0;
 }
-
-// config_cpu.cantidad_entradas_tlb
-// config_cpu.algoritmo_tlb

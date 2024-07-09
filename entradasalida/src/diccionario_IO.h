@@ -2,6 +2,7 @@
 #define DICCIONARIO_IO_H_
 
 #include "utils.h"
+#include "commons/bitarray.h"
 
 typedef struct{
     char* tipo_interfaz;
@@ -50,6 +51,10 @@ extern t_config* config;
 // Files Descriptors 
 extern int fd_kernel;
 extern int fd_memoria;
+
+// FS
+extern int tamanio_bitmap;
+extern t_bitarray* bitarray;
 
 
 #endif /* DICCIONARIO_IO_H_ */

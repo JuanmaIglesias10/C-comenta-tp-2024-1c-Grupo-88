@@ -14,7 +14,7 @@ void inicializar_cpu() {
 	inicializar_config();
     inicializar_registros();
     inicializar_semaforos();
-	inicializar_conexiones();
+	inicializar_conexiones(); // aca hay un join
 
 
 }

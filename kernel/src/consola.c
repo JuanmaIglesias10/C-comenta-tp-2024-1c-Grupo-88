@@ -4,7 +4,8 @@
 void iniciar_consola(){
 	char* input;
 	while(1){
-		mostrar_opciones_consola();
+		reset_terminal_mode();
+		mostrar_opciones_consola(); // limpio el buffer (o algo asi xd)
 		input = readline(">");
 		if(strcmp(input, "EXIT") == 0) {
             free(input);
@@ -14,6 +15,13 @@ void iniciar_consola(){
 		atender_consola(input);
 		free(input);
 	}
+}
+
+void reset_terminal_mode() {
+    struct termios term;
+    tcgetattr(0, &term);
+    term.c_lflag |= ECHO | ICANON;
+    tcsetattr(0, TCSANOW, &term);
 }
 
 void mostrar_opciones_consola(){

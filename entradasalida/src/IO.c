@@ -92,10 +92,12 @@ void inicializar_IO_DIALFS(char* nombre_interfaz){
 	config_IO_DIALFS.block_count = config_get_int_value(config,"BLOCK_COUNT"); 
 	config_IO_DIALFS.retraso_compactacion = config_get_int_value(config,"RETRASO_COMPACTACION"); 
 
-	fd_memoria = conectarse(config_IO_DIALFS.ip_memoria,config_IO_DIALFS.puerto_memoria, "MEMORIA", logger_IO);
-	fd_kernel = conectarse(config_IO_DIALFS.ip_kernel,config_IO_DIALFS.puerto_kernel, "KERNEL", logger_IO);
+	//testeo_FS();
 
-	enviar_info_kernel(nombre_interfaz,config_IO_DIALFS.tipo_interfaz);
+	//fd_memoria = conectarse(config_IO_DIALFS.ip_memoria,config_IO_DIALFS.puerto_memoria, "MEMORIA", logger_IO);
+	//fd_kernel = conectarse(config_IO_DIALFS.ip_kernel,config_IO_DIALFS.puerto_kernel, "KERNEL", logger_IO);
+
+	//enviar_info_kernel(nombre_interfaz,config_IO_DIALFS.tipo_interfaz);
 
 	pthread_t hilo_memoria;
 	pthread_create(&hilo_memoria, NULL, (void*)atender_memoria_IO_DIALFS, NULL);

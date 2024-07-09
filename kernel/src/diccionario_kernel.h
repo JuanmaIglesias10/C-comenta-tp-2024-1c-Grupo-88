@@ -7,7 +7,6 @@
 #include <readline/readline.h>
 #include "commons/temporal.h"
 
-
 //STRUCT'S && ENUM
 typedef struct{
     int puerto_escucha;

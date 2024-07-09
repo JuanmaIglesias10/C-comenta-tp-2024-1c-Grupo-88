@@ -8,7 +8,9 @@ void atender_memoria_IO_DIALFS() {
 }
 
 void atender_kernel_IO_DIALFS() {
-    inicializar_archivos_FS();
+    testeo_FS();
+
+
     while (1) {
         mensajeKernelIO cod_op = recibir_codOp(fd_kernel);
         switch (cod_op) {
@@ -44,55 +46,186 @@ https://github.com/sisoputnfrba/so-commons-library/blob/master/src/commons/bitar
 
 */
 
-void inicializar_archivos_FS(){
+t_bitarray bitis = bitarray_create_with_mode(malloc(tamanio_bitmap), tamanio_bitmap, LSB_FIRST);
+bitarray_clean(bitarray);
 
-    // Archivo de Bloques
-    /*
-    FILE* archBloques = fopen("bloques.dat", "wb");
-    if (bloques == NULL) {
+void testeo_FS() {
+    crear_bitarray();
+    if(!archivos_base__existen()) {
+        crear_archivos_base();
+    }
+    sincronizar_bitarray();
+    void mostrar_bitmap(); // TESTING
+
+
+    //fs_create("notas.txt"); // creo un archivo
+    //fs_truncate(); // modifo el tamaño del archivo
+    //fs_write(); // leo algo de la RAM -> lo escribo en el archivo
+    //fs_read(); // leo de un archivo -> lo escribo en la RAM
+    //fs_delete(); // elimino un archivo
+}
+
+void crear_bitarray() {
+    // ambas son variables globables
+
+    // calcular cantidad de bytes necesarios para el bitarray y el bitmap (deberian pesar lo mismo)
+    // tener en cuenta que hablamos del bitarray como tal, que esta dentro de t_bitarray
+    tamanio_bitmap = config_IO_DIALFS.block_count / 8 ; // ej: si son 8 bloques necesito 8 bits = 1 byte
+
+    // Crear e inicializar el bitarray con todos los bloques libres
+    bitarray = bitarray_create_with_mode(malloc(tamanio_bitmap), tamanio_bitmap, LSB_FIRST);
+    bitarray_clean(bitarray);
+}
+
+void crear_archivos_base(){
+
+    // Crear archivo de Bloques
+    FILE* archBloques = fopen("/home/utnso/dialfs/bloques.dat", "wb"); // lo creo
+    if (archBloques == NULL) {
         log_error(logger_IO, "Error al crear bloques.dat");
         exit(EXIT_FAILURE);
     }
-    ftruncate(fileno(bloques), config_IO_DIALFS.block_size * config_IO_DIALFS.block_count);
-    fclose(bloques);
-    */
-    // Archivo Bitmap
-    /*
-    FILE* archBitmap = fopen("bitmap.dat", "wb");
-    if (bitmap == NULL) {
-        log_error(logger_IO, "Error al crear bitmap.dat")
+
+    // Establecer tamaño del archivo de Bloques
+    ftruncate(fileno(archBloques), config_IO_DIALFS.block_size * config_IO_DIALFS.block_count);
+    fclose(archBloques);
+    
+    // Crear archivo Bitmap
+    FILE* archBitmap = fopen("/home/utnso/dialfs/bitmap.dat", "wb"); // lo creo
+    if (archBitmap == NULL) {
+        log_error(logger_IO, "Error al crear bitmap.dat");
         exit(EXIT_FAILURE);
     }
-    */
-    int cantBytesNecesarios = config_IO_DIALFS.block_count / 8; // ej: si son 8 bloques necesito 8 bits = 1 byte
-    // Inicializar el bitmap con todos los bloques libres
-    t_bitarray* bitarray = bitarray_create_with_mode(malloc(cantBytesNecesarios), cantBytesNecesarios, LSB_FIRST);
-    //inicializar_bitmap(bitarray);
-
-    // testing
-    bitarray_set_bit(bitarray, 0);
-    // bool valor0 = bitarray_test_bit(bitarray, 0);
-    // bool valor1 = bitarray_test_bit(bitarray, 1);
-    // const char* bit0 = bool_to_string(valor0);
-    // const char* bit1 = bool_to_string(valor1);
-    // log_info(logger_IO, bit0); // true: esta ocupado
-    // log_info(logger_IO, bit1); // false: esta libre
-    // fin testing
-
-    // bitarray_clean(bitarray);
-    //write(bitarray->bitarray, bitarray->size, 1, archBitmap);
-    //fclose(archBitmap);
-
-    bitarray_destroy(bitarray);
+    
+    // Establecer tamaño del archivo bitmap
+    ftruncate(fileno(archBitmap), tamanio_bitmap);
+    fclose(archBitmap);
 }
 
-void inicializar_bitmap(t_bitarray* bitarray) {
+void bitarray_clean(t_bitarray* bitarray) {
     for(int i = 0 ; i < config_IO_DIALFS.block_count; i++) {
-        bitarray_set_bit(bitarray, i);
+        bitarray_clean_bit(bitarray, i); // pongo en 0 (libre) el bit
     }
+}
+
+void mostrar_bitarray(t_bitarray* bitarray) {
+    // TESTING:
+    printf("Mapa de bloques libres\n");
+    for(int i = 0; i < config_IO_DIALFS.block_count; i++) {
+        bool bit = bitarray_test_bit(bitarray, i);
+        char* valorBit = bool_to_string(bit);
+        printf("Bloque %d: %s\n",i,valorBit);
+    }
+
+    // muestra un pedazo de memoria por pantalla en forma hexa
+    // mem_hexdump(bitarray->bitarray,bitarray->size);
+}
+
+void mostrar_bitmap() {
+    // TESTING: Mostrar el bitmap
+    FILE* archBitmapTest = fopen("/home/utnso/dialfs/bitmap.dat", "rb"); // lo abro como read
+    t_bitarray* bitarrayLeido = bitarray_create_with_mode(malloc(tamanio_bitmap), tamanio_bitmap, LSB_FIRST);
+    fread(bitarrayLeido->bitarray, tamanio_bitmap, 1, archBitmapTest);    
+    mostrar_bitarray(bitarrayLeido);
 }
 
 char* bool_to_string(bool value) {
-    return value ? "true" : "false";
+    return value ? "ocupado" : "libre";
 }
 
+int file_exists_in_directory(const char *directory, const char *nombre_archivo) {
+    struct dirent *entry;
+    DIR *dp = opendir(directory);
+
+    if (dp == NULL) {
+        perror("opendir");
+        return 0; // No se pudo abrir el directorio
+    }
+
+    while ((entry = readdir(dp))) {
+        if (strcmp(entry->d_name, nombre_archivo) == 0) {
+            closedir(dp);
+            return 1; // El archivo existe en el directorio
+        }
+    }
+
+    closedir(dp);
+    return 0; // El archivo no existe en el directorio
+}
+
+int archivos_base_ya_existen() {
+    if(file_exists_in_directory(config_IO_DIALFS.path_base_dialfs, "bloques.dat") 
+        && file_exists_in_directory(config_IO_DIALFS.path_base_dialfs, "bitmap.dat");)
+        return 1;
+    else
+        return 0;
+}
+
+void sincronizar_bitarray() {
+    FILE* archivo_bitmap = fopen("/home/utnso/dialfs/bitmap.dat", "wb"); // sobreescribo
+    if (archivo_bitmap == NULL) {
+        log_error(logger_IO, "Error al abrir bitmap.dat");
+        exit(EXIT_FAILURE);
+    }
+
+    // LLenar el bitmap con el bitarray que por defecto tiene los bloques libres
+    fwrite(bitarray->bitarray, tamanio_bitmap, 1, archivo_bitmap);
+}
+
+/*
+void fs_create(char* nombre_archivo) {
+    path = config_IO_DIALFS.path_base_dialfs
+    //string_append(&config_IO_DIALFS.path_base_dialfs, nombre_archivo);
+
+    
+    char* path = string_new();
+    string_append(&path, path_base_dialfs);
+    string_append(&path, "bitmap.dat"); 
+    
+    buscar_espacio_contiguo
+
+    // crearArchivoMetadata
+
+    config_create()
+
+    // llenar datos archivo metadata
+
+    // actualizar bitarray
+
+
+}*/
+
+/*
+void buscarBloqueLibre() {
+    // para cuando se crea el archivo
+
+
+}*/
+
+/*
+void leer_bitmap(){
+
+
+}*/
+
+/*
+int buscar_espacio_contiguo(tamanio){
+    // para cuando hago truncate
+
+    // tengo que el tamanio contiguo que necesito dividirlo por el tamanio
+    // de bloque para saber la cantidad de bloques necesarios
+    
+
+    // devuelvo el nro de bloque
+}*/
+
+/*
+int buscar_espacio_contiguo_desde(nro_bloque){
+    // para cuando hago truncate
+
+    // tengo que el tamanio contiguo que necesito dividirlo por el tamanio
+    // de bloque para saber la cantidad de bloques necesarios
+    
+
+    // devuelvo el nro de bloque
+}*/
