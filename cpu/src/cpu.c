@@ -14,6 +14,9 @@ void inicializar_cpu() {
 	inicializar_conexiones();
     inicializar_semaforos();
 
+    lista_TLB = list_create();
+    cont_lru = 0;
+
 }
 
 void inicializar_config(){
