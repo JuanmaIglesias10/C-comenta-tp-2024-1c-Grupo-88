@@ -46,19 +46,15 @@ https://github.com/sisoputnfrba/so-commons-library/blob/master/src/commons/bitar
 
 */
 
-t_bitarray bitis = bitarray_create_with_mode(malloc(tamanio_bitmap), tamanio_bitmap, LSB_FIRST);
-bitarray_clean(bitarray);
-
 void testeo_FS() {
     crear_bitarray();
-    if(!archivos_base__existen()) {
+    if(!archivos_base_existen()) {
         crear_archivos_base();
     }
     sincronizar_bitarray();
-    void mostrar_bitmap(); // TESTING
+    mostrar_bitmap(); // TESTING
 
-
-    //fs_create("notas.txt"); // creo un archivo
+    fs_crear_archivo("notas.txt"); // creo un archivo
     //fs_truncate(); // modifo el tamaño del archivo
     //fs_write(); // leo algo de la RAM -> lo escribo en el archivo
     //fs_read(); // leo de un archivo -> lo escribo en la RAM
@@ -108,12 +104,14 @@ void bitarray_clean(t_bitarray* bitarray) {
     }
 }
 
-void mostrar_bitarray(t_bitarray* bitarray) {
+void mostrar_bitarray(t_bitarray* unBitarray) {
     // TESTING:
+    fflush(stdout);
     printf("Mapa de bloques libres\n");
     for(int i = 0; i < config_IO_DIALFS.block_count; i++) {
-        bool bit = bitarray_test_bit(bitarray, i);
+        bool bit = bitarray_test_bit(unBitarray, i);
         char* valorBit = bool_to_string(bit);
+        fflush(stdout);
         printf("Bloque %d: %s\n",i,valorBit);
     }
 
@@ -153,60 +151,67 @@ int file_exists_in_directory(const char *directory, const char *nombre_archivo) 
     return 0; // El archivo no existe en el directorio
 }
 
-int archivos_base_ya_existen() {
-    if(file_exists_in_directory(config_IO_DIALFS.path_base_dialfs, "bloques.dat") 
-        && file_exists_in_directory(config_IO_DIALFS.path_base_dialfs, "bitmap.dat");)
+int archivos_base_existen() {
+    if(file_exists_in_directory(config_IO_DIALFS.path_base_dialfs, "bloques.dat") && 
+            file_exists_in_directory(config_IO_DIALFS.path_base_dialfs, "bitmap.dat"))
         return 1;
     else
         return 0;
 }
 
 void sincronizar_bitarray() {
-    FILE* archivo_bitmap = fopen("/home/utnso/dialfs/bitmap.dat", "wb"); // sobreescribo
+    FILE* archivo_bitmap = fopen("/home/utnso/dialfs/bitmap.dat", "ab"); // sobreescribo
     if (archivo_bitmap == NULL) {
         log_error(logger_IO, "Error al abrir bitmap.dat");
         exit(EXIT_FAILURE);
     }
-
+    rewind(archivo_bitmap);
     // LLenar el bitmap con el bitarray que por defecto tiene los bloques libres
     fwrite(bitarray->bitarray, tamanio_bitmap, 1, archivo_bitmap);
 }
 
-/*
-void fs_create(char* nombre_archivo) {
-    path = config_IO_DIALFS.path_base_dialfs
-    //string_append(&config_IO_DIALFS.path_base_dialfs, nombre_archivo);
+
+void fs_crear_archivo(char* nombre_archivo) {
+    // Crear Archivo Metadata
+
+    char* path_archivo_metadata = string_new();
+    string_append(&path_archivo_metadata, config_IO_DIALFS.path_base_dialfs);
+    string_append(&path_archivo_metadata, nombre_archivo); 
 
     
-    char* path = string_new();
-    string_append(&path, path_base_dialfs);
-    string_append(&path, "bitmap.dat"); 
+    FILE* archivo_metadata = fopen(path_archivo_metadata, "wb"); // lo creo
+    if (archivo_metadata == NULL) {
+        log_error(logger_IO, "Error al crear archivo de metadata de %s",nombre_archivo);
+        exit(EXIT_FAILURE);
+    }
+
     
-    buscar_espacio_contiguo
+    t_config* config = config_create(path_archivo_metadata);
 
-    // crearArchivoMetadata
-
-    config_create()
-
-    // llenar datos archivo metadata
-
+    int nro_bloque_libre = asignarBloqueLibre();
+    // buscar_espacio_contiguo
     // actualizar bitarray
 
+    config_set_value(config, "BLOQUE_INICIAL", string_itoa(nro_bloque_libre));
+    config_set_value(config, "TAMANIO_ARCHIVO", "0");
 
-}*/
+    config_save(config);
+    fclose(archivo_metadata);
+    free(path_archivo_metadata);
+}
 
-/*
-void buscarBloqueLibre() {
-    // para cuando se crea el archivo
-
-
-}*/
-
-/*
-void leer_bitmap(){
-
-
-}*/
+int asignarPrimerBloqueLibre() {
+    // t_bitarray* bitarray (global)
+    for(int i = 0; i < config_IO_DIALFS.block_count; i++) {
+        // busco el 1ro que este libre
+        if(!bitarray_test_bit(bitarray, i)) {
+            bitarray_set_bit(bitarray,i);
+            sincronizar_bitarray();
+            return i;
+        }
+    }
+    // no hace falta contemplar que no haya ningun bloque libre (creo, atte: nico)
+}
 
 /*
 int buscar_espacio_contiguo(tamanio){
@@ -229,3 +234,16 @@ int buscar_espacio_contiguo_desde(nro_bloque){
 
     // devuelvo el nro de bloque
 }*/
+
+// para truncate puede que tenga que cambiar el bloque inicial, para eso 1ro debo buscar 
+// el primer espacio contiguo de bloques donde quepa el archivo, incluyendo los bloques actuales
+// ya asignados
+
+// caso feliz: puedo agrandar el archivo sin mover lo actual
+// caso menos feliz: tengo espacio contiguo pero debo cambiar de primer bloque
+// caso feo: no tengo espacio contiguo, tengo que compactar
+
+// ya desde el caso menos feliz al feo se podria de entrada liberar los bloques del archivo ya que sabemos que no 
+// se puede mantener el bloque inicial y habra que mover de lugar el archivo en el "FS"
+
+// esto es suponiendo que quiera agrandarlo, en caso de achicar seria mas sencillo, si o si voy a tener espacio contiguo
