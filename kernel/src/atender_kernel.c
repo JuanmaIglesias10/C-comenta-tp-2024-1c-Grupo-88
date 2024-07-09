@@ -27,6 +27,8 @@ void* atender_IO(void* arg) {
     t_buffer* buffer = recibir_buffer(fd_IO);
     char* nombre = leer_buffer_string(buffer);
     char* tipo = leer_buffer_string(buffer);
+    log_warning(logger_kernel, "%s", tipo);
+    log_warning(logger_kernel, "%s", nombre);
     destruir_buffer(buffer);
     t_interfaz* interfaz = malloc(sizeof(t_interfaz));
     interfaz->nombre = nombre;
@@ -45,8 +47,8 @@ void* atender_IO(void* arg) {
         queue_push(colaDIALFS, interfaz);
     }
     pthread_mutex_unlock(&mutex_colasIO);
-    // free(nombre);
-    // free(tipo);
+    //free(nombre);
+    //free(tipo);
     while (1) {
         // uint8_t cod_op = recibir_codOp(fd_IO);
         // switch (cod_op) {

@@ -5,6 +5,12 @@ t_log* logger_cpu;
 t_config* config;
 t_config_cpu config_cpu;
 
+// Colas
+t_list* lista_TLB;
+
+// Contador LRU
+uint32_t cont_lru;
+
 // File Descriptors 
 int fd_memoria;
 int fd_cpu_dis;
