@@ -8,7 +8,7 @@ void atender_memoria_IO_STDIN()
         // por ahora no se usa
         sleep(10);
     }
-}
+} // to do: espera activa
 
 void atender_memoria_IO_STDOUT()
 {
@@ -16,7 +16,7 @@ void atender_memoria_IO_STDOUT()
         // por ahora no se usa
         sleep(10);
     }
-}
+} // to do: espera activa
 
 void atender_kernel_IO_GENERICA()
 {
