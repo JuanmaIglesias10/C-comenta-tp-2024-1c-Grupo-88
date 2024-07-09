@@ -197,6 +197,93 @@ void iniciar_proceso(char* path) {
     
 }
 
+void finalizar_proceso(char* pid_string){
+    // Antes de hacer finalizar proceso, hay que ver que como desde todos los estados podes pasar a exit, quiza conviene 
+    // tener el estado en el pcb, para saber en que lista lo sacas? 
+    // Aunque sin este parametro se puede hacer quiza es un poco mas rebuscado?
+
+    int resultado = 0;
+    uint32_t pid = atoi(pid_string);
+    retirar_pcb_de_su_respectivo_estado(pid, &resultado);    
+    return;
+}
+
+t_pcb* encontrar_pcb_por_pid(uint32_t pid, int* encontrado){
+    t_pcb* pcb;
+    int i = 0;
+    
+    *(encontrado) = 0;
+
+    for(int i = 0; i < list_size(procesos_globales); i++){
+        pcb = list_get(procesos_globales, i);
+        if(pcb->cde->pid == pid){
+            *(encontrado) = 1;
+            break;
+        }
+    }
+
+    if(*(encontrado))
+        return pcb;
+    else
+        log_warning(logger_kernel, "PCB no encontrado de PID: %d", pid);
+}
+
+void retirar_pcb_de_su_respectivo_estado(uint32_t pid, int* resultado){
+    t_pcb* pcb_a_retirar = encontrar_pcb_por_pid(pid, resultado);
+
+    if(resultado){
+        switch(pcb_a_retirar->estado){
+            case NEW:
+                sem_wait(&procesos_NEW);
+                pthread_mutex_lock(&mutex_new);
+                list_remove_element(colaNEW->elements, pcb_a_retirar);
+                pthread_mutex_unlock(&mutex_new);
+                enviar_a_finalizado(pcb_a_retirar, "EXIT POR CONSOLA");
+                break;
+            case READY:
+                sem_wait(&procesos_en_ready);
+                pthread_mutex_lock(&mutex_ready);
+                list_remove_element(colaREADY->elements, pcb_a_retirar); //PARA VRR hacemos el chequeo si hay algo en ready+ o ya fue?
+                pthread_mutex_unlock(&mutex_ready);
+                enviar_a_finalizado(pcb_a_retirar, "EXIT POR CONSOLA");
+                break;
+            case BLOCKED:
+                sem_wait(&procesos_en_blocked);
+                pthread_mutex_lock(&mutex_block);
+                list_remove_element(colaBLOCKED->elements, pcb_a_retirar);
+                pthread_mutex_unlock(&mutex_block);
+                enviar_a_finalizado(pcb_a_retirar, "EXIT POR CONSOLA");
+                break;
+            case EXEC:
+                enviar_codOp(fd_cpu_int, INTERRUPT);
+
+                t_buffer* buffer = crear_buffer();
+                agregar_buffer_uint32(buffer, pcb_a_retirar->cde->pid);
+                enviar_buffer(buffer, fd_cpu_int);
+                destruir_buffer(buffer);
+                break;
+            case FINISHED:
+                // ?? hace falta hacer algo?? dsps ver
+                break;
+            default:
+                log_error(logger_kernel, "Entre al default en estado nro: %d", pcb_a_retirar->estado);
+                break;
+        
+        }
+    }
+    else
+        log_warning(logger_kernel, "No ejecute el switch");
+}
+
+void enviar_a_finalizado(t_pcb* pcb_a_finalizar, char* razon){
+    agregar_pcb_a(colaFINISHED, pcb_a_finalizar, &mutex_finalizados);
+    log_info(logger_kernel, "PID: %d - Estado anterior: %s - Estado actual: %s", pcb_a_finalizar->cde->pid, obtener_nombre_estado(pcb_a_finalizar->estado), obtener_nombre_estado(FINISHED)); //OBLIGATORIO
+    log_info(logger_kernel, "Finaliza el proceso %d - Motivo: %s", pcb_a_finalizar->cde->pid, razon); // OBLIGATORIO
+    sem_post(&procesos_en_exit);
+    if (pcb_a_finalizar->estado == READY || pcb_a_finalizar->estado == BLOCKED)
+        sem_post(&grado_de_multiprogramacion); //Como se envia a EXIT, se "libera" 1 grado de multiprog
+}
+
 void cambiar_grado_multiprogramacion(char* nuevo_grado){
     //para cambiarlo la planificacion debe estar detendida
     int grado_a_asignar = atoi(nuevo_grado);
@@ -630,7 +717,6 @@ void evaluar_instruccion(t_instruccion* instruccion_actual){
             io_stdout_write();
             destruir_instruccion(instruccion_actual);
             break;
-
         case OUT_OF_MEMORY_VUELTA:
             if(es_RR_o_VRR()){
                 pcb_ejecutando->flag_clock = true;
@@ -644,6 +730,13 @@ void evaluar_instruccion(t_instruccion* instruccion_actual){
                 pcb_ejecutando->flag_clock = true;
             }
             agregar_a_cola_finished("SUCCESS");
+            destruir_instruccion(instruccion_actual);
+            break;
+        case EXIT_POR_CONSOLA:
+            if(es_RR_o_VRR()){
+                pcb_ejecutando->flag_clock = true;
+            }
+            agregar_a_cola_finished("EXIT POR CONSOLA");
             destruir_instruccion(instruccion_actual);
             break;
         default: // FIN DE QUANTUM

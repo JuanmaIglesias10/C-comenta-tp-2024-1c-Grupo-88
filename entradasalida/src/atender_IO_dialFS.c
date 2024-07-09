@@ -188,7 +188,7 @@ void fs_crear_archivo(char* nombre_archivo) {
     
     t_config* config = config_create(path_archivo_metadata);
 
-    int nro_bloque_libre = asignarBloqueLibre();
+    int nro_bloque_libre = asignarPrimerBloqueLibre();
     // buscar_espacio_contiguo
     // actualizar bitarray
 

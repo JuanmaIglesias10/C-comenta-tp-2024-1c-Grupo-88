@@ -23,6 +23,7 @@ int fd_kernel_int;
 pthread_mutex_t mutex_realizar_desalojo;
 pthread_mutex_t mutex_cde_ejecutando;
 pthread_mutex_t mutex_instruccion_actualizada;
+pthread_mutex_t mutex_interrupcion_consola;
 
 // Registro
 t_registros* registros_cpu;
@@ -30,6 +31,7 @@ t_registros* registros_cpu;
 //Interrupciones
 int interrupcion = 0;
 int realizar_desalojo = 0;
+int interrupcion_consola = 0;
 uint32_t tam_pagina;
 
 uint8_t algoritmo_planificacion;

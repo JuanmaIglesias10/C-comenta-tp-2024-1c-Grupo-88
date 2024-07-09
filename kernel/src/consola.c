@@ -118,8 +118,7 @@ void switch_comandos(uint8_t codOp, char* lista_mensaje){
 			free(lista_mensaje); 
 			break;
 		case FINALIZAR_PROCESO:
-			// finalizarProceso(lista_mensaje);
-			//detectarDeadlock();
+			finalizar_proceso(lista_mensaje);
 			free(lista_mensaje); 
 			break;
 		case INICIAR_PLANIFICACION:
