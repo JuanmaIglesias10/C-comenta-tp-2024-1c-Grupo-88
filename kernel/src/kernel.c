@@ -255,8 +255,8 @@ void retirar_pcb_de_su_respectivo_estado(uint32_t pid, int* resultado){
                 enviar_a_finalizado(pcb_a_retirar, "EXIT POR CONSOLA");
                 break;
             case EXEC:
-                enviar_codOp(fd_cpu_int, INTERRUPT);
-
+                enviar_codOp(fd_cpu_int,INTERRUPT);
+                
                 t_buffer* buffer = crear_buffer();
                 agregar_buffer_uint32(buffer, pcb_a_retirar->cde->pid);
                 enviar_buffer(buffer, fd_cpu_int);
@@ -410,7 +410,7 @@ t_list* obtener_lista_script(char* pathScript){
 		list_add(listaScript,script);
 	}
 	fclose(archivo);
-    free(parametros);
+    // free(parametros);
 	return listaScript;
 
 }
@@ -565,7 +565,7 @@ void enviar_cde_a_cpu() {
 void recibir_cde_de_cpu(){
 	while(1){
         sem_wait(&bin_recibir_cde);
-
+        
         t_buffer* buffer = recibir_buffer(fd_cpu_dis);
         
         pthread_mutex_lock(&mutex_exec);
@@ -721,8 +721,8 @@ void evaluar_instruccion(t_instruccion* instruccion_actual){
             if(es_RR_o_VRR()){
                 pcb_ejecutando->flag_clock = true;
             }
-            agregar_a_cola_finished("OUT OF MEMORY");
             log_warning(logger_kernel, "PID: %d - OUT OF MEMORY", pcb_ejecutando->cde->pid);
+            agregar_a_cola_finished("OUT OF MEMORY");
             destruir_instruccion(instruccion_actual);
             break;
         case EXIT:

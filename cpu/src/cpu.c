@@ -15,8 +15,6 @@ void inicializar_cpu() {
     inicializar_registros();
     inicializar_semaforos();
 	inicializar_conexiones(); // aca hay un join
-
-
 }
 
 void inicializar_config(){
@@ -118,6 +116,9 @@ void* atender_kernel_int()
 {
 	while (1) {
 		mensajeKernelCpu cod_op = recibir_codOp(fd_kernel_int);
+        t_buffer* buffer = recibir_buffer(fd_kernel_int); // recibe pid o lo que necesite
+        uint32_t pid_recibido = leer_buffer_uint32(buffer);
+        destruir_buffer(buffer);
 		switch (cod_op) {
             case INTERRUPT:
                 pthread_mutex_lock(&mutex_interrupcion_consola);
@@ -125,10 +126,6 @@ void* atender_kernel_int()
                 pthread_mutex_unlock(&mutex_interrupcion_consola);
                 break;
             case DESALOJO:
-                t_buffer* buffer = recibir_buffer(fd_kernel_int); // recibe pid o lo que necesite
-                uint32_t pid_recibido = leer_buffer_uint32(buffer);
-                destruir_buffer(buffer);
-
                 // se desaloja proceso en ejecucion
                 if(algoritmo_planificacion == 1 && pid_de_cde_ejecutando != pid_recibido){
                     break;
@@ -210,14 +207,18 @@ void ejecutar_proceso(t_cde* cde){
         desalojar_cde(cde, instruccion_a_ejecutar);
     }
     else{
+        log_warning(logger_cpu , "me quiero ir a dormir  %d", interrupcion_consola);
         interrupcion = 0;
         pthread_mutex_lock(&mutex_interrupcion_consola);
         interrupcion_consola = 0;
         pthread_mutex_unlock(&mutex_interrupcion_consola);
+        log_warning(logger_cpu , "me quiero ir a dormir 2");
         pthread_mutex_lock(&mutex_realizar_desalojo);
         realizar_desalojo = 0;
         pthread_mutex_unlock(&mutex_realizar_desalojo);
+        log_warning(logger_cpu , "me quiero ir a dormir 3");
         instruccion_a_ejecutar->codigo = EXIT_POR_CONSOLA;
+        log_warning(logger_cpu , "me quiero ir a dormir 4");
         instruccion_a_ejecutar->par1 = NULL;
         instruccion_a_ejecutar->par2 = NULL;
         instruccion_a_ejecutar->par3 = NULL;
@@ -404,6 +405,9 @@ bool es_bloqueante(t_codigo_instruccion instruccion){
         return true;
         break;
     case EXIT:
+        return true;
+        break;
+    case EXIT_POR_CONSOLA:
         return true;
         break;
     default:

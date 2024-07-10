@@ -374,8 +374,6 @@ void escribirValorEnMemoria(uint32_t valor, size_t dirFisica, int cantBytes, t_p
     }
 }
 
-// luego de recibir MOV_IN_SOLICITUD del CPU
-// lee un valor de 8 o 32 bits en memoria
 void ejecutar_MOV_IN(){
 	uint32_t tamanio;
 	uint32_t dirFisica;
@@ -661,9 +659,6 @@ void escribir_stdin_read(int fd_IO){
     destruir_buffer(buffer_recibido);
 	t_proceso* proceso = buscarProcesoPorPid(pid);
 	escribirValorEnMemoriaString(valor_ingresado, dirFisica, tamanio, proceso);
-	// t_pagina* pagModificada = buscarPaginaPorNroYPid(proceso , numPagina);
-	// pagModificada->ultimaReferencia = temporal_get_string_time("%H:%M:%S:%MS");
-	// pagModificada->bitModificado = true;
 	
 	enviar_codOp(fd_IO, IO_M_STDIN_READ_OK);
 	imprimir_memoria();
@@ -681,9 +676,6 @@ void leer_stdout_write(int fd_IO){
 	t_proceso* proceso = buscarProcesoPorPid(pid);
 	
 	char* string_leido = leerValorEnMemoriaString(dirFisica, tamanio, proceso);
-	// t_pagina* pagModificada = buscarPaginaPorNroYPid(proceso , numPagina);
-	// pagModificada->ultimaReferencia = temporal_get_string_time("%H:%M:%S:%MS");
-	// pagModificada->bitModificado = true;
 	
 	enviar_codOp(fd_IO, IO_M_STDOUT_WRITE_OK);
 	t_buffer* buffer_a_enviar = crear_buffer();
@@ -700,7 +692,7 @@ void imprimir_memoria() {
     int i = 0;
 
     while (nroMarcoVariable * config_memoria.tam_pagina < config_memoria.tam_memoria) {
-        printf("Nro Marco %d, contenido:", nroMarcoVariable);
+        printf("Marco %d:", nroMarcoVariable);
         for (i = 0; i < config_memoria.tam_pagina; i++) {
             unsigned char obtenido;
             memcpy(&obtenido, (unsigned char *)memoriaPrincipal + nroMarcoVariable * config_memoria.tam_pagina + i, 1);
@@ -827,5 +819,4 @@ void ejecutar_copy_string(){
 
 	imprimir_memoria();
 	free(string_a_escribir);
-
 }

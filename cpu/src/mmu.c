@@ -70,7 +70,6 @@ uint32_t pedir_marco_memoria(uint32_t nro_pagina){
 }
 
 uint32_t consultar_TLB(uint32_t nro_pagina) {
-	log_warning(logger_cpu, "%d" , cont_lru);
 	for (size_t i = 0; i < list_size(lista_TLB); i++)
 	{
 		t_entrada_tlb* entrada_tlb = list_get(lista_TLB, i);
@@ -100,7 +99,8 @@ void actualizar_TLB(uint32_t nro_pagina,uint32_t nro_marco) {
 
 	else {
 		if(es_fifo()){
-			t_entrada_tlb* xd = list_remove(lista_TLB,0);
+			t_entrada_tlb* xdFIFO = list_remove(lista_TLB,0);
+			log_warning(logger_cpu, "%d"  ,xdFIFO->nro_pagina);
 			list_add(lista_TLB,entrada_TLB_nueva);
 			log_warning(logger_cpu, "hubo un reemplazo por FIFO");
 		} 
@@ -117,6 +117,9 @@ void actualizar_TLB(uint32_t nro_pagina,uint32_t nro_marco) {
 				}
 			}
 			entrada_TLB_nueva->cont_lru = cont_lru++;
+
+			t_entrada_tlb* xdLRU = list_get(lista_TLB,indice_a_reemplazar);
+			log_warning(logger_cpu, "%d" ,xdLRU->nro_pagina);
 			list_replace(lista_TLB, indice_a_reemplazar, entrada_TLB_nueva);
 			log_warning(logger_cpu, "hubo un reemplazo por LRU");
 		}

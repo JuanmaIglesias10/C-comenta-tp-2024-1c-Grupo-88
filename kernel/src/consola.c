@@ -7,6 +7,9 @@ void iniciar_consola(){
 		reset_terminal_mode();
 		mostrar_opciones_consola(); // limpio el buffer (o algo asi xd)
 		input = readline(">");
+		if(strcmp(input, "DEBUG") == 0) {
+            while(1);
+		}
 		if(strcmp(input, "EXIT") == 0) {
             free(input);
             break;

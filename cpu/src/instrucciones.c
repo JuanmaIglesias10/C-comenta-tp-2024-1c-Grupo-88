@@ -527,6 +527,5 @@ void ejecutar_copy_string(char* char_tamanio){
 
     mensajeCpuMemoria codOp = recibir_codOp(fd_memoria);
     if (codOp == COPY_STRING_OK){
-        log_warning(logger_cpu, "Copie bien el string :D");
     }
 }
