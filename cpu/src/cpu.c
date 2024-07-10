@@ -52,6 +52,7 @@ void inicializar_conexiones(){
 	pthread_detach(hilo_cpu_memoria);
 
 	pthread_t hilo_kernel_dis;
+
 	pthread_create(&hilo_kernel_dis, NULL, (void*)atender_kernel_dis, NULL);
 	pthread_detach(hilo_kernel_dis);
 
@@ -437,50 +438,20 @@ void desalojar_cde(t_cde* cde, t_instruccion* instruccion_a_ejecutar){
 void devolver_cde_a_kernel(t_cde* cde, t_instruccion* instruccion_a_ejecutar){
 
     t_buffer* buffer = crear_buffer();
+    
     agregar_buffer_cde(buffer, cde);
-    // if(strcmp(instruccion_a_ejecutar->par1, "") == 0 ){
-    //     instruccion_a_ejecutar->par1 = NULL;
-    // } else if (strcmp(instruccion_a_ejecutar->par2, "") == 0){
-    //     instruccion_a_ejecutar->par2 = NULL;
-    // } else if (strcmp(instruccion_a_ejecutar->par3, "") == 0){
-    //     instruccion_a_ejecutar->par3 = NULL;
-    // } else if (strcmp(instruccion_a_ejecutar->par4, "") == 0){
-    //     instruccion_a_ejecutar->par4 = NULL;
-    // }
-    //  else if (strcmp(instruccion_a_ejecutar->par5, "") == 0){
-    //     instruccion_a_ejecutar->par5 = NULL;
-    // }
-    agregar_buffer_instruccion(buffer, instruccion_a_ejecutar);
-/*
-    // caso de page fault, tiene que volver a kernel con el nroPagina que genero el page fault
-    if(instruccion_a_ejecutar->codigo == MOV_IN){
-        uint32_t dirLogica = leerEnteroParametroInstruccion(2, instruccion_a_ejecutar);
-        uint32_t nroPagina = obtener_numero_pagina(dirLogica);
-        buffer_write_uint32(buffer, nroPagina);
+
+    if(instruccion_a_ejecutar->codigo != EXIT_POR_CONSOLA)
+        agregar_buffer_instruccion(buffer, instruccion_a_ejecutar);
+    
+    else {
+        instruccion_a_ejecutar->par1 = NULL;
+        instruccion_a_ejecutar->par2 = NULL;
+        instruccion_a_ejecutar->par3 = NULL;
+        instruccion_a_ejecutar->par4 = NULL;
+        instruccion_a_ejecutar->par5 = NULL;
+        agregar_buffer_instruccion(buffer, instruccion_a_ejecutar);
     }
-    else if(instruccion_a_ejecutar->codigo == MOV_OUT){
-        uint32_t dirLogica = leerEnteroParametroInstruccion(1, instruccion_a_ejecutar);
-        uint32_t nroPagina = obtener_numero_pagina(dirLogica);
-        buffer_write_uint32(buffer, nroPagina);
-    }
-    // caso de F_WRITE y F_READ, devuelve a kernel la direccion fisica
-    else if(instruccion_a_ejecutar->codigo == F_READ || instruccion_a_ejecutar->codigo == F_WRITE){
-        uint32_t dirLogica = leerEnteroParametroInstruccion(2, instruccion_a_ejecutar);
-        if(pf_con_funcion_fs){
-            uint32_t nroPagina = obtener_numero_pagina(dirLogica);
-            buffer_write_uint8(buffer, HAY_PAGE_FAULT);
-            buffer_write_uint32(buffer, nroPagina);
-            pf_con_funcion_fs = 0;
-        }
-        else{
-            uint32_t nroPagina = obtener_numero_pagina(dirLogica);
-            uint32_t dirFisica = calcular_direccion_fisica(dirLogica, cde);
-            buffer_write_uint8(buffer, DIRECCION_FISICA_OK);
-            buffer_write_uint32(buffer, dirFisica);
-            buffer_write_uint32(buffer, nroPagina);
-        }
-    }
-*/
 
     enviar_buffer(buffer, fd_kernel_dis);
     destruir_buffer(buffer);
