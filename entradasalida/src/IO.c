@@ -8,7 +8,7 @@ int main(int argc, char* argv[]) {
 
 void seleccionar_tipo_interfaz(char* nombre_interfaz, char* path_archivo_config){
 
-	logger_IO = iniciar_logger("logEntradaSalida.log", nombre_interfaz ,LOG_LEVEL_INFO);
+	logger_IO = iniciar_logger("logEntradaSalida.log", nombre_interfaz ,LOG_LEVEL_DEBUG);
 	config = config_create(path_archivo_config);
 	char* tipo_interfaz = config_get_string_value(config, "TIPO_INTERFAZ");
 	if (strcmp(tipo_interfaz,"GENERICA") == 0){
