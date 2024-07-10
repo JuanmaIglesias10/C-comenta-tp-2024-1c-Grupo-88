@@ -243,39 +243,39 @@ void ejecutar_instruccion(t_cde* cde, t_instruccion* instruccion_a_ejecutar){
                 uint32_t valor32 = atoi(instruccion_a_ejecutar->par2);
                 ejecutar_set32(instruccion_a_ejecutar->par1, valor32);
             }
-            if (interrupcion == 0 && realizar_desalojo == 0)
+            if (interrupcion == 0 && realizar_desalojo == 0 && interrupcion_consola == 0)
                 destruir_instruccion(instruccion_a_ejecutar);
             break;
         case MOV_IN:
             log_info(logger_cpu, "PID: %d - Ejecutando: %s - %s %s", cde->pid, obtener_nombre_instruccion(instruccion_a_ejecutar), instruccion_a_ejecutar->par1, instruccion_a_ejecutar->par2);
             // par2 = leerEnteroParametroInstruccion(2, instruccion_a_ejecutar);
             ejecutar_mov_in(instruccion_a_ejecutar->par1, instruccion_a_ejecutar->par2);
-                if (interrupcion == 0 && realizar_desalojo == 0)
+                if (interrupcion == 0 && realizar_desalojo == 0 && interrupcion_consola == 0)
                         destruir_instruccion(instruccion_a_ejecutar);
             break;
         case MOV_OUT:
             log_info(logger_cpu, "PID: %d - Ejecutando: %s - %s %s", cde->pid, obtener_nombre_instruccion(instruccion_a_ejecutar), instruccion_a_ejecutar->par1, instruccion_a_ejecutar->par2);
             ejecutar_mov_out(instruccion_a_ejecutar->par1, instruccion_a_ejecutar->par2);
-            if (interrupcion == 0 && realizar_desalojo == 0)
+            if (interrupcion == 0 && realizar_desalojo == 0 && interrupcion_consola == 0)
                 destruir_instruccion(instruccion_a_ejecutar);
             break;
         case SUM:
             log_info(logger_cpu, "PID: %d - Ejecutando: %s - %s %s", cde->pid, obtener_nombre_instruccion(instruccion_a_ejecutar), instruccion_a_ejecutar->par1, instruccion_a_ejecutar->par2);
             ejecutar_sum(instruccion_a_ejecutar->par1, instruccion_a_ejecutar->par2);
-            if (interrupcion == 0 && realizar_desalojo == 0)
+            if (interrupcion == 0 && realizar_desalojo == 0 && interrupcion_consola == 0)
                  destruir_instruccion(instruccion_a_ejecutar);
             break;
         case SUB:
             log_info(logger_cpu, "PID: %d - Ejecutando: %s - %s %s", cde->pid, obtener_nombre_instruccion(instruccion_a_ejecutar), instruccion_a_ejecutar->par1, instruccion_a_ejecutar->par2);
             ejecutar_sub(instruccion_a_ejecutar->par1, instruccion_a_ejecutar->par2);
-              if (interrupcion == 0 && realizar_desalojo == 0)
+              if (interrupcion == 0 && realizar_desalojo == 0 && interrupcion_consola == 0)
                 destruir_instruccion(instruccion_a_ejecutar);
             break;
         case JNZ:
             log_info(logger_cpu, "PID: %d - Ejecutando: %s - %s %s", cde->pid, obtener_nombre_instruccion(instruccion_a_ejecutar), instruccion_a_ejecutar->par1, instruccion_a_ejecutar->par2);
             // par2 = leerEnteroParametroInstruccion(2, instruccion_a_ejecutar);
             ejecutar_jnz(instruccion_a_ejecutar->par1, instruccion_a_ejecutar->par2);
-            if (interrupcion == 0 && realizar_desalojo == 0)
+            if (interrupcion == 0 && realizar_desalojo == 0 && interrupcion_consola == 0)
                 destruir_instruccion(instruccion_a_ejecutar);
             break;
         case RESIZE:
@@ -284,43 +284,43 @@ void ejecutar_instruccion(t_cde* cde, t_instruccion* instruccion_a_ejecutar){
             if (valor == 1){
                 instruccion_a_ejecutar->codigo = OUT_OF_MEMORY_VUELTA;
             }
-            if (interrupcion == 0 && realizar_desalojo == 0)
+            if (interrupcion == 0 && realizar_desalojo == 0 && interrupcion_consola == 0)
                 destruir_instruccion(instruccion_a_ejecutar);
             break;
 		case COPY_STRING:
 			log_info(logger_cpu, "PID: %d - Ejecutando: %s - %s", cde->pid, obtener_nombre_instruccion(instruccion_a_ejecutar), instruccion_a_ejecutar->par1);
             ejecutar_copy_string(instruccion_a_ejecutar->par1);
-            if (interrupcion == 0 && realizar_desalojo == 0)
+            if (interrupcion == 0 && realizar_desalojo == 0 && interrupcion_consola == 0)
                 destruir_instruccion(instruccion_a_ejecutar);
 			break;
         case WAIT:
             log_info(logger_cpu, "PID: %d - Ejecutando: %s - %s", cde->pid, obtener_nombre_instruccion(instruccion_a_ejecutar), instruccion_a_ejecutar->par1);
             ejecutar_wait(instruccion_a_ejecutar->par1);
-            if (interrupcion == 0 && realizar_desalojo == 0)
+            if (interrupcion == 0 && realizar_desalojo == 0 && interrupcion_consola == 0)
                 destruir_instruccion(instruccion_a_ejecutar);
             break;
         case SIGNAL:
             log_info(logger_cpu, "PID: %d - Ejecutando: %s - %s", cde->pid, obtener_nombre_instruccion(instruccion_a_ejecutar), instruccion_a_ejecutar->par1);
             ejecutar_signal(instruccion_a_ejecutar->par1);
-            if (interrupcion == 0 && realizar_desalojo == 0)
+            if (interrupcion == 0 && realizar_desalojo == 0 && interrupcion_consola == 0)
                  destruir_instruccion(instruccion_a_ejecutar);
             break;
         case IO_GEN_SLEEP:
             log_info(logger_cpu, "PID: %d - Ejecutando: %s - %s %s", cde->pid, obtener_nombre_instruccion(instruccion_a_ejecutar), instruccion_a_ejecutar->par1, instruccion_a_ejecutar->par2);
             ejecutar_io_gen_sleep(instruccion_a_ejecutar->par1,instruccion_a_ejecutar->par2);
-                if (interrupcion == 0 && realizar_desalojo == 0)
+                if (interrupcion == 0 && realizar_desalojo == 0 && interrupcion_consola == 0)
                     destruir_instruccion(instruccion_a_ejecutar);
                 break;
         case IO_STDIN_READ:
             log_info(logger_cpu, "PID: %d - Ejecutando: %s - %s %s %s", cde->pid, obtener_nombre_instruccion(instruccion_a_ejecutar), instruccion_a_ejecutar->par1, instruccion_a_ejecutar->par2, instruccion_a_ejecutar->par3);
             ejecutar_io_stdin_read(instruccion_a_ejecutar->par1,instruccion_a_ejecutar->par2, instruccion_a_ejecutar->par3);
-            if (interrupcion == 0 && realizar_desalojo == 0)
+            if (interrupcion == 0 && realizar_desalojo == 0 && interrupcion_consola == 0)
                     destruir_instruccion(instruccion_a_ejecutar);
             break;
         case IO_STDOUT_WRITE:
 			log_info(logger_cpu, "PID: %d - Ejecutando: %s - %s %s %s", cde->pid, obtener_nombre_instruccion(instruccion_a_ejecutar), instruccion_a_ejecutar->par1, instruccion_a_ejecutar->par2, instruccion_a_ejecutar->par3);
             ejecutar_io_stdout_write(instruccion_a_ejecutar->par1,instruccion_a_ejecutar->par2, instruccion_a_ejecutar->par3);
-            if (interrupcion == 0 && realizar_desalojo == 0)
+            if (interrupcion == 0 && realizar_desalojo == 0 && interrupcion_consola == 0)
                     destruir_instruccion(instruccion_a_ejecutar);
             break;
             break;
@@ -440,18 +440,7 @@ void devolver_cde_a_kernel(t_cde* cde, t_instruccion* instruccion_a_ejecutar){
     t_buffer* buffer = crear_buffer();
     
     agregar_buffer_cde(buffer, cde);
-
-    if(instruccion_a_ejecutar->codigo != EXIT_POR_CONSOLA)
-        agregar_buffer_instruccion(buffer, instruccion_a_ejecutar);
-    
-    else {
-        instruccion_a_ejecutar->par1 = NULL;
-        instruccion_a_ejecutar->par2 = NULL;
-        instruccion_a_ejecutar->par3 = NULL;
-        instruccion_a_ejecutar->par4 = NULL;
-        instruccion_a_ejecutar->par5 = NULL;
-        agregar_buffer_instruccion(buffer, instruccion_a_ejecutar);
-    }
+    agregar_buffer_instruccion(buffer, instruccion_a_ejecutar);
 
     enviar_buffer(buffer, fd_kernel_dis);
     destruir_buffer(buffer);
