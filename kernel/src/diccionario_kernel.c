@@ -40,6 +40,7 @@ pthread_mutex_t mutex_block;
 pthread_mutex_t mutex_pcb_en_ejecucion;
 pthread_mutex_t mutex_finalizados;
 pthread_mutex_t mutex_colasIO;
+pthread_mutex_t mutex_colaGEN;
 
 
 sem_t procesos_NEW;
@@ -60,6 +61,7 @@ sem_t pausar_exec_a_finalizado;
 sem_t pausar_exec_a_ready;
 sem_t pausar_exec_a_blocked;
 sem_t pausar_blocked_a_ready;
+sem_t sem_colaGEN;
 
 
 //Temporal

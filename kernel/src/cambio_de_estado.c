@@ -59,22 +59,22 @@ void ready_a_exec(){
 
 
 		sem_post(&cont_exec); 
-        
-
-        if(strcmp(config_kernel.algoritmo_planificacion, "RR") == 0){
-            pcb_ejecutando->fin_q = false;
-            sem_wait(&sem_reiniciar_quantum);
-            sem_post(&sem_iniciar_quantum);
-        }
-		
         enviar_cde_a_cpu(); 
 
-        if(strcmp(config_kernel.algoritmo_planificacion, "VRR") == 0){
+        if(strcmp(config_kernel.algoritmo_planificacion, "RR") == 0 || strcmp(config_kernel.algoritmo_planificacion, "VRR") == 0){
             pcb_ejecutando->fin_q = false;
             sem_wait(&sem_reiniciar_quantum);
             sem_post(&sem_iniciar_quantum);
-            timer_vrr();
+            if(strcmp(config_kernel.algoritmo_planificacion, "VRR") == 0){
+                timer_vrr();
+            }
         }
+		
+
+            // pcb_ejecutando->fin_q = false;
+            // sem_wait(&sem_reiniciar_quantum);
+            // sem_post(&sem_iniciar_quantum);
+
     }
 }
 
@@ -159,6 +159,7 @@ void enviar_de_exec_a_block(){
     if(planificacion_detenida == 1){
         sem_wait(&pausar_exec_a_blocked);
     }
+    
     agregar_pcb_a(colaBLOCKED, pcb_ejecutando, &mutex_block);
     pcb_ejecutando->estado = BLOCKED;
 

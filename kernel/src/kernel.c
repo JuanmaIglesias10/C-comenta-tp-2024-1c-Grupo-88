@@ -121,6 +121,7 @@ void inicializar_semaforos(){
 	pthread_mutex_init(&mutex_finalizados, NULL);
     pthread_mutex_init(&mutex_colasIO,NULL);
     pthread_mutex_init(&mutex_block,NULL);
+    pthread_mutex_init(&mutex_colaGEN,NULL);
 	sem_init(&cpu_libre, 0, 1);
 	sem_init(&procesos_en_ready, 0, 0);
 	sem_init(&procesos_NEW, 0, 0);
@@ -138,6 +139,7 @@ void inicializar_semaforos(){
     sem_init(&pausar_exec_a_ready, 0, 0);
     sem_init(&pausar_exec_a_blocked, 0, 0);
     sem_init(&pausar_blocked_a_ready, 0, 0);
+    sem_init(&sem_colaGEN, 0, 1);
 }
 
 t_recurso* inicializar_recurso(char* nombre_recurso, int instancias_totales){
@@ -639,7 +641,6 @@ void controlar_tiempo_de_ejecucion(){
         if(pcb_ejecutando != NULL) pcb_ejecutando->fin_q = true;
 
         if(pcb_ejecutando != NULL && pid_pcb_before_start_clock == pcb_ejecutando->cde->pid && flag_clock_pcb_before_start_clock == pcb_ejecutando->flag_clock){
-        log_warning(logger_kernel, "estoy queriendo desalojar");
         enviar_codOp(fd_cpu_int, DESALOJO);
         t_buffer* buffer = crear_buffer();
         agregar_buffer_uint32(buffer, pcb_ejecutando->cde->pid); // lo enviamos porque interrupt recibe un buffer, pero no hacemos nada con esto
@@ -699,8 +700,10 @@ void evaluar_instruccion(t_instruccion* instruccion_actual){
         case IO_GEN_SLEEP:
             if(es_RR_o_VRR()){
                 pcb_ejecutando->flag_clock = true;
-            }
-            io_gen_sleep(instruccion_actual->par1, instruccion_actual->par2);
+            }   
+            char* interfaz = instruccion_actual->par1;
+            char* tiempoUnidadTrabajo = instruccion_actual->par2;
+            io_gen_sleep(interfaz, tiempoUnidadTrabajo);
             destruir_instruccion(instruccion_actual);
             break;
         case IO_STDIN_READ:
@@ -753,8 +756,16 @@ void evaluar_instruccion(t_instruccion* instruccion_actual){
 }
 
 void io_gen_sleep(char* interfaz, char* char_unidadesDeTrabajo) {
-    uint8_t unidadesDeTrabajo = atoi(char_unidadesDeTrabajo);        
+    uint8_t unidadesDeTrabajo = atoi(char_unidadesDeTrabajo);
+
+    log_warning(logger_kernel, "Interfaz lala");
+
+    pthread_mutex_lock(&mutex_colaGEN);
     t_interfaz* aux = queue_pop(colaGenerica);
+    pthread_mutex_unlock(&mutex_colaGEN);
+    
+
+    log_warning(logger_kernel, "Interfaz: %s", aux->nombre);
     if (strcmp(aux->nombre, interfaz) == 0 ){
         if (strcmp(aux->tipo , "GENERICA") == 0) {
         enviar_codOp(aux->fd,SLEEP);
@@ -765,15 +776,21 @@ void io_gen_sleep(char* interfaz, char* char_unidadesDeTrabajo) {
         
         //Bloqueo el proceso
         t_pcb* pcb_sleep = malloc(sizeof(t_pcb)); 
-        pcb_sleep = pcb_ejecutando;             
+        pcb_sleep = pcb_ejecutando;
+                     
         enviar_de_exec_a_block();
 
         mensajeKernelIO codigo = recibir_codOp(aux->fd);
             if(codigo == SLEEP_OK) {
                 if(strcmp(config_kernel.algoritmo_planificacion,"VRR") == 0 && ms_transcurridos < pcb_sleep->quantum){
                     pcb_sleep->quantum -= ms_transcurridos;
+                    queue_push(colaGenerica,aux);
+                    sem_post(&sem_colaGEN);
                     enviar_pcb_de_block_a_ready_mas(pcb_sleep);
+                    
                 } else {
+                    queue_push(colaGenerica,aux);
+                    sem_post(&sem_colaGEN);
                     enviar_pcb_de_block_a_ready(pcb_sleep);
                 }
             }
@@ -788,8 +805,7 @@ void io_gen_sleep(char* interfaz, char* char_unidadesDeTrabajo) {
         agregar_a_cola_finished("INVALID_INTERFACE");
 
     }
-    free(interfaz);
-    queue_push(colaGenerica,aux);
+    //free(interfaz);
 }
 
 
