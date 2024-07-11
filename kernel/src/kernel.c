@@ -80,18 +80,10 @@ void inicializar_conexiones(){
     pthread_t hilo_IO_accept;
     pthread_create(&hilo_IO_accept, NULL, (void*)aceptar_conexiones_IO, NULL);
     pthread_detach(hilo_IO_accept);
-    
-	pthread_t hilo_memoria;
-	pthread_create(&hilo_memoria, NULL, (void*)atender_memoria, NULL);
-	pthread_detach(hilo_memoria);
 
 	pthread_t hilo_cpu_dis;
 	pthread_create(&hilo_cpu_dis, NULL, (void*)recibir_cde_de_cpu, NULL);
 	pthread_detach(hilo_cpu_dis);
-
-	pthread_t hilo_cpu_int;
-	pthread_create(&hilo_cpu_int, NULL, (void*)atender_cpu_int, NULL);
-	pthread_detach(hilo_cpu_int);
 
 }
 
@@ -359,8 +351,6 @@ void procesosPorEstado(){
     free(procesos_cargados_en_exit);
 }
 
-
-
 t_pcb* crear_PCB(){
 
 	t_pcb* PCB_creado = malloc(sizeof(t_pcb));
@@ -573,6 +563,7 @@ void recibir_cde_de_cpu(){
         pthread_mutex_lock(&mutex_exec);
         destruir_cde(pcb_ejecutando->cde);        
         pcb_ejecutando->cde = leer_buffer_cde(buffer);
+        pthread_mutex_unlock(&mutex_exec);
         if (pcb_ejecutando->cde == NULL) log_error(logger_kernel, "CDE NULL");
         pthread_mutex_unlock(&mutex_exec);
         t_instruccion* instruccion_actual = leer_buffer_instruccion(buffer);
@@ -581,39 +572,6 @@ void recibir_cde_de_cpu(){
             temporal_stop(timer);
             sem_post(&sem_timer);
         }
-        /*
-        if(strcmp(config_kernel.algoritmo, "RR") == 0 && pcb_en_ejecucion->fin_q && (instruccion_actual->codigo == MOV_IN || instruccion_actual->codigo == MOV_OUT)){
-            log_info(logger_kernel, "PID: %d - Desalojado por fin de Quantum", pcb_en_ejecucion->cde->pid);
-            enviar_de_exec_a_ready();
-            destruir_instruccion(instruccion_actual);
-        }
-
-        else if(instruccion_actual->codigo == MOV_IN || instruccion_actual->codigo == MOV_OUT){
-            uint32_t nro_pagina = buffer_read_uint32(buffer);
-            pthread_t hilo_page_fault;
-            pthread_create(&hilo_page_fault, NULL, (void *) recibir_page_fault, (void *) &nro_pagina);
-            pthread_detach(hilo_page_fault);
-            destruir_instruccion(instruccion_actual);
-        }
-        else if(instruccion_actual->codigo == F_READ || instruccion_actual->codigo == F_WRITE){
-            uint8_t motivo = buffer_read_uint8(buffer);
-            if(motivo == HAY_PAGE_FAULT){
-                uint32_t nro_pagina = buffer_read_uint32(buffer);          
-                pthread_t hilo_page_fault;
-                pthread_create(&hilo_page_fault, NULL, (void *) recibir_page_fault, (void *) &nro_pagina);
-                pthread_detach(hilo_page_fault);
-                destruir_instruccion(instruccion_actual);
-                }
-            else if(motivo == DIRECCION_FISICA_OK){
-                uint32_t dir_fisica = buffer_read_uint32(buffer);
-                uint32_t nro_pagina = buffer_read_uint32(buffer);
-                instruccion_actual->par2 = string_itoa(dir_fisica);
-                instruccion_actual->par3 = string_itoa(nro_pagina);
-                evaluar_instruccion(instruccion_actual);
-            }
-        }
-        else{
-		}*/
         evaluar_instruccion(instruccion_actual);
         
         
@@ -633,19 +591,29 @@ void prender_quantum(){
 void controlar_tiempo_de_ejecucion(){
     while(1){
         sem_wait(&sem_iniciar_quantum);
+        // log_warning(logger_kernel, "Aca esta el pid : ");
+        // if(pcb_ejecutando != NULL){
+        //     log_warning(logger_kernel, "----> %d" , pcb_ejecutando->cde->pid);
+        // } else {
+        //     log_warning(logger_kernel, "NULL");
+        // }
+        pthread_mutex_lock(&mutex_pcb_en_ejecucion);
         uint32_t pid_pcb_before_start_clock = pcb_ejecutando->cde->pid;
         bool flag_clock_pcb_before_start_clock = pcb_ejecutando->flag_clock; //aranca en false
         
         usleep(pcb_ejecutando->quantum * 1000);
 
         if(pcb_ejecutando != NULL) pcb_ejecutando->fin_q = true;
+        pthread_mutex_unlock(&mutex_pcb_en_ejecucion);
 
         if(pcb_ejecutando != NULL && pid_pcb_before_start_clock == pcb_ejecutando->cde->pid && flag_clock_pcb_before_start_clock == pcb_ejecutando->flag_clock){
-        enviar_codOp(fd_cpu_int, DESALOJO);
-        t_buffer* buffer = crear_buffer();
-        agregar_buffer_uint32(buffer, pcb_ejecutando->cde->pid); // lo enviamos porque interrupt recibe un buffer, pero no hacemos nada con esto
-        enviar_buffer(buffer, fd_cpu_int);
-        destruir_buffer(buffer);
+            log_warning(logger_kernel, "Aca esta el pid : ");
+           
+            enviar_codOp(fd_cpu_int, DESALOJO);
+            t_buffer* buffer = crear_buffer();
+            agregar_buffer_uint32(buffer, pcb_ejecutando->cde->pid); // lo enviamos porque interrupt recibe un buffer, pero no hacemos nada con esto
+            enviar_buffer(buffer, fd_cpu_int);
+            destruir_buffer(buffer);
         }
         sem_post(&sem_reiniciar_quantum);
 
@@ -758,14 +726,12 @@ void evaluar_instruccion(t_instruccion* instruccion_actual){
 void io_gen_sleep(char* interfaz, char* char_unidadesDeTrabajo) {
     uint8_t unidadesDeTrabajo = atoi(char_unidadesDeTrabajo);
 
-    log_warning(logger_kernel, "Interfaz lala");
 
     pthread_mutex_lock(&mutex_colaGEN);
     t_interfaz* aux = queue_pop(colaGenerica);
     pthread_mutex_unlock(&mutex_colaGEN);
     
 
-    log_warning(logger_kernel, "Interfaz: %s", aux->nombre);
     if (strcmp(aux->nombre, interfaz) == 0 ){
         if (strcmp(aux->tipo , "GENERICA") == 0) {
         enviar_codOp(aux->fd,SLEEP);
@@ -779,7 +745,7 @@ void io_gen_sleep(char* interfaz, char* char_unidadesDeTrabajo) {
         pcb_sleep = pcb_ejecutando;
                      
         enviar_de_exec_a_block();
-
+        
         mensajeKernelIO codigo = recibir_codOp(aux->fd);
             if(codigo == SLEEP_OK) {
                 if(strcmp(config_kernel.algoritmo_planificacion,"VRR") == 0 && ms_transcurridos < pcb_sleep->quantum){
@@ -807,7 +773,6 @@ void io_gen_sleep(char* interfaz, char* char_unidadesDeTrabajo) {
     }
     //free(interfaz);
 }
-
 
 void evaluar_wait(char* nombre_recurso_pedido){
     int coincidencia = 0;

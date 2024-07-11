@@ -128,11 +128,9 @@ void* atender_kernel_int()
                 break;
             case DESALOJO:
                 // se desaloja proceso en ejecucion
-                if(algoritmo_planificacion == 1 && pid_de_cde_ejecutando != pid_recibido){
+                if((algoritmo_planificacion == 1 || algoritmo_planificacion == 2) && pid_de_cde_ejecutando != pid_recibido){
                     break;
-                }
-                else if(algoritmo_planificacion == 1 && pid_de_cde_ejecutando == pid_recibido){
-
+                } else if((algoritmo_planificacion == 1 || algoritmo_planificacion == 2) && pid_de_cde_ejecutando == pid_recibido){
                      if(es_bloqueante(instruccion_actualizada)){ 
                         break;
                     }
@@ -145,9 +143,8 @@ void* atender_kernel_int()
                 log_warning(logger_cpu, "Se desconectó KERNEL (INTERRUPT)");
                 return NULL;
             }
-	}
-}
-
+	    }
+}   
 
 void ejecutar_proceso(t_cde* cde){
 	cargar_registros(cde);
@@ -358,7 +355,7 @@ bool es_bloqueante(t_codigo_instruccion instruccion){
         return false;
         break;
     case MOV_OUT:
-        //
+        return false;
         break;
     case SUM:
         return false;
@@ -373,7 +370,7 @@ bool es_bloqueante(t_codigo_instruccion instruccion){
         return true;
         break;
     case COPY_STRING:
-        //
+        return false;
         break;
     case WAIT: 
         return true;
@@ -381,11 +378,14 @@ bool es_bloqueante(t_codigo_instruccion instruccion){
     case SIGNAL:
         return true;
         break;
+    case IO_GEN_SLEEP:
+        return true;
+        break;
     case IO_STDIN_READ:
         return true;
         break;
     case IO_STDOUT_WRITE:
-        //
+        return true;
         break;
     case IO_FS_CREATE:
         //
@@ -401,9 +401,6 @@ bool es_bloqueante(t_codigo_instruccion instruccion){
         break;
     case IO_FS_TRUNCATE:
         //
-        break;
-    case IO_GEN_SLEEP:
-        return true;
         break;
     case EXIT:
         return true;

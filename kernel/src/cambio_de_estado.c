@@ -32,11 +32,13 @@ void ready_a_exec(){
 		// Espera a que new_a_ready se ejecute
 		sem_wait(&procesos_en_ready);
 		//Actualizar cuando tengamos VRR
-
         char* lista_pcbs_en_ready = obtener_elementos_cargados_en(colaREADY);
+
         log_info(logger_kernel, "Cola Ready de algoritmo %s: %s", config_kernel.algoritmo_planificacion, lista_pcbs_en_ready); //OBLIGATORIO
         
         if(strcmp(config_kernel.algoritmo_planificacion,"VRR") == 0 && !queue_is_empty(colaREADYMAS)){
+		    // sem_wait(&procesos_en_ready_mas);
+
             char* lista_pcbs_en_ready_mas = obtener_elementos_cargados_en(colaREADYMAS);
             log_info(logger_kernel, "Cola Ready+ de algoritmo %s: %s", config_kernel.algoritmo_planificacion, lista_pcbs_en_ready_mas); //OBLIGATORIO
             free(lista_pcbs_en_ready_mas);
@@ -52,7 +54,7 @@ void ready_a_exec(){
 		pthread_mutex_lock(&mutex_exec);
 		pcb_ejecutando = retirar_pcb_de_ready_segun_algoritmo();
 		pthread_mutex_unlock(&mutex_exec);
-		
+
 
 		log_info(logger_kernel, "PID: %d - Estado anterior: READY - Estado actual: EXEC", pcb_ejecutando->cde->pid); //OBLIGATORIO
         pcb_ejecutando->estado = EXEC;
@@ -231,6 +233,7 @@ void enviar_pcb_de_block_a_ready_mas(t_pcb* pcb){
     // pthread_mutex_unlock(&mutex_pcb_en_ejecucion);
     
     log_info(logger_kernel, "PID: %d - Estado anterior: %s - Estado actual: %s", pcb_a_ready->cde->pid, "BLOCKED", "READY+");
+    // sem_post(&procesos_en_ready_mas);
 
     sem_post(&procesos_en_ready);
 
