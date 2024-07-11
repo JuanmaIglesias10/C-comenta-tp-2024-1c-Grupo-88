@@ -654,7 +654,6 @@ void evaluar_instruccion(t_instruccion* instruccion_actual){
             char* nombre_recurso = instruccion_actual->par1;
             evaluar_wait(nombre_recurso);
             destruir_instruccion(instruccion_actual);
-            free(nombre_recurso);
             break;
         case SIGNAL:
             if(es_RR_o_VRR()){
@@ -663,7 +662,6 @@ void evaluar_instruccion(t_instruccion* instruccion_actual){
             char* nombre_recurso_signal = instruccion_actual->par1;
             evaluar_signal(nombre_recurso_signal);
             destruir_instruccion(instruccion_actual);
-            free(nombre_recurso_signal);
             break;      
         case IO_GEN_SLEEP:
             if(es_RR_o_VRR()){
@@ -1009,4 +1007,52 @@ void io_stdout_write() {
     }
 
     // TODO: falta un else
+}
+
+void liberar_recursos_pcb(t_pcb* pcb){
+    t_recurso* recurso;
+    for(int i = 0; i < list_size(pcb->recursos_asignados); i++){
+        recurso = list_get(pcb->recursos_asignados, i);
+        signal_recursos_asignados_pcb(pcb, recurso->nombre);
+    }
+    
+    while(list_size(pcb->recursos_asignados) != 0){
+        list_remove(pcb->recursos_asignados, 0);
+    }
+
+    while(list_size(pcb->recursos_solicitados) != 0){ // Aca entraria solo en el caso de que se finalice el proceso por consola
+        recurso = list_remove(pcb->recursos_solicitados, 0);
+        list_remove_element(recurso->procesos_bloqueados, pcb);
+    }
+}
+
+void signal_recursos_asignados_pcb(t_pcb* pcb, char* nombre_recurso_pedido){
+    int posicion_recurso;
+    for(int i=0; i < list_size(config_kernel.recursos); i++){
+        t_recurso* recurso = list_get(config_kernel.recursos, i);
+        char* nombre_recurso = recurso->nombre;
+        if(strcmp(nombre_recurso_pedido, nombre_recurso) == 0){
+            posicion_recurso = i;
+            break;
+        }
+    }
+    t_recurso* recurso = list_get(config_kernel.recursos, posicion_recurso);
+    recurso->instancias++; //podria considerarse chequear que no se pase de las instancias totales del recurso, pero me parecio innecesario
+    log_info(logger_kernel, "PID: %d - LIBERANDO INSTANCIAS DEL RECURSO: %s - INSTANCIAS DISPONIBLES: %d", pcb->cde->pid, nombre_recurso_pedido, recurso->instancias);
+
+    if(list_size(recurso->procesos_bloqueados) > 0){ // Desbloquea al primer proceso de la cola de bloqueados del recurso
+	    sem_t semaforo_recurso = recurso->sem_recurso;
+
+	    sem_wait(&semaforo_recurso);
+
+		t_pcb* pcb_a_retirar = list_remove(recurso->procesos_bloqueados, 0);
+		
+		sem_post(&semaforo_recurso);
+        
+        // le asigno al pcb que se "libero" el recurso asi puede ejecutar
+        recurso->instancias--;
+        list_add(pcb_a_retirar->recursos_asignados, recurso);
+        
+        enviar_pcb_de_block_a_ready(pcb_a_retirar);
+	}
 }

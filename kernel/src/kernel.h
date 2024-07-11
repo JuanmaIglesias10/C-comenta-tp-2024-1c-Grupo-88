@@ -32,6 +32,8 @@ t_list* ejecutar_script(char* pathScript);
 t_list* obtener_lista_script(char* pathScript);
 void iniciar_proceso(char* path);
 void finalizar_proceso(char* pid_string);
+void liberar_recursos_pcb(t_pcb* pcb);
+void signal_recursos_asignados_pcb(t_pcb* pcb, char* nombre_recurso_pedido);
 void detenerPlanificacion();
 void iniciarPlanificacion();
 void procesosPorEstado();

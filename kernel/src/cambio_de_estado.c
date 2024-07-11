@@ -91,7 +91,7 @@ void exec_a_finished(){
 	    pthread_mutex_unlock(&mutex_procesos_globales);
         
         //TODO
-        // liberar_recursos_pcb(pcb);
+        liberar_recursos_pcb(pcb);
 
         // Solicitar a memoria liberar estructuras
         enviar_codOp(fd_memoria, FINALIZAR_PROCESO_SOLICITUD);
