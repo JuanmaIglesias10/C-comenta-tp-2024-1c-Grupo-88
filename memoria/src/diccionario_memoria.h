@@ -48,7 +48,6 @@ extern int fd_kernel;
 
 //Listas
 extern t_list* listaProcesos;
-extern t_list* tablaGlobalPaginas;
 extern t_list* listaMarcos;
 
 

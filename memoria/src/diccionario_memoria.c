@@ -13,7 +13,6 @@ int fd_kernel;
 
 //Listas
 t_list* listaProcesos;
-t_list* tablaGlobalPaginas;
 t_list* listaMarcos;
 
 //Semaforos

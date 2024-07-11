@@ -308,9 +308,9 @@ void ejecutar_instruccion(t_cde* cde, t_instruccion* instruccion_a_ejecutar){
         case IO_GEN_SLEEP:
             log_info(logger_cpu, "PID: %d - Ejecutando: %s - %s %s", cde->pid, obtener_nombre_instruccion(instruccion_a_ejecutar), instruccion_a_ejecutar->par1, instruccion_a_ejecutar->par2);
             ejecutar_io_gen_sleep(instruccion_a_ejecutar->par1,instruccion_a_ejecutar->par2);
-                if (interrupcion == 0 && realizar_desalojo == 0 && interrupcion_consola == 0)
-                    destruir_instruccion(instruccion_a_ejecutar);
-                break;
+            if (interrupcion == 0 && realizar_desalojo == 0 && interrupcion_consola == 0)
+                destruir_instruccion(instruccion_a_ejecutar);
+            break;
         case IO_STDIN_READ:
             log_info(logger_cpu, "PID: %d - Ejecutando: %s - %s %s %s", cde->pid, obtener_nombre_instruccion(instruccion_a_ejecutar), instruccion_a_ejecutar->par1, instruccion_a_ejecutar->par2, instruccion_a_ejecutar->par3);
             ejecutar_io_stdin_read(instruccion_a_ejecutar->par1,instruccion_a_ejecutar->par2, instruccion_a_ejecutar->par3);

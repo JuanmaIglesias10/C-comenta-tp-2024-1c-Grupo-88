@@ -87,31 +87,28 @@ void exec_a_finished(){
         pthread_mutex_lock(&mutex_procesos_globales);
 	    list_remove_element(procesos_globales, pcb);
 	    pthread_mutex_unlock(&mutex_procesos_globales);
-
-
-        destruir_pcb(pcb);
-
+        
+        //TODO
         // liberar_recursos_pcb(pcb);
-        // liberar_archivos_pcb(pcb);
 
-        // // Solicitar a memoria liberar estructuras
-        // enviar_codigo(socket_memoria, FINALIZAR_PROCESO_SOLICITUD);
+        // Solicitar a memoria liberar estructuras
+        enviar_codOp(fd_memoria, FINALIZAR_PROCESO_SOLICITUD);
 
-        // t_buffer* buffer = crear_buffer_nuestro();
-        // buffer_write_uint32(buffer, pcb->cde->pid);
-        // enviar_buffer(buffer, socket_memoria);
-        // destruir_buffer_nuestro(buffer);
+        t_buffer* buffer = crear_buffer();
+        agregar_buffer_uint32(buffer, pcb->cde->pid);
+        enviar_buffer(buffer, fd_memoria);
+        destruir_buffer(buffer);
 
-        // mensajeKernelMem rta_memoria = recibir_codigo(socket_memoria);
+        mensajeKernelMem rta_memoria = recibir_codOp(fd_memoria);
 
-        // if(rta_memoria == FINALIZAR_PROCESO_OK){
-        //     log_info(logger_kernel, "PID: %d - Destruir PCB", pcb->cde->pid);
-        //     destruir_pcb(pcb);
-        // }
-        // else{
-        //     log_error(logger_kernel, "Memoria no logró liberar correctamente las estructuras");
-        //     exit(1);
-        // }
+        if(rta_memoria == FINALIZAR_PROCESO_OK){
+            log_info(logger_kernel, "PID: %d - Destruir PCB", pcb->cde->pid);
+            destruir_pcb(pcb);
+        }
+        else{
+            log_error(logger_kernel, "Memoria no logró liberar correctamente las estructuras");
+            exit(1);
+        }
     }
 }
 

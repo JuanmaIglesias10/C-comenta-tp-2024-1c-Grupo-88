@@ -47,7 +47,7 @@ void colocar_pagina_en_marco(uint32_t pid, uint32_t nroPagina);
 
 uint32_t obtener_marco_libre();
 
-uint32_t obtener_pagina_libre();
+// uint32_t obtener_pagina_libre();
 
 void escribir_pagina(uint32_t posEnMemoria, void* pagina);
 
@@ -70,5 +70,13 @@ void escribir_stdin_read(int fd_IO);
 void leer_stdout_write(int fd_IO);
 
 void ejecutar_copy_string();
+
+void finalizar_proceso();
+
+void proceso_destroy(t_proceso* proceso_a_destruir);
+
+void destruir_instrucciones(t_instruccion* instruccion_a_destruir);
+
+
 #endif /* MEMORIA_H_ */
 

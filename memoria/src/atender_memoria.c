@@ -47,7 +47,7 @@ void atender_kernel()
 				iniciar_proceso();
 				break;
 			case FINALIZAR_PROCESO_SOLICITUD:
-				// finalizarProceso();
+				finalizar_proceso();
 				break;
 			default:
 				log_info(logger_memoria,"Se desconectó Kernel");

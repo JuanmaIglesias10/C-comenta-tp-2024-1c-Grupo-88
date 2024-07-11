@@ -639,8 +639,8 @@ void controlar_tiempo_de_ejecucion(){
         if(pcb_ejecutando != NULL) pcb_ejecutando->fin_q = true;
 
         if(pcb_ejecutando != NULL && pid_pcb_before_start_clock == pcb_ejecutando->cde->pid && flag_clock_pcb_before_start_clock == pcb_ejecutando->flag_clock){
+        log_warning(logger_kernel, "estoy queriendo desalojar");
         enviar_codOp(fd_cpu_int, DESALOJO);
-
         t_buffer* buffer = crear_buffer();
         agregar_buffer_uint32(buffer, pcb_ejecutando->cde->pid); // lo enviamos porque interrupt recibe un buffer, pero no hacemos nada con esto
         enviar_buffer(buffer, fd_cpu_int);
@@ -700,7 +700,7 @@ void evaluar_instruccion(t_instruccion* instruccion_actual){
             if(es_RR_o_VRR()){
                 pcb_ejecutando->flag_clock = true;
             }
-            io_gen_sleep();
+            io_gen_sleep(instruccion_actual->par1, instruccion_actual->par2);
             destruir_instruccion(instruccion_actual);
             break;
         case IO_STDIN_READ:
@@ -752,55 +752,46 @@ void evaluar_instruccion(t_instruccion* instruccion_actual){
     }
 }
 
-void io_gen_sleep() {
-	mensajeKernelCpu codOp = recibir_codOp(fd_cpu_int); // TODO: se supone CPU no puede enviar mediante Interrupt
-
-	if (codOp == INTERRUPT) { // TODO: este interrupt esta bien aca?
-		t_buffer* buffer_recibido = recibir_buffer(fd_cpu_int);
-		uint8_t unidadesDeTrabajo  = leer_buffer_uint8(buffer_recibido);
-		char* interfaz = leer_buffer_string(buffer_recibido); //Int1 
-		destruir_buffer(buffer_recibido);
+void io_gen_sleep(char* interfaz, char* char_unidadesDeTrabajo) {
+    uint8_t unidadesDeTrabajo = atoi(char_unidadesDeTrabajo);        
+    t_interfaz* aux = queue_pop(colaGenerica);
+    if (strcmp(aux->nombre, interfaz) == 0 ){
+        if (strcmp(aux->tipo , "GENERICA") == 0) {
+        enviar_codOp(aux->fd,SLEEP);
+        t_buffer* buffer_a_enviar = crear_buffer();
+        agregar_buffer_uint8(buffer_a_enviar,unidadesDeTrabajo);
+        enviar_buffer(buffer_a_enviar,aux->fd);
+        destruir_buffer(buffer_a_enviar);
         
-        t_interfaz* aux = queue_pop(colaGenerica);
-        
-        if (strcmp(aux->nombre, interfaz) == 0 ){
-            if (strcmp(aux->tipo , "GENERICA") == 0) {
-		    enviar_codOp(aux->fd,SLEEP);
-		    t_buffer* buffer_a_enviar = crear_buffer();
-		    agregar_buffer_uint8(buffer_a_enviar,unidadesDeTrabajo);
-		    enviar_buffer(buffer_a_enviar,aux->fd);
-		    destruir_buffer(buffer_a_enviar);
-            
-            //Bloqueo el proceso
-            t_pcb* pcb_sleep = malloc(sizeof(t_pcb)); 
-            pcb_sleep = pcb_ejecutando;             
-            enviar_de_exec_a_block();
+        //Bloqueo el proceso
+        t_pcb* pcb_sleep = malloc(sizeof(t_pcb)); 
+        pcb_sleep = pcb_ejecutando;             
+        enviar_de_exec_a_block();
 
-            mensajeKernelIO codigo = recibir_codOp(aux->fd);
-                if(codigo == SLEEP_OK) {
-                    if(strcmp(config_kernel.algoritmo_planificacion,"VRR") == 0 && ms_transcurridos < pcb_sleep->quantum){
-                        pcb_sleep->quantum -= ms_transcurridos;
-                        enviar_pcb_de_block_a_ready_mas(pcb_sleep);
-                    } else {
-                        enviar_pcb_de_block_a_ready(pcb_sleep);
-                    }
+        mensajeKernelIO codigo = recibir_codOp(aux->fd);
+            if(codigo == SLEEP_OK) {
+                if(strcmp(config_kernel.algoritmo_planificacion,"VRR") == 0 && ms_transcurridos < pcb_sleep->quantum){
+                    pcb_sleep->quantum -= ms_transcurridos;
+                    enviar_pcb_de_block_a_ready_mas(pcb_sleep);
+                } else {
+                    enviar_pcb_de_block_a_ready(pcb_sleep);
                 }
-            
-            } else {
-                agregar_a_cola_finished("INVALID_INTERFACE");
             }
-        }
-        else if(strcmp(aux->nombre, interfaz) != 0){
-            agregar_a_cola_finished("INVALID_INTERFACE");
+        
         } else {
             agregar_a_cola_finished("INVALID_INTERFACE");
-
         }
+    }
+    else if(strcmp(aux->nombre, interfaz) != 0){
+        agregar_a_cola_finished("INVALID_INTERFACE");
+    } else {
+        agregar_a_cola_finished("INVALID_INTERFACE");
+
+    }
     free(interfaz);
     queue_push(colaGenerica,aux);
-    
-    }
 }
+
 
 void evaluar_wait(char* nombre_recurso_pedido){
     int coincidencia = 0;

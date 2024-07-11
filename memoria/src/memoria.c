@@ -31,7 +31,6 @@ void inicializar_config(){
 void inicializar_variables(){
 	listaProcesos = list_create();
 	listaMarcos = list_create();
-	tablaGlobalPaginas = list_create();
 
 	// sem_init(&finalizacion, 0, 0);
 	// sem_init(&sem_pagina_cargada, 0, 0);
@@ -41,15 +40,9 @@ void inicializar_variables(){
 	for(int i = 0; i < cantMarcos; i++)
 		list_add(listaMarcos, NULL); //Inicializo la lista de marcos
 
-	for(int i = 0; i < cantMarcos; i++)
-		list_add(tablaGlobalPaginas, NULL); //Inicializo la lista de marcos
-
-
-
 	memoriaPrincipal = malloc(config_memoria.tam_memoria);
 	memset(memoriaPrincipal, 0, config_memoria.tam_memoria);
 	
-	// indicePorFifo = 0;
 }
 
 void inicializar_conexiones() {
@@ -565,9 +558,6 @@ t_pagina* crear_pagina(uint32_t nroPag, uint32_t nroMarco, void* dirreccionInici
 	paginaCreada->pidProcesoCreador = pid;
 	paginaCreada->ultimaReferencia = temporal_get_string_time("%H:%M:%S:%MS");
 
-	// list_replace(tablaGlobalPaginas, nroPag , paginaCreada);
-
-
 	return paginaCreada;
 }
 
@@ -612,26 +602,15 @@ uint32_t obtener_marco_libre(){
 	return -1;
 }
 
-uint32_t obtener_pagina_libre(){
-	for(int i = 0; i < cantMarcos; i++){
-		t_pagina* pagina = list_get(tablaGlobalPaginas, i);
-		if(pagina == NULL)
-			return i;
-	}
-	return -1;
-}
-
 void escribir_pagina(uint32_t posEnMemoria, void* pagina){
 	memcpy(memoriaPrincipal + posEnMemoria, pagina, config_memoria.tam_pagina);
 }
-
 
 void liberarPaginasDeUnProcesoResize(t_proceso* procesoAReducir, uint32_t nuevoTamaño){
 	uint32_t cantPaginasAEliminar = (uint32_t)ceil((double)(procesoAReducir->tamaño - nuevoTamaño)/config_memoria.tam_pagina);
 	for(int j = list_size(procesoAReducir->listaPaginasProceso) - 1; j >= 0; j--){		
 		t_pagina* pagina = list_get(procesoAReducir->listaPaginasProceso, j);
 		vaciar_marco(pagina->nroMarco);
-		// list_remove(tablaGlobalPaginas, j);
 		list_remove(procesoAReducir->listaPaginasProceso, j);
 		free(pagina);
 		cantPaginasAEliminar--;
@@ -819,4 +798,39 @@ void ejecutar_copy_string(){
 
 	imprimir_memoria();
 	free(string_a_escribir);
+}
+
+void finalizar_proceso(){
+	t_buffer* buffer 		= recibir_buffer(fd_kernel);
+	uint32_t pidAFinalizar  = leer_buffer_uint32(buffer);
+	destruir_buffer(buffer);
+	
+	t_proceso* proceso_a_eliminar = buscarProcesoPorPid(pidAFinalizar);
+
+	log_info(logger_memoria, "Destrucción: PID: %d - Tamaño: %d", proceso_a_eliminar->pid, proceso_a_eliminar->cantPaginas);
+
+	liberarPaginasDeUnProcesoResize(proceso_a_eliminar , 0);
+
+	proceso_destroy(proceso_a_eliminar);
+
+	imprimir_memoria();
+	enviar_codOp(fd_kernel, FINALIZAR_PROCESO_OK);
+}
+
+void proceso_destroy(t_proceso* proceso_a_destruir){
+	list_destroy_and_destroy_elements(proceso_a_destruir->instrucciones, (void* ) destruir_instrucciones);
+	free(proceso_a_destruir);
+
+	return;
+}
+
+void destruir_instrucciones(t_instruccion* instruccion_a_destruir){
+	free(instruccion_a_destruir->par1);
+	free(instruccion_a_destruir->par2);
+	free(instruccion_a_destruir->par3);
+	free(instruccion_a_destruir->par4);
+	free(instruccion_a_destruir->par5);
+	free(instruccion_a_destruir);
+
+	return;
 }
