@@ -313,7 +313,7 @@ void ejecutar_MOV_OUT(){
 
 
 	enviar_codOp(fd_cpu, MOV_OUT_OK);
-	imprimir_memoria();
+	// imprimir_memoria();
 
 }
 
@@ -628,7 +628,7 @@ void escribir_stdin_read(int fd_IO){
 	escribirValorEnMemoriaString(valor_ingresado, dirFisica, tamanio, proceso);
 	
 	enviar_codOp(fd_IO, IO_M_STDIN_READ_OK);
-	imprimir_memoria();
+	// imprimir_memoria();
 	free(valor_ingresado);
 }
 
@@ -651,7 +651,7 @@ void leer_stdout_write(int fd_IO){
     destruir_buffer(buffer_a_enviar);
 	free(string_leido);
 
-	imprimir_memoria();
+	// imprimir_memoria();
 }
 
 void imprimir_memoria() {
@@ -784,7 +784,7 @@ void ejecutar_copy_string(){
 
 	enviar_codOp(fd_cpu, COPY_STRING_OK);
 
-	imprimir_memoria();
+	// imprimir_memoria();
 	free(string_a_escribir);
 }
 
@@ -801,7 +801,7 @@ void finalizar_proceso(){
 
 	// proceso_destroy(proceso_a_eliminar);
 
-	imprimir_memoria();
+	// imprimir_memoria();
 	enviar_codOp(fd_kernel, FINALIZAR_PROCESO_OK);
 }
 
