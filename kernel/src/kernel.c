@@ -591,12 +591,6 @@ void prender_quantum(){
 void controlar_tiempo_de_ejecucion(){
     while(1){
         sem_wait(&sem_iniciar_quantum);
-        // log_warning(logger_kernel, "Aca esta el pid : ");
-        // if(pcb_ejecutando != NULL){
-        //     log_warning(logger_kernel, "----> %d" , pcb_ejecutando->cde->pid);
-        // } else {
-        //     log_warning(logger_kernel, "NULL");
-        // }
         pthread_mutex_lock(&mutex_pcb_en_ejecucion);
         uint32_t pid_pcb_before_start_clock = pcb_ejecutando->cde->pid;
         bool flag_clock_pcb_before_start_clock = pcb_ejecutando->flag_clock; //aranca en false
@@ -607,7 +601,6 @@ void controlar_tiempo_de_ejecucion(){
         pthread_mutex_unlock(&mutex_pcb_en_ejecucion);
 
         if(pcb_ejecutando != NULL && pid_pcb_before_start_clock == pcb_ejecutando->cde->pid && flag_clock_pcb_before_start_clock == pcb_ejecutando->flag_clock){
-            log_warning(logger_kernel, "Aca esta el pid : ");
            
             enviar_codOp(fd_cpu_int, DESALOJO);
             t_buffer* buffer = crear_buffer();
@@ -667,8 +660,6 @@ void evaluar_instruccion(t_instruccion* instruccion_actual){
             if(es_RR_o_VRR()){
                 pcb_ejecutando->flag_clock = true;
             }   
-            // char* interfaz = instruccion_actual->par1;
-            // char* tiempoUnidadTrabajo = instruccion_actual->par2;
             io_gen_sleep(instruccion_actual->par1, instruccion_actual->par2);
             destruir_instruccion(instruccion_actual);
             break;
@@ -880,8 +871,6 @@ bool es_RR_o_VRR() {
 }
 
 void io_stdin_read(char* interfaz, char* char_direccion_fisica, char* char_tamanio) {
-    log_warning(logger_kernel, "---> %s" , char_direccion_fisica);
-    log_warning(logger_kernel, "---> %s" , char_tamanio);
 	uint32_t direccion_fisica   = atoi(char_direccion_fisica);
     uint32_t tamanio             = atoi(char_tamanio);
         

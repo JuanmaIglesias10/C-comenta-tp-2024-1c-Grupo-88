@@ -116,7 +116,7 @@ void ejecutar_set32(char* registro, uint32_t valor_recibido){
     }
 }
 
-uint8_t  buscar_valor_registro8(void* registro) {
+uint8_t  buscar_valor_registro8(char* registro) {
 	uint8_t  valorLeido8;
 	if(strcmp(registro, "AX") == 0){
 		valorLeido8 = registros_cpu->AX;
@@ -139,12 +139,12 @@ uint8_t  buscar_valor_registro8(void* registro) {
 
 }
 
-uint32_t  buscar_valor_registro32(void* registro){
+uint32_t  buscar_valor_registro32(char* registro){
     uint32_t valorLeido32;
-     if(strcmp(registro, "EAX") == 0){
-            valorLeido32 = registros_cpu->EAX;
-            return valorLeido32;
-        }
+    if(strcmp(registro, "EAX") == 0){
+        valorLeido32 = registros_cpu->EAX;
+        return valorLeido32;
+    }
     else if(strcmp(registro, "EBX") == 0){
         valorLeido32 = registros_cpu->EBX;
         return valorLeido32;
@@ -173,36 +173,76 @@ uint32_t  buscar_valor_registro32(void* registro){
 
 void ejecutar_sum(char* reg_dest, char* reg_origen) {
     if(strcmp(reg_dest, "AX") == 0){
-        uint8_t  valor_reg_origen = buscar_valor_registro8(reg_origen);
-        registros_cpu->AX += valor_reg_origen;
+        if(es_uint8(reg_origen)){
+            uint8_t  valor_reg_origen = buscar_valor_registro8(reg_origen);
+            registros_cpu->AX += valor_reg_origen;
+        } else {
+            uint32_t  valor_reg_origen = buscar_valor_registro32(reg_origen);
+            registros_cpu->AX += valor_reg_origen;
+        }
     }    
     else if(strcmp(reg_dest, "BX") == 0){
-        uint8_t valor_reg_origen = buscar_valor_registro8(reg_origen);
-        registros_cpu->BX += valor_reg_origen;
+        if(es_uint8(reg_origen)){
+            uint8_t  valor_reg_origen = buscar_valor_registro8(reg_origen);
+            registros_cpu->BX += valor_reg_origen;
+        } else {
+            uint32_t  valor_reg_origen = buscar_valor_registro32(reg_origen);
+            registros_cpu->BX += valor_reg_origen;
+        }
     }
     else if(strcmp(reg_dest, "CX") == 0){
-        uint8_t valor_reg_origen = buscar_valor_registro8(reg_origen);
-        registros_cpu->CX += valor_reg_origen;
+        if(es_uint8(reg_origen)){
+            uint8_t  valor_reg_origen = buscar_valor_registro8(reg_origen);
+            registros_cpu->CX += valor_reg_origen;
+        } else {
+            uint32_t  valor_reg_origen = buscar_valor_registro32(reg_origen);
+            registros_cpu->CX += valor_reg_origen;
+        }
     }
     else if(strcmp(reg_dest, "DX") == 0){
-        uint8_t valor_reg_origen = buscar_valor_registro8(reg_origen);
-        registros_cpu->DX += valor_reg_origen;
+        if(es_uint8(reg_origen)){
+            uint8_t  valor_reg_origen = buscar_valor_registro8(reg_origen);
+            registros_cpu->DX += valor_reg_origen;
+        } else {
+            uint32_t  valor_reg_origen = buscar_valor_registro32(reg_origen);
+            registros_cpu->DX += valor_reg_origen;
+        }
     }
     else if(strcmp(reg_dest, "EAX") == 0){
-        uint32_t valor_reg_origen = buscar_valor_registro32(reg_origen);
-        registros_cpu->EAX += valor_reg_origen;
+        if(es_uint8(reg_origen)){
+            uint8_t  valor_reg_origen = buscar_valor_registro8(reg_origen);
+            registros_cpu->EAX += valor_reg_origen;
+        } else {
+            uint32_t  valor_reg_origen = buscar_valor_registro32(reg_origen);
+            registros_cpu->EAX += valor_reg_origen;
+        }
     }
     else if(strcmp(reg_dest, "EBX") == 0){
-        uint32_t valor_reg_origen = buscar_valor_registro32(reg_origen);
-        registros_cpu->EBX += valor_reg_origen;
+        if(es_uint8(reg_origen)){
+            uint8_t  valor_reg_origen = buscar_valor_registro8(reg_origen);
+            registros_cpu->EBX += valor_reg_origen;
+        } else {
+            uint32_t  valor_reg_origen = buscar_valor_registro32(reg_origen);
+            registros_cpu->EBX += valor_reg_origen;
+        }
     }
     else if(strcmp(reg_dest, "ECX") == 0){
-        uint32_t valor_reg_origen = buscar_valor_registro32(reg_origen);
-        registros_cpu->ECX += valor_reg_origen;
+        if(es_uint8(reg_origen)){
+            uint8_t  valor_reg_origen = buscar_valor_registro8(reg_origen);
+            registros_cpu->ECX += valor_reg_origen;
+        } else {
+            uint32_t  valor_reg_origen = buscar_valor_registro32(reg_origen);
+            registros_cpu->ECX += valor_reg_origen;
+        }
     }
     else if(strcmp(reg_dest, "EDX") == 0){
-        uint32_t valor_reg_origen = buscar_valor_registro32(reg_origen);
-        registros_cpu->EDX += valor_reg_origen;
+        if(es_uint8(reg_origen)){
+            uint8_t  valor_reg_origen = buscar_valor_registro8(reg_origen);
+            registros_cpu->EDX += valor_reg_origen;
+        } else {
+            uint32_t  valor_reg_origen = buscar_valor_registro32(reg_origen);
+            registros_cpu->EDX += valor_reg_origen;
+        }
     }
     else
         log_warning(logger_cpu, "Registro no valido");
@@ -210,36 +250,76 @@ void ejecutar_sum(char* reg_dest, char* reg_origen) {
 
 void ejecutar_sub(char* reg_dest, char* reg_origen) {
     if(strcmp(reg_dest, "AX") == 0){
-        uint8_t  valor_reg_origen = buscar_valor_registro8(reg_origen);
-        registros_cpu->AX -= valor_reg_origen;
+        if(es_uint8(reg_origen)){
+            uint8_t  valor_reg_origen = buscar_valor_registro8(reg_origen);
+            registros_cpu->AX -= valor_reg_origen;
+        } else {
+            uint32_t  valor_reg_origen = buscar_valor_registro32(reg_origen);
+            registros_cpu->AX -= valor_reg_origen;
+        }
     }    
     else if(strcmp(reg_dest, "BX") == 0){
-        uint8_t valor_reg_origen = buscar_valor_registro8(reg_origen);
-        registros_cpu->BX -= valor_reg_origen;
+        if(es_uint8(reg_origen)){
+            uint8_t  valor_reg_origen = buscar_valor_registro8(reg_origen);
+            registros_cpu->BX -= valor_reg_origen;
+        } else {
+            uint32_t  valor_reg_origen = buscar_valor_registro32(reg_origen);
+            registros_cpu->BX -= valor_reg_origen;
+        }
     }
     else if(strcmp(reg_dest, "CX") == 0){
-        uint8_t valor_reg_origen = buscar_valor_registro8(reg_origen);
-        registros_cpu->CX -= valor_reg_origen;
+        if(es_uint8(reg_origen)){
+            uint8_t  valor_reg_origen = buscar_valor_registro8(reg_origen);
+            registros_cpu->CX -= valor_reg_origen;
+        } else {
+            uint32_t  valor_reg_origen = buscar_valor_registro32(reg_origen);
+            registros_cpu->CX -= valor_reg_origen;
+        }
     }
     else if(strcmp(reg_dest, "DX") == 0){
-        uint8_t valor_reg_origen = buscar_valor_registro8(reg_origen);
-        registros_cpu->DX -= valor_reg_origen;
+        if(es_uint8(reg_origen)){
+            uint8_t  valor_reg_origen = buscar_valor_registro8(reg_origen);
+            registros_cpu->DX -= valor_reg_origen;
+        } else {
+            uint32_t  valor_reg_origen = buscar_valor_registro32(reg_origen);
+            registros_cpu->DX -= valor_reg_origen;
+        }
     }
     else if(strcmp(reg_dest, "EAX") == 0){
-        uint32_t valor_reg_origen = buscar_valor_registro32(reg_origen);
-        registros_cpu->EAX -= valor_reg_origen;
+        if(es_uint8(reg_origen)){
+            uint8_t  valor_reg_origen = buscar_valor_registro8(reg_origen);
+            registros_cpu->EAX -= valor_reg_origen;
+        } else {
+            uint32_t  valor_reg_origen = buscar_valor_registro32(reg_origen);
+            registros_cpu->EAX -= valor_reg_origen;
+        }
     }
     else if(strcmp(reg_dest, "EBX") == 0){
-        uint32_t valor_reg_origen = buscar_valor_registro32(reg_origen);
-        registros_cpu->EBX -= valor_reg_origen;
+        if(es_uint8(reg_origen)){
+            uint8_t  valor_reg_origen = buscar_valor_registro8(reg_origen);
+            registros_cpu->EBX -= valor_reg_origen;
+        } else {
+            uint32_t  valor_reg_origen = buscar_valor_registro32(reg_origen);
+            registros_cpu->EBX -= valor_reg_origen;
+        }
     }
     else if(strcmp(reg_dest, "ECX") == 0){
-        uint32_t valor_reg_origen = buscar_valor_registro32(reg_origen);
-        registros_cpu->ECX -= valor_reg_origen;
+        if(es_uint8(reg_origen)){
+            uint8_t  valor_reg_origen = buscar_valor_registro8(reg_origen);
+            registros_cpu->ECX -= valor_reg_origen;
+        } else {
+            uint32_t  valor_reg_origen = buscar_valor_registro32(reg_origen);
+            registros_cpu->ECX -= valor_reg_origen;
+        }
     }
     else if(strcmp(reg_dest, "EDX") == 0){
-        uint32_t valor_reg_origen = buscar_valor_registro32(reg_origen);
-        registros_cpu->EDX -= valor_reg_origen;
+        if(es_uint8(reg_origen)){
+            uint8_t  valor_reg_origen = buscar_valor_registro8(reg_origen);
+            registros_cpu->EDX -= valor_reg_origen;
+        } else {
+            uint32_t  valor_reg_origen = buscar_valor_registro32(reg_origen);
+            registros_cpu->EDX -= valor_reg_origen;
+        }
     }
     else
         log_warning(logger_cpu, "Registro no valido");
@@ -400,7 +480,7 @@ void ejecutar_mov_out(char* registroDirLogica, char* registro){ //MOV_OUT EAX AX
     } else {
         valorAEscribir32 = buscar_valor_registro32(registro);
     }
-    
+    log_warning(logger_cpu , "%d<---------------------- ",dirLogica );
     uint32_t dirFisica = calcular_direccion_fisica(dirLogica); //0
     uint32_t numPagina = obtener_numero_pagina(dirLogica); //0
 
@@ -493,7 +573,7 @@ void ejecutar_io_stdout_write(char* interfaz, char** dir_logica, char** registro
         direccion_logica  = buscar_valor_registro32(*dir_logica);
     }
     uint32_t direccion_fisica = calcular_direccion_fisica(direccion_logica);
-        
+    
     // Convertir los valores a cadenas de texto
     char dir_logica_str[20];
     char tamanio_a_escribir_str[20];

@@ -1,18 +1,18 @@
 /*MMU*/
 #include "mmu.h"
 
-int obtener_numero_pagina(int direccionLogica){
+uint32_t obtener_numero_pagina(uint32_t direccionLogica){
 		return floor (direccionLogica/tam_pagina);
 }
 
-int obtener_desplazamiento_pagina(int direccionLogica){
-	int numero_pagina = obtener_numero_pagina(direccionLogica);
+uint32_t obtener_desplazamiento_pagina(uint32_t direccionLogica){
+	uint32_t numero_pagina = obtener_numero_pagina(direccionLogica);
 	return (direccionLogica - numero_pagina * tam_pagina);
 }
 
-uint32_t calcular_direccion_fisica(int direccion_logica){
-	int nro_pagina = obtener_numero_pagina(direccion_logica); //floor(dir_logica/tam_pagina)   				0
-	int desplazamiento = obtener_desplazamiento_pagina(direccion_logica); //direccionLogica - numero_pagina * tam_pagina                0
+uint32_t calcular_direccion_fisica(uint32_t direccion_logica){
+	uint32_t nro_pagina = obtener_numero_pagina(direccion_logica); //floor(dir_logica/tam_pagina)   				0
+	uint32_t desplazamiento = obtener_desplazamiento_pagina(direccion_logica); //direccionLogica - numero_pagina * tam_pagina                0
 	uint32_t nro_marco_memoria;
 
 	// si no esta activada la TLB:
@@ -53,6 +53,7 @@ uint32_t pedir_marco_memoria(uint32_t nro_pagina){
 	enviar_codOp(fd_memoria,NUMERO_MARCO_SOLICITUD); //Hacia atender_cpu en atender_memoria.c
 
     t_buffer* buffer = crear_buffer();
+	log_warning(logger_cpu , "-------> %d" ,  nro_pagina);
 	agregar_buffer_uint32(buffer, nro_pagina); //0
 	agregar_buffer_uint32(buffer, pid_de_cde_ejecutando);
 	enviar_buffer(buffer, fd_memoria);

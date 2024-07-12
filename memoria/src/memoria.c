@@ -478,7 +478,6 @@ void devolver_nro_marco(){
 
 t_pagina* buscarPaginaPorNroYPid(t_proceso* proceso , uint32_t nroPag){
 	for(int i = 0; i < list_size(proceso->listaPaginasProceso); i++){
-
 		t_pagina* pag = list_get(proceso->listaPaginasProceso, i);
 		if(pag->nroPagina == nroPag)
 			return pag;
@@ -643,6 +642,7 @@ void leer_stdout_write(int fd_IO){
 	t_proceso* proceso = buscarProcesoPorPid(pid);
 	
 	char* string_leido = leerValorEnMemoriaString(dirFisica, tamanio, proceso);
+	log_info(logger_memoria,"%s",string_leido);
 	
 	enviar_codOp(fd_IO, IO_M_STDOUT_WRITE_OK);
 	t_buffer* buffer_a_enviar = crear_buffer();
@@ -721,8 +721,10 @@ void escribirValorEnMemoriaString(char* valor, size_t dirFisica, int tamString, 
 
 char* leerValorEnMemoriaString(size_t dirFisica, int tamString, t_proceso* proceso) {
     // Convertir el string a bytes individuales
-	char* stringARetornar = malloc(tamString);
-
+	char* stringARetornar = malloc(tamString + 1);  // +1 para el carácter nulo
+    if (stringARetornar == NULL) {
+        return NULL; // Manejar error de asignación de memoria
+    }
     size_t bytesRestantesPorLeer = tamString;
     size_t bytesLeidos = 0;
 
@@ -765,6 +767,7 @@ char* leerValorEnMemoriaString(size_t dirFisica, int tamString, t_proceso* proce
         // Pasar al siguiente marco y reiniciar el offset
         offsetActual = 0;  // Después del primer marco, el offset es 0
     }
+	stringARetornar[tamString] = '\0'; // Asegurar que la cadena esté terminada en null
 	return stringARetornar;
 }
 

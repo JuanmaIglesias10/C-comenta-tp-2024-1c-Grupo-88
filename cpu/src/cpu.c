@@ -117,6 +117,7 @@ void* atender_kernel_int()
 {
 	while (1) {
 		mensajeKernelCpu cod_op = recibir_codOp(fd_kernel_int);
+
         t_buffer* buffer = recibir_buffer(fd_kernel_int); // recibe pid o lo que necesite
         uint32_t pid_recibido = leer_buffer_uint32(buffer);
         destruir_buffer(buffer);
@@ -127,7 +128,6 @@ void* atender_kernel_int()
                 pthread_mutex_unlock(&mutex_interrupcion_consola);
                 break;
             case DESALOJO:
-                // se desaloja proceso en ejecucion
                 if((algoritmo_planificacion == 1 || algoritmo_planificacion == 2) && pid_de_cde_ejecutando != pid_recibido){
                     break;
                 } else if((algoritmo_planificacion == 1 || algoritmo_planificacion == 2) && pid_de_cde_ejecutando == pid_recibido){
@@ -366,7 +366,7 @@ bool es_bloqueante(t_codigo_instruccion instruccion){
         return false;
         break;
     case RESIZE:
-        return true;
+        return false;
         break;
     case COPY_STRING:
         return false;
