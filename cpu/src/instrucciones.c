@@ -441,69 +441,76 @@ bool es_uint8(char* registro){
     return (strcmp(registro, "AX") == 0 || strcmp(registro, "BX") == 0 || strcmp(registro, "CX") == 0 || strcmp(registro, "DX") == 0);
 }
 
-void ejecutar_io_stdin_read(char* interfaz, char* dir_logica, char* registro_tamaño){
-    
+void ejecutar_io_stdin_read(char* interfaz, char** dir_logica, char** registro_tamanio){
     uint32_t direccion_logica;
-    uint32_t direccion_fisica;
-    uint32_t tamaño_a_escribir;
-    enviar_codOp(fd_kernel_int, INTERRUPT);
-
-    t_buffer* buffer_a_enviar = crear_buffer();
+    uint32_t tamanio_a_escribir;
     
-    if (es_uint8(registro_tamaño)){
-        tamaño_a_escribir = (uint32_t)buscar_valor_registro8(registro_tamaño);
+    if (es_uint8(*registro_tamanio)){
+        tamanio_a_escribir = (uint32_t)buscar_valor_registro8(*registro_tamanio);
     } else {
-        tamaño_a_escribir = buscar_valor_registro32(registro_tamaño);
+        tamanio_a_escribir = buscar_valor_registro32(*registro_tamanio);
     }
-    agregar_buffer_uint32(buffer_a_enviar, tamaño_a_escribir);
 
-
-    if (es_uint8(dir_logica)){
-        direccion_logica = (uint32_t)buscar_valor_registro8(dir_logica);
+    if (es_uint8(*dir_logica)){
+        direccion_logica = (uint32_t)buscar_valor_registro8(*dir_logica);
     } else {
-        direccion_logica  = buscar_valor_registro32(dir_logica);
+        direccion_logica  = buscar_valor_registro32(*dir_logica);
     }
-    direccion_fisica = calcular_direccion_fisica(direccion_logica);
+    uint32_t direccion_fisica = calcular_direccion_fisica(direccion_logica);
+        
+    // Convertir los valores a cadenas de texto
+    char dir_logica_str[20];
+    char tamanio_a_escribir_str[20];
     
-    agregar_buffer_uint32(buffer_a_enviar,direccion_fisica);
+    sprintf(dir_logica_str, "%u", direccion_fisica);
+    sprintf(tamanio_a_escribir_str, "%u", tamanio_a_escribir);
 
-    agregar_buffer_string(buffer_a_enviar,interfaz);
-    
+    // Asignar las cadenas a los parámetros, liberando previamente la memoria si es necesario
+    free(*dir_logica);
+    free(*registro_tamanio);
+
+    *dir_logica = strdup(dir_logica_str);
+    *registro_tamanio = strdup(tamanio_a_escribir_str);
+
+    log_warning(logger_cpu , "////%s" , *dir_logica);
+    log_warning(logger_cpu , "////%s" , *registro_tamanio);
     interrupcion = 1;
-    enviar_buffer(buffer_a_enviar,fd_kernel_int);
-    destruir_buffer(buffer_a_enviar);
 }
 
-void ejecutar_io_stdout_write(char* interfaz, char* dir_logica, char* registro_tamaño){ 
+void ejecutar_io_stdout_write(char* interfaz, char** dir_logica, char** registro_tamanio){
     uint32_t direccion_logica;
-    uint32_t direccion_fisica;
-    uint32_t tamaño_a_leer;
-    enviar_codOp(fd_kernel_int, INTERRUPT);
-
-    t_buffer* buffer_a_enviar = crear_buffer();
+    uint32_t tamanio_a_escribir;
     
-    if (es_uint8(registro_tamaño)){
-        tamaño_a_leer = (uint32_t)buscar_valor_registro8(registro_tamaño);
+    if (es_uint8(*registro_tamanio)){
+        tamanio_a_escribir = (uint32_t)buscar_valor_registro8(*registro_tamanio);
     } else {
-        tamaño_a_leer = buscar_valor_registro32(registro_tamaño);
+        tamanio_a_escribir = buscar_valor_registro32(*registro_tamanio);
     }
-    agregar_buffer_uint32(buffer_a_enviar, tamaño_a_leer);
 
-
-    if (es_uint8(dir_logica)){
-        direccion_logica = (uint32_t)buscar_valor_registro8(dir_logica);
+    if (es_uint8(*dir_logica)){
+        direccion_logica = (uint32_t)buscar_valor_registro8(*dir_logica);
     } else {
-        direccion_logica  = buscar_valor_registro32(dir_logica);
+        direccion_logica  = buscar_valor_registro32(*dir_logica);
     }
-    direccion_fisica = calcular_direccion_fisica(direccion_logica);
+    uint32_t direccion_fisica = calcular_direccion_fisica(direccion_logica);
+        
+    // Convertir los valores a cadenas de texto
+    char dir_logica_str[20];
+    char tamanio_a_escribir_str[20];
     
-    agregar_buffer_uint32(buffer_a_enviar,direccion_fisica);
+    sprintf(dir_logica_str, "%u", direccion_fisica);
+    sprintf(tamanio_a_escribir_str, "%u", tamanio_a_escribir);
 
-    agregar_buffer_string(buffer_a_enviar,interfaz);
-    
+    // Asignar las cadenas a los parámetros, liberando previamente la memoria si es necesario
+    free(*dir_logica);
+    free(*registro_tamanio);
+
+    *dir_logica = strdup(dir_logica_str);
+    *registro_tamanio = strdup(tamanio_a_escribir_str);
+
+    log_warning(logger_cpu , "////%s" , *dir_logica);
+    log_warning(logger_cpu , "////%s" , *registro_tamanio);
     interrupcion = 1;
-    enviar_buffer(buffer_a_enviar,fd_kernel_int);
-    destruir_buffer(buffer_a_enviar);
 }
 
 void ejecutar_copy_string(char* char_tamanio){

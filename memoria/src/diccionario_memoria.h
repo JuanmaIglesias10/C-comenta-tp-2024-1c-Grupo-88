@@ -26,11 +26,7 @@ typedef struct {
 	uint32_t pidProcesoCreador;
     uint32_t nroPagina;
     uint32_t nroMarco;
-    bool bitModificado;
-    bool bitPresencia;
-    char* ultimaReferencia; //LRU
     void* direccionFisicaInicio;
-
     void* direccionLogica;
 }t_pagina;
 

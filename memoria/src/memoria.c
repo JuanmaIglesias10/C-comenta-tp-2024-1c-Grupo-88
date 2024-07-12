@@ -311,10 +311,7 @@ void ejecutar_MOV_OUT(){
    		 escribirValorEnMemoria(valorAEscribir32, dirFisica, 4, proceso);
 	}
 
-	t_pagina* pagModificada = buscarPaginaPorNroYPid(proceso , numPagina);
-	pagModificada->ultimaReferencia = temporal_get_string_time("%H:%M:%S:%MS");
-	pagModificada->bitModificado = true;
-	
+
 	enviar_codOp(fd_cpu, MOV_OUT_OK);
 	imprimir_memoria();
 
@@ -394,10 +391,7 @@ void ejecutar_MOV_IN(){
 	} else {
 		log_warning(logger_memoria, "tamanio invalido del valor a leer");
 	}
-	t_pagina* pagLeida = buscarPaginaPorNroYPid(proceso, nroPag);
 
-	pagLeida->ultimaReferencia = temporal_get_string_time("%H:%M:%S:%MS"); //LRU
-	
 	enviar_codOp(fd_cpu, MOV_IN_OK); // Lo recibe ejecutar_mov_in() en instrucciones.c en CPU
 	log_info(logger_memoria, "PID: %d - Acción: LEER - Dirección física: %d", pid, dirFisica);
 	buffer = crear_buffer();
@@ -549,14 +543,10 @@ void resize() {
 
 t_pagina* crear_pagina(uint32_t nroPag, uint32_t nroMarco, void* dirreccionInicio, uint32_t pid){
 	t_pagina* paginaCreada= malloc(sizeof(t_pagina));
-
-	paginaCreada->bitModificado = false; //--------------------------- Recordar esto
-	paginaCreada->bitPresencia = true;
 	paginaCreada->direccionFisicaInicio = dirreccionInicio;
 	paginaCreada->nroMarco = nroMarco;
 	paginaCreada->nroPagina = nroPag;
 	paginaCreada->pidProcesoCreador = pid;
-	paginaCreada->ultimaReferencia = temporal_get_string_time("%H:%M:%S:%MS");
 
 	return paginaCreada;
 }
@@ -572,8 +562,6 @@ void colocar_pagina_en_marco(uint32_t pid, uint32_t nroPagina){
 
 	escribir_pagina(posEnMemoria, pagNueva);
 	
-	pagNueva->bitModificado = false;
-	pagNueva->bitPresencia = true;
 	pagNueva->direccionFisicaInicio = memoriaPrincipal + posEnMemoria;
 	pagNueva->pidProcesoCreador = pid;
 	pagNueva->nroMarco = numeroMarco;
@@ -811,7 +799,7 @@ void finalizar_proceso(){
 
 	liberarPaginasDeUnProcesoResize(proceso_a_eliminar , 0);
 
-	proceso_destroy(proceso_a_eliminar);
+	// proceso_destroy(proceso_a_eliminar);
 
 	imprimir_memoria();
 	enviar_codOp(fd_kernel, FINALIZAR_PROCESO_OK);
