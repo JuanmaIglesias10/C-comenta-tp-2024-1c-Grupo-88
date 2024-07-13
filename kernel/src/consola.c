@@ -4,7 +4,8 @@
 void iniciar_consola(){
 	char* input;
 	while(1){
-		mostrar_opciones_consola();
+		reset_terminal_mode();
+		mostrar_opciones_consola(); // limpio el buffer (o algo asi xd)
 		input = readline(">");
 		if(strcmp(input, "EXIT") == 0) {
             free(input);
@@ -14,6 +15,13 @@ void iniciar_consola(){
 		atender_consola(input);
 		free(input);
 	}
+}
+
+void reset_terminal_mode() {
+    struct termios term;
+    tcgetattr(0, &term);
+    term.c_lflag |= ECHO | ICANON;
+    tcsetattr(0, TCSANOW, &term);
 }
 
 void mostrar_opciones_consola(){
@@ -110,26 +118,26 @@ void switch_comandos(uint8_t codOp, char* lista_mensaje){
 			free(lista_mensaje); 
 			break;
 		case FINALIZAR_PROCESO:
-			// finalizarProceso(lista_mensaje);
-			//detectarDeadlock();
+			finalizar_proceso(lista_mensaje);
 			free(lista_mensaje); 
 			break;
 		case INICIAR_PLANIFICACION:
 			log_info(logger_kernel, "INICIO DE PLANIFICACIÓN");
-			// iniciarPlanificacion();
+			iniciarPlanificacion();
 			free(lista_mensaje);
 			break;
 		case DETENER_PLANIFICACION:
 			log_info(logger_kernel, "PAUSA DE PLANIFICACIÓN");
-			// detenerPlanificacion();
+			detenerPlanificacion();
 			free(lista_mensaje);
 			break;
 		case MULTIPROGRAMACION:
+			log_info(logger_kernel, "CAMBIO DE GRADO DE MULTIPROGRAMACION A: %s", lista_mensaje);
 			cambiar_grado_multiprogramacion(lista_mensaje);
 			free(lista_mensaje);
 			break;
 		case PROCESO_ESTADO:
-			// procesosPorEstado();
+			procesosPorEstado();
 			free(lista_mensaje); 
 			break;
 		case E_PARAMETROS:

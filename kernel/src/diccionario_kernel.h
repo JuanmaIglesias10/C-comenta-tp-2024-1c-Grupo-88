@@ -7,7 +7,6 @@
 #include <readline/readline.h>
 #include "commons/temporal.h"
 
-
 //STRUCT'S && ENUM
 typedef struct{
     int puerto_escucha;
@@ -18,8 +17,8 @@ typedef struct{
 	int puerto_cpu_interrupt;
 	char* algoritmo_planificacion;
 	int quantum;
-	// t_list* recursos;
-	// t_list* instancias_recursos;
+	t_list* recursos;
+	t_list* instancias_recursos;
 	int grado_multiprogramacion;
 } t_config_kernel;
 
@@ -33,15 +32,21 @@ typedef enum {
 } t_estado_proceso;
 
 typedef struct{
+    char* nombre;
+    int instancias;
+	t_list* procesos_bloqueados;
+    sem_t sem_recurso;
+}t_recurso;
+
+typedef struct{
 	t_cde* cde;
 	t_estado_proceso estado;
 	uint32_t quantum;
 	// char* path;
-	// int prioridad;
 	// t_list* archivos_abiertos;
 	// t_list* archivos_solicitados;
-	// t_list* recursos_asignados;
-	// t_list* recursos_solicitados;
+	t_list* recursos_asignados;
+	t_list* recursos_solicitados;
 	bool flag_clock;
 	bool fin_q;
 }t_pcb;
@@ -115,7 +120,7 @@ extern pthread_mutex_t mutex_block;
 extern pthread_mutex_t mutex_pcb_en_ejecucion;
 extern pthread_mutex_t mutex_finalizados;
 extern pthread_mutex_t mutex_colasIO;
-
+extern pthread_mutex_t mutex_colaGEN;
 
 extern sem_t procesos_NEW;
 extern sem_t cpu_libre;
@@ -129,6 +134,13 @@ extern sem_t procesos_en_blocked;
 extern sem_t cont_exec;
 extern sem_t sem_timer;
 extern sem_t grado_de_multiprogramacion;
+extern sem_t pausar_new_a_ready;
+extern sem_t pausar_ready_a_exec;
+extern sem_t pausar_exec_a_finalizado;
+extern sem_t pausar_exec_a_ready;
+extern sem_t pausar_exec_a_blocked;
+extern sem_t pausar_blocked_a_ready;
+extern sem_t sem_colaGEN;
 
 
 // Temporal

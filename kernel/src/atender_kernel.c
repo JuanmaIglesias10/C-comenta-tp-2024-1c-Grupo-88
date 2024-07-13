@@ -1,24 +1,5 @@
 #include "atender_kernel.h"
 
-void* atender_memoria()
-{   
-	while (1) {
-		// uint8_t cod_op = recibir_codOp(fd_memoria);
-		// switch (cod_op) {
-        //     case MENSAJE:
-        //         //'
-        //         break;
-        //     case PAQUETE:
-        //         log_info(logger_kernel,"xd");
-        //         break;
-        //     default:
-        //         log_info(logger_kernel, "Se desconectó MEMORIA");
-        //         break;
-        //     }
-		sleep(5);
-	}
-}
-
 
 void* atender_IO(void* arg) {
     int fd_IO = *(int*)arg;
@@ -27,6 +8,7 @@ void* atender_IO(void* arg) {
     t_buffer* buffer = recibir_buffer(fd_IO);
     char* nombre = leer_buffer_string(buffer);
     char* tipo = leer_buffer_string(buffer);
+    log_warning(logger_kernel, "Se conecto Interfaz tipo: %s , llamada %s", tipo, nombre);
     destruir_buffer(buffer);
     t_interfaz* interfaz = malloc(sizeof(t_interfaz));
     interfaz->nombre = nombre;
@@ -45,64 +27,11 @@ void* atender_IO(void* arg) {
         queue_push(colaDIALFS, interfaz);
     }
     pthread_mutex_unlock(&mutex_colasIO);
-    // free(nombre);
-    // free(tipo);
-    while (1) {
-        // uint8_t cod_op = recibir_codOp(fd_IO);
-        // switch (cod_op) {
-        //     case MENSAJE:
-        //         // Manejar el mensaje
-        //         break;
-        //     case PAQUETE:
-        //         // Manejar el paquete
-        //         break;
-        //     default:
-        //         log_info(logger_kernel, "Se desconectó IO");
-        //         close(fd_IO);
-        //         return NULL;
-        // }
-    }
+    //free(nombre);
+    //free(tipo);
+    // while(1);
 }
 
-
-//Este hace falta para recibir el cde
-// void* atender_cpu_dis()
-// {
-// 	while (1) {
-// 		mensajeKernelCpu cod_op = recibir_codOp(fd_cpu_dis);
-// 		switch (cod_op) {
-//             case MENSAJE:
-//             // t_buffer* buffer = buffer_create();
-            
-//             break;
-//             case PAQUETE:
-//                 //
-//                 break;
-//             default:
-//                 log_info(logger_kernel, "Se desconectó CPU (DISPATCH)");
-//                 break;
-//             }
-// 	}
-//     return NULL;
-// }
-
-void* atender_cpu_int()
-{
-	while (1) {
-		// uint8_t cod_op = recibir_codOp(fd_cpu_int);
-		// switch (cod_op) {
-        //     case MENSAJE:
-        //         //
-        //         break;
-        //     case PAQUETE:
-        //         //
-        //         break;
-        //     default:
-        //         log_info(logger_kernel, "Se desconectó CPU (INTERRUPT)");
-        //         return;
-        //     }
-	}
-}
 
 void aceptar_conexiones_IO() {
 

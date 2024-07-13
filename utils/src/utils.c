@@ -25,7 +25,8 @@ t_log* iniciar_logger(char* rutaLog, char* nombreProceso , t_log_level level)
 int conectarse(char* IP, int puerto, char* nombreConexion, t_log* logger){
 	char* puerto_conectado = string_itoa(puerto);
 	int conexion = crear_conexion(IP, puerto_conectado);
-    log_info(logger, "Conexion exitosa con %s" , nombreConexion); 
+    log_info(logger, "Conexion exitosa con %s" , nombreConexion);
+    free(puerto_conectado);
 	return conexion;
 } 
 
@@ -66,4 +67,21 @@ void destruir_instruccion(t_instruccion* instruccion) {
         instruccion->par5 = NULL;
     }
     free(instruccion);
+}
+
+char* uint32_a_string(uint32_t num) {
+    // Calcular el tamaño máximo de la cadena necesaria (10 dígitos + 1 para el carácter nulo)
+    int size = snprintf(NULL, 0, "%u", num) + 1;
+
+    // Asignar memoria para la cadena resultante
+    char *str = (char *)malloc(size * sizeof(char));
+    if (str == NULL) {
+        // Manejar el caso en que malloc falla
+        return NULL;
+    }
+
+    // Convertir el número a cadena
+    sprintf(str, "%u", num);
+
+    return str;
 }

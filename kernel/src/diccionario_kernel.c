@@ -29,7 +29,7 @@ t_queue* colaSTDOUT;
 t_queue* colaDIALFS;
 
 int pid_a_asignar;
-int planificacion_detenida = 1;
+int planificacion_detenida; 
 
 //Semaforos
 pthread_mutex_t mutex_new;
@@ -40,6 +40,7 @@ pthread_mutex_t mutex_block;
 pthread_mutex_t mutex_pcb_en_ejecucion;
 pthread_mutex_t mutex_finalizados;
 pthread_mutex_t mutex_colasIO;
+pthread_mutex_t mutex_colaGEN;
 
 
 sem_t procesos_NEW;
@@ -54,6 +55,13 @@ sem_t sem_reiniciar_quantum;
 sem_t cont_exec;
 sem_t sem_timer;
 sem_t grado_de_multiprogramacion;
+sem_t pausar_new_a_ready;
+sem_t pausar_ready_a_exec;
+sem_t pausar_exec_a_finalizado;
+sem_t pausar_exec_a_ready;
+sem_t pausar_exec_a_blocked;
+sem_t pausar_blocked_a_ready;
+sem_t sem_colaGEN;
 
 
 //Temporal

@@ -9,13 +9,16 @@ t_config_memoria config_memoria;
 int fd_memoria;
 int fd_cpu;
 int fd_kernel;
-int fd_IO;
+// int fd_IO;
 
 //Listas
 t_list* listaProcesos;
-t_list* tablaGlobalPaginas;
 t_list* listaMarcos;
 
 //Semaforos
 pthread_mutex_t mutex_lista_procesos;
+
+//Memoria principal
+ void* memoriaPrincipal;
+int cantMarcos;
 
