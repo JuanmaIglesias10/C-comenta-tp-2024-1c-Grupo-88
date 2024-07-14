@@ -404,7 +404,6 @@ t_list* obtener_lista_script(char* pathScript){
 	fclose(archivo);
     // free(parametros);
 	return listaScript;
-
 }
 
 t_codigo_operacion obtener_codigo_operacion(char* parametro) {
@@ -872,107 +871,90 @@ bool es_RR_o_VRR() {
 }
 
 void io_stdin_read(char* interfaz, char* char_direccion_fisica, char* char_tamanio) {
-	uint32_t direccion_fisica   = atoi(char_direccion_fisica);
-    uint32_t tamanio             = atoi(char_tamanio);
-        
+    uint32_t direccion_fisica = atoi(char_direccion_fisica);
+    uint32_t tamanio = atoi(char_tamanio);
+
     t_interfaz* aux = queue_pop(colaSTDIN);
 
+    if (strcmp(aux->nombre, interfaz) == 0) {
+        if (strcmp(aux->tipo, "STDIN") == 0) {
+            enviar_codOp(aux->fd, STDIN_READ);
+            t_buffer* buffer_a_enviar = crear_buffer();
 
-    if (strcmp(aux->nombre, interfaz) == 0 ){
-        if (strcmp(aux->tipo , "STDIN") == 0) {
-	    enviar_codOp(aux->fd, STDIN_READ);
-	    t_buffer* buffer_a_enviar = crear_buffer();
+            agregar_buffer_uint32(buffer_a_enviar, direccion_fisica);
+            agregar_buffer_uint32(buffer_a_enviar, tamanio);
+            agregar_buffer_uint32(buffer_a_enviar, pcb_ejecutando->cde->pid);
 
-	    agregar_buffer_uint32(buffer_a_enviar,direccion_fisica);
-        agregar_buffer_uint32(buffer_a_enviar,tamanio);
-        agregar_buffer_uint32(buffer_a_enviar,pcb_ejecutando->cde->pid);
+            enviar_buffer(buffer_a_enviar, aux->fd);
+            destruir_buffer(buffer_a_enviar);
 
-		enviar_buffer(buffer_a_enviar,aux->fd);
-            		    
-        destruir_buffer(buffer_a_enviar);
-            
-            //Bloqueo el proceso
-        t_pcb* pcb_read_stdin= malloc(sizeof(t_pcb)); 
-        pcb_read_stdin = pcb_ejecutando;             
-        enviar_de_exec_a_block();
+            // Bloqueo el proceso
+            t_pcb* pcb_read_stdin = pcb_ejecutando;
+            enviar_de_exec_a_block();
 
-        mensajeKernelIO codigo = recibir_codOp(aux->fd);
-            if(codigo == STDIN_READ_OK) {
+            mensajeKernelIO codigo = recibir_codOp(aux->fd);
+            if (codigo == STDIN_READ_OK) {
                 log_info(logger_kernel, "Llegue a STDIN_READ_OK");
-                if(strcmp(config_kernel.algoritmo_planificacion,"VRR") == 0 && ms_transcurridos < pcb_read_stdin->quantum){
+                if (strcmp(config_kernel.algoritmo_planificacion, "VRR") == 0 && ms_transcurridos < pcb_read_stdin->quantum) {
                     pcb_read_stdin->quantum -= ms_transcurridos;
                     enviar_pcb_de_block_a_ready_mas(pcb_read_stdin);
                 } else {
                     enviar_pcb_de_block_a_ready(pcb_read_stdin);
-                    }
                 }
-            
-            } else {
-                agregar_a_cola_finished("INVALID_INTERFACE");
             }
-        }
-        else if(strcmp(aux->nombre, interfaz) != 0){
-            agregar_a_cola_finished("INVALID_INTERFACE");
         } else {
             agregar_a_cola_finished("INVALID_INTERFACE");
-
         }
-    //free(interfaz);
-    queue_push(colaSTDIN,aux);
-    
+    } else {
+        agregar_a_cola_finished("INVALID_INTERFACE");
+    }
+    queue_push(colaSTDIN, aux);
 }
 
 
+
 void io_stdout_write(char* interfaz, char* char_direccion_fisica, char* char_tamanio) {
-	uint32_t direccion_fisica   = atoi(char_direccion_fisica);
+    uint32_t direccion_fisica   = atoi(char_direccion_fisica);
     uint32_t tamanio             = atoi(char_tamanio);
 
-    
     t_interfaz* aux = queue_pop(colaSTDOUT);
 
     if (strcmp(aux->nombre, interfaz) == 0 ){
         if (strcmp(aux->tipo , "STDOUT") == 0) {
-        enviar_codOp(aux->fd, STDOUT_WRITE);
-        t_buffer* buffer_a_enviar = crear_buffer();
+            enviar_codOp(aux->fd, STDOUT_WRITE);
+            t_buffer* buffer_a_enviar = crear_buffer();
 
-        agregar_buffer_uint32(buffer_a_enviar,direccion_fisica);
+            agregar_buffer_uint32(buffer_a_enviar, direccion_fisica);
+            agregar_buffer_uint32(buffer_a_enviar, tamanio);
+            agregar_buffer_uint32(buffer_a_enviar, pcb_ejecutando->cde->pid);
 
-        agregar_buffer_uint32(buffer_a_enviar,tamanio);
+            enviar_buffer(buffer_a_enviar, aux->fd);
 
-        agregar_buffer_uint32(buffer_a_enviar,pcb_ejecutando->cde->pid);
+            destruir_buffer(buffer_a_enviar);
 
-        enviar_buffer(buffer_a_enviar,aux->fd);
-                    
-        destruir_buffer(buffer_a_enviar);
-        
-        //Bloqueo el proceso
-        t_pcb* pcb_read_stdin= malloc(sizeof(t_pcb)); 
-        pcb_read_stdin = pcb_ejecutando;             
-        enviar_de_exec_a_block();
+            // Bloqueo el proceso
+            t_pcb* pcb_read_stdin = pcb_ejecutando;
+            enviar_de_exec_a_block();
 
-        mensajeKernelIO codigo = recibir_codOp(aux->fd);
-            if(codigo == STDOUT_WRITE_OK) {
+            mensajeKernelIO codigo = recibir_codOp(aux->fd);
+            if (codigo == STDOUT_WRITE_OK) {
                 log_info(logger_kernel, "Llegue a STDOUT_WRITE_OK");
-                if(strcmp(config_kernel.algoritmo_planificacion,"VRR") == 0 && ms_transcurridos < pcb_read_stdin->quantum){
+                if (strcmp(config_kernel.algoritmo_planificacion, "VRR") == 0 && ms_transcurridos < pcb_read_stdin->quantum) {
                     pcb_read_stdin->quantum -= ms_transcurridos;
                     enviar_pcb_de_block_a_ready_mas(pcb_read_stdin);
                 } else {
                     enviar_pcb_de_block_a_ready(pcb_read_stdin);
                 }
             }
-        
         } else {
             agregar_a_cola_finished("INVALID_INTERFACE");
         }
-    }
-    else if(strcmp(aux->nombre, interfaz) != 0){
-        agregar_a_cola_finished("INVALID_INTERFACE");
     } else {
         agregar_a_cola_finished("INVALID_INTERFACE");
-
     }
-    queue_push(colaSTDOUT,aux);
+    queue_push(colaSTDOUT, aux);
 }
+
 
     // TODO: falta un else
 
