@@ -450,8 +450,9 @@ void inicializar_corto_plazo(){
 
 void destruir_pcb(t_pcb* pcb){
     destruir_cde(pcb->cde);
+    list_destroy(pcb->recursos_asignados);
+    list_destroy(pcb->recursos_solicitados);
     free(pcb);
-
 }
 
 char* obtener_elementos_cargados_en(t_queue* cola){

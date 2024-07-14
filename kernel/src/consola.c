@@ -63,6 +63,7 @@ void atender_consola(char* input){
 	} else {
 		switch_comandos(cod_operacion, lista_mensaje[1]);
 	}
+	string_array_destroy(lista_mensaje);
 	
 }
 t_codigo_operacion get_codigo_operacion(char* comando, int cant_par){
