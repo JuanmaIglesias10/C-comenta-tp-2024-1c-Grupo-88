@@ -36,6 +36,9 @@ uint32_t bloque_inicial_archivo(char* nombre_archivo);
 
 void fs_truncar_archivo(char* nombre_archivo, uint32_t nuevo_tamanio);
 
+uint32_t contar_bloques_siguientes_libres(uint32_t ultimo_bloque_actual);
+uint32_t hay_espacio_contiguo_libre_en_algun_lado (uint32_t cantidad_bloques_nueva);
+
 
 
 #endif /* ATENDER_IO_DIALFS_H_ */

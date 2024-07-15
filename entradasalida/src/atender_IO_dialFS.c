@@ -56,10 +56,13 @@ void testeo_FS() {
     }
     sincronizar_bitarray();
     mostrar_bitmap(); // TESTING
-
-    fs_crear_archivo("notas.txt");
-    fs_truncar_archivo("notas.txt",15);
-
+    
+    fs_crear_archivo("manzanas.txt");
+    fs_truncar_archivo("manzanas.txt",15);
+    // fs_crear_archivo("peras.txt");
+    // fs_truncar_archivo("peras.txt",12);
+    // fs_truncar_archivo("manzanas.txt",18);
+    
 
     //fs_write(); // leo algo de la RAM -> lo escribo en el archivo
     //fs_read(); // leo de un archivo -> lo escribo en la RAM
@@ -263,14 +266,15 @@ void fs_truncar_archivo(char* nombre_archivo, uint32_t nuevo_tamanio) {
     uint32_t cantidad_bloques_actual;
     if (tamanio_actual == 0) 
         cantidad_bloques_actual = 1;
-    else 
-        cantidad_bloques_actual = ceil(tamanio_actual / tamanio_bloque);
-
+    else {
+        //double aux = double(tamanio_actual / tamanio_bloque);
+        cantidad_bloques_actual = ceil((double)tamanio_actual / (double)tamanio_bloque);
+    }
     uint32_t cantidad_bloques_nueva;
     if (nuevo_tamanio == 0) 
         cantidad_bloques_nueva = 1;
     else 
-        cantidad_bloques_nueva = ceil(nuevo_tamanio / tamanio_bloque);
+        cantidad_bloques_nueva = ceil((double)nuevo_tamanio / (double)tamanio_bloque);
         
     uint32_t ultimo_bloque_actual = bloque_inicial + cantidad_bloques_actual - 1;
     uint32_t ultimo_bloque_nuevo = bloque_inicial + cantidad_bloques_nueva - 1;
@@ -278,9 +282,11 @@ void fs_truncar_archivo(char* nombre_archivo, uint32_t nuevo_tamanio) {
     // caso 3
     uint32_t espacio_libre_ult_bloque = cantidad_bloques_actual * tamanio_bloque - tamanio_actual;
 
-    // caso 4
-    uint32_t cantidad_bloques_a_agregar = cantidad_bloques_nueva - cantidad_bloques_actual;
-    uint32_t bloques_siguientes_libres = contar_bloques_siguientes_libres(ultimo_bloque_actual);
+    // caso 4 y 5
+    uint32_t cantidad_bloques_a_agregar = cantidad_bloques_nueva - cantidad_bloques_actual; // caso 4 y 5
+    uint32_t cant_bloques_siguientes_libres = contar_bloques_siguientes_libres(ultimo_bloque_actual); // caso 4
+
+    uint32_t nuevo_bloque_inicial = hay_espacio_contiguo_libre_en_algun_lado(cantidad_bloques_nueva); // caso 5
 
     // caso 1: si el tamanio es igual al actual
     if (nuevo_tamanio == tamanio_actual) {
@@ -321,24 +327,16 @@ void fs_truncar_archivo(char* nombre_archivo, uint32_t nuevo_tamanio) {
         config_save(config_md);
     }
 
-    // else if (/*si no tengo espacio libre*/) {
-
-    //     // hace falta? creo que no
-    // }
-
-    // a partir de aca se supone hay espacio libre en el FS para ampliarlo
-
-    //uint32_t tam_continuacion = nuevo_tamanio - espacio_libre_ult_bloque // tamaño en bytes, evaluando si hay que llenar primero el ultimo bloque
-
-    /* Caso 4: tengo espacio contiguo al final del archivo para ampliar */
-    else if (cantidad_bloques_a_agregar <= bloques_siguientes_libres) {
+    /* Caso 4: tengo espacio contiguo suficiente despues del ultimo bloque actual para ampliar */
+    else if (cantidad_bloques_a_agregar <= cant_bloques_siguientes_libres) {
+        log_debug(logger_IO,"Truncar. Caso 4: tengo espacio contiguo suficiente despues del ultimo bloque actual para ampliar");
 
         // bloque inicial no cambia
-
         // cambiar tamanio
         config_set_value(config_md, "TAMANIO_ARCHIVO", string_itoa(nuevo_tamanio));
         config_save(config_md);
 
+        // asigno los bloques 
         for(int i = ultimo_bloque_actual + 1; i <= ultimo_bloque_nuevo; i++) {
             bitarray_set_bit(bitarray,i); // setea en 1 = ocupado
         }
@@ -348,35 +346,51 @@ void fs_truncar_archivo(char* nombre_archivo, uint32_t nuevo_tamanio) {
     
     
     // Caso 5: tengo espacio contiguo en el FS pero no al final del archivo. No hay que compactar porque entra pero en otro lado
-    else if () {
-
-
-     // cambiar tamanio
+    else if (nuevo_bloque_inicial != -1) {
+        log_debug(logger_IO,"Truncar. Caso 5");
+        
+        // cambiar tamanio y bloque inicial
         config_set_value(config_md, "TAMANIO_ARCHIVO", string_itoa(nuevo_tamanio));
+        config_set_value(config_md, "BLOQUE_INICIAL", string_itoa(nuevo_bloque_inicial));
         config_save(config_md);
 
-        uint32_t cantidad_bloques_contiguos_libres = 0;
-        uint32_t i = 0;
-    
+        // mover "archivo" de lugar dentro del archivo de bloques
+        FILE* arch_bloques = fopen("/home/utnso/dialfs/bloques.dat", "wb");
+        char* buffer = (char*)malloc(tamanio_actual);
+        fseek(arch_bloques, bloque_inicial * tamanio_bloque, SEEK_SET);
+        fread(buffer, tamanio_actual, 1, arch_bloques);
+        fseek(arch_bloques, nuevo_bloque_inicial * tamanio_bloque, SEEK_SET);
+        fwrite(buffer, tamanio_actual, 1, arch_bloques);
+        free(buffer);
+        fclose(arch_bloques);
 
+        // liberar bloques
+        for(int i = bloque_inicial; i < ultimo_bloque_actual; i++) {
+            bitarray_clean_bit(bitarray,i); // lo marco libre
+        }
+        // asignar bloques
+        for(int i = nuevo_bloque_inicial; i < ultimo_bloque_nuevo; i++) {
+            bitarray_set_bit(bitarray,i); // lo marco lleno
+        }
+        sincronizar_bitarray();
     }
 
     // caso 6: no tengo espacio contiguo en el FS
-    else (/*no tengo espacio contiguo en el FS*/) {
-        /*
-        -> tengo que compactar
-        /duda: deberia compactar incluido el archivo si ya se que lo voy a tener que mover al final? me quedaria el hueco libre
-        lo ideal seria primero quitar el archivo que voy a ampliar y luego compactar en si, 
-        y agregar al final el archivo ampliado despues de compactar (se podria )
+    // else (/*no tengo espacio contiguo en el FS*/) {
+    //     /*
+    //     -> tengo que compactar
+    //     /duda: deberia compactar incluido el archivo si ya se que lo voy a tener que mover al final? me quedaria el hueco libre
+    //     lo ideal seria primero quitar el archivo que voy a ampliar y luego compactar en si, 
+    //     y agregar al final el archivo ampliado despues de compactar (se podria )
 
-        Luego de compactar podria volver a llamar a esta funcion ya que habria que volver 
+    //     Luego de compactar podria volver a llamar a esta funcion ya que habria que volver 
 
-        */
-    }
+    //     */
+    // }
 
     // FIN AMPLIAR ARCHIVO
 
-    log_info(logger_IO, "PID: <PID> - Truncar Archivo: %s - Tamaño: %u", nombre_archivo, nuevo_tamanio); // LOG OBLIGATORIO
+    //log_info(logger_IO, "PID: <PID> - Truncar Archivo: %s - Tamaño: %u", nombre_archivo, nuevo_tamanio); // LOG OBLIGATORIO
 }
 
 uint32_t contar_bloques_siguientes_libres(uint32_t ultimo_bloque_actual) {
@@ -393,13 +407,13 @@ uint32_t contar_bloques_siguientes_libres(uint32_t ultimo_bloque_actual) {
     return cantidad_bloques_libres;
 }
 
-uint32_t hay_espacio_contiguo_libre_en_algun_lado (uint32_t cantidad_bloques_a_agregar) {
+uint32_t hay_espacio_contiguo_libre_en_algun_lado (uint32_t cantidad_bloques_nueva) {
     
     uint32_t cantidad_bloques_libres_contiguos = 0;
     uint32_t i = 0;
     uint32_t pos_primer_bloque_contiguo_libre;
 
-    while ( i <= (config_IO_DIALFS.block_count - 1 ) && cantidad_bloques_libres_contiguos != cantidad_bloques_a_agregar) {
+    while ( i <= (config_IO_DIALFS.block_count - 1 ) && cantidad_bloques_libres_contiguos != cantidad_bloques_nueva) {
 
         // si esta ocupado
         if (bitarray_test_bit(bitarray,i)) {
@@ -409,14 +423,14 @@ uint32_t hay_espacio_contiguo_libre_en_algun_lado (uint32_t cantidad_bloques_a_a
 
         //si esta libre
         else {
-            if (cantidad_bloques_libres_contiguos = 0) 
+            if (cantidad_bloques_libres_contiguos == 0) 
                 pos_primer_bloque_contiguo_libre = i;
             cantidad_bloques_libres_contiguos ++;
             i++;
         }
     }
 
-    if (cantidad_bloques_libres_contiguos == cantidad_bloques_a_agregar) 
+    if (cantidad_bloques_libres_contiguos == cantidad_bloques_nueva) 
         return pos_primer_bloque_contiguo_libre;
     else 
         return -1; //no hay bloques contiguos libre suficientes para mover al archivo -> hay que hacer compactacion
