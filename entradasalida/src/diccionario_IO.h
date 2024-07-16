@@ -55,6 +55,6 @@ extern int fd_memoria;
 // FS
 extern int tamanio_bitmap;
 extern t_bitarray* bitarray;
-
+extern char* puntero_bitarray;
 
 #endif /* DICCIONARIO_IO_H_ */

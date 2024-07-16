@@ -50,20 +50,58 @@ https://github.com/sisoputnfrba/so-commons-library/blob/master/src/commons/bitar
 */
 
 void testeo_FS() {
-    crear_bitarray();
+    tamanio_bitmap = config_IO_DIALFS.block_count / 8 ; // ej: si son 8 bloques necesito 8 bits = 1 byte
+    //crear_bitarray();
     if(!archivos_base_existen()) {
-        crear_archivos_base();
-    }
-    sincronizar_bitarray();
-    mostrar_bitmap(); // TESTING
-    
-    fs_crear_archivo("manzanas.txt");
-    fs_truncar_archivo("manzanas.txt",15);
-    // fs_crear_archivo("peras.txt");
-    // fs_truncar_archivo("peras.txt",12);
-    // fs_truncar_archivo("manzanas.txt",18);
-    
+        crear_archivos_base(); // bloques.dat
+        FILE* archBitmap = fopen("/home/utnso/dialfs/bitmap.dat", "wb"); // lo creo
+        ftruncate(fileno(archBitmap), tamanio_bitmap);
+        rewind(archBitmap);
+        puntero_bitarray = mmap(NULL, tamanio_bitmap, PROT_READ | PROT_WRITE, MAP_SHARED, fileno(archBitmap), 0);
+        fclose(archBitmap);
+        bitarray = bitarray_create_with_mode(puntero_bitarray, tamanio_bitmap, LSB_FIRST);
+        bitarray_clean(bitarray);
+        bitarray_set_bit(bitarray,0);
+        bitarray_set_bit(bitarray,1);
+        mostrar_bitarray(bitarray);
 
+        msync(puntero_bitarray, tamanio_bitmap, MS_SYNC);
+    } 
+    else { // si ya existen
+        FILE* archBitmap = fopen("/home/utnso/dialfs/bitmap.dat", "r+b");
+        // char* buffer = (char*)malloc(tamanio_bitmap);
+        // fread(buffer, tamanio_bitmap, 1, archBitmap);
+        // log_info(logger_IO, "%s",buffer);
+        puntero_bitarray = (char*)mmap(NULL, tamanio_bitmap, PROT_READ | PROT_WRITE, MAP_SHARED, fileno(archBitmap), 0);
+        fclose(archBitmap);
+
+        msync(puntero_bitarray, tamanio_bitmap, MS_SYNC);
+        
+        //bitarray->bitarray = buffer;
+        mostrar_bitarray(bitarray);
+    }
+    // //sincronizar_bitarray();
+    // mostrar_bitmap(); // TESTING
+
+    // bitarray_set_bit(bitarray,0);
+    // bitarray_set_bit(bitarray,1);
+    // mem_hexdump(bitarray->bitarray,bitarray->size); 
+    // mostrar_bitarray(bitarray);
+
+    // msync(bitarray->bitarray, tamanio_bitmap, MS_SYNC);
+    // mem_hexdump(bitarrayLeido->bitarray, tamanio_bitmap); 
+
+    // //sincronizar_bitarray();
+    // // // tamBloques = 16 B
+    // // //fs_crear_archivo("manzanas.txt");
+    //mostrar_bitmap(); // TESTING
+    
+    //fs_truncar_archivo("manzanas.txt",15);
+    //fs_crear_archivo("peras.txt");
+    //fs_truncar_archivo("peras.txt",12);
+    //fs_truncar_archivo("manzanas.txt",18);
+    
+    
     //fs_write(); // leo algo de la RAM -> lo escribo en el archivo
     //fs_read(); // leo de un archivo -> lo escribo en la RAM
     //fs_delete(); // elimino un archivo
@@ -74,7 +112,7 @@ void crear_bitarray() {
 
     // calcular cantidad de bytes necesarios para el bitarray y el bitmap (deberian pesar lo mismo)
     // tener en cuenta que hablamos del bitarray como tal, que esta dentro de t_bitarray
-    tamanio_bitmap = config_IO_DIALFS.block_count / 8 ; // ej: si son 8 bloques necesito 8 bits = 1 byte
+    
 
     // Crear e inicializar el bitarray con todos los bloques libres
     bitarray = bitarray_create_with_mode(malloc(tamanio_bitmap), tamanio_bitmap, LSB_FIRST);
@@ -85,25 +123,18 @@ void crear_archivos_base(){
 
     // Crear archivo de Bloques
     FILE* archBloques = fopen("/home/utnso/dialfs/bloques.dat", "wb"); // lo creo
-    if (archBloques == NULL) {
-        log_error(logger_IO, "Error al crear bloques.dat");
-        exit(EXIT_FAILURE);
-    }
 
     // Establecer tamaño del archivo de Bloques
     ftruncate(fileno(archBloques), config_IO_DIALFS.block_size * config_IO_DIALFS.block_count);
     fclose(archBloques);
     
-    // Crear archivo Bitmap
-    FILE* archBitmap = fopen("/home/utnso/dialfs/bitmap.dat", "wb"); // lo creo
-    if (archBitmap == NULL) {
-        log_error(logger_IO, "Error al crear bitmap.dat");
-        exit(EXIT_FAILURE);
-    }
+    // // Crear archivo Bitmap
+    // FILE* archBitmap = fopen("/home/utnso/dialfs/bitmap.dat", "wb"); // lo creo
     
-    // Establecer tamaño del archivo bitmap
-    ftruncate(fileno(archBitmap), tamanio_bitmap);
-    fclose(archBitmap);
+    // // Establecer tamaño del archivo bitmap
+    // ftruncate(fileno(archBitmap), tamanio_bitmap);
+    // mmap(bitarray->bitarray, tamanio_bitmap, PROT_READ | PROT_WRITE, MAP_SHARED, fileno(archBitmap), 0);
+    // fclose(archBitmap);
 
     log_debug(logger_IO, "archivos base creados");
 }
@@ -131,9 +162,11 @@ void mostrar_bitarray(t_bitarray* unBitarray) {
 
 void mostrar_bitmap() {
     // TESTING: Mostrar el bitmap
-    FILE* archBitmapTest = fopen("/home/utnso/dialfs/bitmap.dat", "rb"); // lo abro como read
+    FILE* archBitmapTest = fopen("/home/utnso/dialfs/bitmap.dat", "r+b"); // lo abro como read
     t_bitarray* bitarrayLeido = bitarray_create_with_mode(malloc(tamanio_bitmap), tamanio_bitmap, LSB_FIRST);
-    fread(bitarrayLeido->bitarray, tamanio_bitmap, 1, archBitmapTest);    
+    rewind(archBitmapTest);
+    fread(bitarrayLeido->bitarray, tamanio_bitmap, 1, archBitmapTest);   
+    mem_hexdump(bitarrayLeido->bitarray,bitarrayLeido->size); 
     mostrar_bitarray(bitarrayLeido);
 }
 
@@ -174,7 +207,7 @@ bool archivos_base_existen() {
 }
 
 void sincronizar_bitarray() {
-    FILE* archivo_bitmap = fopen("/home/utnso/dialfs/bitmap.dat", "ab");
+    FILE* archivo_bitmap = fopen("/home/utnso/dialfs/bitmap.dat", "r+b");
     if (archivo_bitmap == NULL) {
         log_error(logger_IO, "Error al abrir bitmap.dat");
         exit(EXIT_FAILURE);
@@ -355,7 +388,7 @@ void fs_truncar_archivo(char* nombre_archivo, uint32_t nuevo_tamanio) {
         config_save(config_md);
 
         // mover "archivo" de lugar dentro del archivo de bloques
-        FILE* arch_bloques = fopen("/home/utnso/dialfs/bloques.dat", "wb");
+        FILE* arch_bloques = fopen("/home/utnso/dialfs/bloques.dat", "r+b"); // El puntero se posiciona al inicio
         char* buffer = (char*)malloc(tamanio_actual);
         fseek(arch_bloques, bloque_inicial * tamanio_bloque, SEEK_SET);
         fread(buffer, tamanio_actual, 1, arch_bloques);

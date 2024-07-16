@@ -15,3 +15,4 @@ int fd_memoria;
 // FS
 int tamanio_bitmap;
 t_bitarray* bitarray;
+char* puntero_bitarray;

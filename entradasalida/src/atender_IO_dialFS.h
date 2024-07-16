@@ -10,6 +10,7 @@
 #include "commons/memory.h"
 #include "dirent.h"
 #include "math.h" // para floor() y ceil()
+#include <sys/mman.h>
 
 void atender_memoria_IO_DIALFS();
 void atender_kernel_IO_DIALFS();
