@@ -50,91 +50,60 @@ https://github.com/sisoputnfrba/so-commons-library/blob/master/src/commons/bitar
 */
 
 void testeo_FS() {
+
     tamanio_bitmap = config_IO_DIALFS.block_count / 8 ; // ej: si son 8 bloques necesito 8 bits = 1 byte
-    //crear_bitarray();
-    if(!archivos_base_existen()) {
-        crear_archivos_base(); // bloques.dat
-        FILE* archBitmap = fopen("/home/utnso/dialfs/bitmap.dat", "wb"); // lo creo
-        ftruncate(fileno(archBitmap), tamanio_bitmap);
-        rewind(archBitmap);
-        puntero_bitarray = mmap(NULL, tamanio_bitmap, PROT_READ | PROT_WRITE, MAP_SHARED, fileno(archBitmap), 0);
-        fclose(archBitmap);
-        bitarray = bitarray_create_with_mode(puntero_bitarray, tamanio_bitmap, LSB_FIRST);
-        bitarray_clean(bitarray);
-        bitarray_set_bit(bitarray,0);
-        bitarray_set_bit(bitarray,1);
-        mostrar_bitarray(bitarray);
+    crear_bitarray();
+    lista_metadata_archivos = list_create();
+    if(!archivos_base_existen()) { // si no existen los archivos base
+        crear_archivos_base();
 
-        msync(puntero_bitarray, tamanio_bitmap, MS_SYNC);
-    } 
-    else { // si ya existen
-        FILE* archBitmap = fopen("/home/utnso/dialfs/bitmap.dat", "r+b");
-        // char* buffer = (char*)malloc(tamanio_bitmap);
-        // fread(buffer, tamanio_bitmap, 1, archBitmap);
-        // log_info(logger_IO, "%s",buffer);
-        puntero_bitarray = (char*)mmap(NULL, tamanio_bitmap, PROT_READ | PROT_WRITE, MAP_SHARED, fileno(archBitmap), 0);
-        fclose(archBitmap);
-
-        msync(puntero_bitarray, tamanio_bitmap, MS_SYNC);
-        
-        //bitarray->bitarray = buffer;
-        mostrar_bitarray(bitarray);
+        fs_crear_archivo("manzanas.txt");
+        fs_truncar_archivo("manzanas.txt",10);
     }
-    // //sincronizar_bitarray();
-    // mostrar_bitmap(); // TESTING
+    else { // si ya exixten los archivos base
+        leer_bitmap();
+        leer_metadatas();
+        //list_remove();
+        t_config* config_aux = list_get(lista_metadata_archivos,0);
+        int value = config_get_int_value(config_aux,"TAMANIO_ARCHIVO");
+        printf("%d", value);
+    }
 
-    // bitarray_set_bit(bitarray,0);
-    // bitarray_set_bit(bitarray,1);
-    // mem_hexdump(bitarray->bitarray,bitarray->size); 
+    
+    // fs_crear_archivo("peras.txt");
+    // fs_truncar_archivo("peras.txt",12);
+
+    // fs_truncar_archivo("manzanas.txt",18);
+
+    // leer_bitmap();
     // mostrar_bitarray(bitarray);
 
-    // msync(bitarray->bitarray, tamanio_bitmap, MS_SYNC);
-    // mem_hexdump(bitarrayLeido->bitarray, tamanio_bitmap); 
 
-    // //sincronizar_bitarray();
-    // // // tamBloques = 16 B
-    // // //fs_crear_archivo("manzanas.txt");
-    //mostrar_bitmap(); // TESTING
+
     
-    //fs_truncar_archivo("manzanas.txt",15);
-    //fs_crear_archivo("peras.txt");
-    //fs_truncar_archivo("peras.txt",12);
-    //fs_truncar_archivo("manzanas.txt",18);
-    
-    
-    //fs_write(); // leo algo de la RAM -> lo escribo en el archivo
-    //fs_read(); // leo de un archivo -> lo escribo en la RAM
-    //fs_delete(); // elimino un archivo
+    // fs_write(); // leo algo de la RAM -> lo escribo en el archivo
+    // fs_read(); // leo de un archivo -> lo escribo en la RAM
+    // fs_delete(); // elimino un archivo
 }
 
 void crear_bitarray() {
-    // ambas son variables globables
-
-    // calcular cantidad de bytes necesarios para el bitarray y el bitmap (deberian pesar lo mismo)
-    // tener en cuenta que hablamos del bitarray como tal, que esta dentro de t_bitarray
-    
-
     // Crear e inicializar el bitarray con todos los bloques libres
     bitarray = bitarray_create_with_mode(malloc(tamanio_bitmap), tamanio_bitmap, LSB_FIRST);
     bitarray_clean(bitarray);
 }
 
 void crear_archivos_base(){
-
     // Crear archivo de Bloques
     FILE* archBloques = fopen("/home/utnso/dialfs/bloques.dat", "wb"); // lo creo
-
     // Establecer tamaño del archivo de Bloques
     ftruncate(fileno(archBloques), config_IO_DIALFS.block_size * config_IO_DIALFS.block_count);
     fclose(archBloques);
     
-    // // Crear archivo Bitmap
-    // FILE* archBitmap = fopen("/home/utnso/dialfs/bitmap.dat", "wb"); // lo creo
-    
-    // // Establecer tamaño del archivo bitmap
-    // ftruncate(fileno(archBitmap), tamanio_bitmap);
-    // mmap(bitarray->bitarray, tamanio_bitmap, PROT_READ | PROT_WRITE, MAP_SHARED, fileno(archBitmap), 0);
-    // fclose(archBitmap);
+    // Crear archivo Bitmap
+    FILE* archBitmap = fopen("/home/utnso/dialfs/bitmap.dat", "wb"); // lo creo
+    // Establecer tamaño del archivo bitmap
+    ftruncate(fileno(archBitmap), tamanio_bitmap);
+    fclose(archBitmap);
 
     log_debug(logger_IO, "archivos base creados");
 }
@@ -147,12 +116,12 @@ void bitarray_clean(t_bitarray* bitarray) {
 
 void mostrar_bitarray(t_bitarray* unBitarray) {
     // TESTING:
-    fflush(stdout);
+    //fflush(stdout);
     printf("Mapa de bloques libres\n");
     for(int i = 0; i < config_IO_DIALFS.block_count; i++) {
         bool bit = bitarray_test_bit(unBitarray, i);
         char* valorBit = bool_to_string(bit);
-        fflush(stdout);
+        //fflush(stdout);
         printf("Bloque %d: %s\n",i,valorBit);
     }
 
@@ -196,6 +165,27 @@ bool existe_archivo(char* nombre_archivo) {
     return 0; // El archivo no existe en el directorio
 }
 
+void leer_metadatas(){
+    char* directory = config_IO_DIALFS.path_base_dialfs;
+    struct dirent *entry;
+    DIR *dp = opendir(directory);
+
+    while ((entry = readdir(dp))) {
+        if ((strcmp(entry->d_name, "bloques.dat") != 0) && (strcmp(entry->d_name, "bitmap.dat") != 0)) {
+            char* path_archivo_metadata = string_new();
+            string_append(&path_archivo_metadata, config_IO_DIALFS.path_base_dialfs);
+            string_append(&path_archivo_metadata, entry->d_name); 
+
+            t_config* config_md = config_create(path_archivo_metadata);
+            list_add(lista_metadata_archivos, config_md);
+
+            free(path_archivo_metadata);
+        }
+    }
+    closedir(dp);
+}
+
+
 bool archivos_base_existen() {
     if(existe_archivo("bloques.dat") && existe_archivo("bitmap.dat")) {
         return 1;
@@ -206,17 +196,18 @@ bool archivos_base_existen() {
     }
 }
 
-void sincronizar_bitarray() {
+void actualizar_bitmap() {
     FILE* archivo_bitmap = fopen("/home/utnso/dialfs/bitmap.dat", "r+b");
-    if (archivo_bitmap == NULL) {
-        log_error(logger_IO, "Error al abrir bitmap.dat");
-        exit(EXIT_FAILURE);
-    }
-    rewind(archivo_bitmap);
-    // Sobrescribo el bitmap con el bitarray
     fwrite(bitarray->bitarray, tamanio_bitmap, 1, archivo_bitmap);
+    fclose(archivo_bitmap);
+    log_debug(logger_IO, "bitmap actualizado");
+}
 
-    log_debug(logger_IO, "bitmap sincronizado");
+void leer_bitmap() {
+    FILE* archivo_bitmap = fopen("/home/utnso/dialfs/bitmap.dat", "rb");
+    fread(bitarray->bitarray, tamanio_bitmap, 1, archivo_bitmap);
+    fclose(archivo_bitmap);
+    log_debug(logger_IO, "bitmap leido");
 }
 
 void fs_crear_archivo(char* nombre_archivo) {
@@ -237,13 +228,14 @@ void fs_crear_archivo(char* nombre_archivo) {
 
     int nro_bloque_libre = encontrarPrimerBloqueLibre();
     bitarray_set_bit(bitarray,nro_bloque_libre);
-    sincronizar_bitarray();
+    actualizar_bitmap();
 
     config_set_value(config_md, "BLOQUE_INICIAL", string_itoa(nro_bloque_libre));
     config_set_value(config_md, "TAMANIO_ARCHIVO", "0");
 
+    list_add(lista_metadata_archivos, config_md);
     config_save(config_md);
-    config_destroy(config_md);
+    //config_destroy(config_md);
     fclose(archivo_metadata);
     free(path_archivo_metadata);
 
@@ -324,14 +316,14 @@ void fs_truncar_archivo(char* nombre_archivo, uint32_t nuevo_tamanio) {
     // caso 1: si el tamanio es igual al actual
     if (nuevo_tamanio == tamanio_actual) {
         // no hago nada
-        log_debug(logger_IO,"Truncar: Caso 1");
+        log_debug(logger_IO,"Truncar. Caso 1: El tamanio es el mismo.");
     }
 
     // REDUCIR ARCHIVO
 
     // caso 2 : si el tamanio es mas chico al actual
     else if (nuevo_tamanio<tamanio_actual) {
-        log_debug(logger_IO,"Truncar: Caso 2. El tamanio es mas chico al actual");
+        log_debug(logger_IO,"Truncar. Caso 2: Reducir el tamanio.");
         // bibitarray: global
 
         // el bloque inicial no va a necesitar cambiar
@@ -345,7 +337,7 @@ void fs_truncar_archivo(char* nombre_archivo, uint32_t nuevo_tamanio) {
         for(int i = ultimo_bloque_actual; i > ultimo_bloque_nuevo; i--) {
             bitarray_clean_bit(bitarray,i); 
         }
-        sincronizar_bitarray();
+        actualizar_bitmap();
     }
 
     // FIN REDUCIR ARCHIVO 
@@ -354,7 +346,7 @@ void fs_truncar_archivo(char* nombre_archivo, uint32_t nuevo_tamanio) {
 
     /* Caso 3: tengo espacio en el ultimo bloque*/
     else if (nuevo_tamanio < tamanio_actual + espacio_libre_ult_bloque) {
-        log_debug(logger_IO,"Truncar: Caso 3. Tengo espacio en el ultimo bloque");
+        log_debug(logger_IO,"Truncar. Caso 3. Ampliar en el ultimo bloque");
         // cambiar tamanio
         config_set_value(config_md, "TAMANIO_ARCHIVO", string_itoa(nuevo_tamanio));
         config_save(config_md);
@@ -362,7 +354,7 @@ void fs_truncar_archivo(char* nombre_archivo, uint32_t nuevo_tamanio) {
 
     /* Caso 4: tengo espacio contiguo suficiente despues del ultimo bloque actual para ampliar */
     else if (cantidad_bloques_a_agregar <= cant_bloques_siguientes_libres) {
-        log_debug(logger_IO,"Truncar. Caso 4: tengo espacio contiguo suficiente despues del ultimo bloque actual para ampliar");
+        log_debug(logger_IO,"Truncar. Caso 4: Ampliar al final");
 
         // bloque inicial no cambia
         // cambiar tamanio
@@ -373,14 +365,14 @@ void fs_truncar_archivo(char* nombre_archivo, uint32_t nuevo_tamanio) {
         for(int i = ultimo_bloque_actual + 1; i <= ultimo_bloque_nuevo; i++) {
             bitarray_set_bit(bitarray,i); // setea en 1 = ocupado
         }
-        sincronizar_bitarray();        
+        actualizar_bitmap();        
     }
 
-    
-    
     // Caso 5: tengo espacio contiguo en el FS pero no al final del archivo. No hay que compactar porque entra pero en otro lado
     else if (nuevo_bloque_inicial != -1) {
-        log_debug(logger_IO,"Truncar. Caso 5");
+        log_debug(logger_IO,"Truncar. Caso 5: Mover para ampliar");
+
+        ultimo_bloque_nuevo = nuevo_bloque_inicial + cantidad_bloques_nueva - 1;
         
         // cambiar tamanio y bloque inicial
         config_set_value(config_md, "TAMANIO_ARCHIVO", string_itoa(nuevo_tamanio));
@@ -398,33 +390,68 @@ void fs_truncar_archivo(char* nombre_archivo, uint32_t nuevo_tamanio) {
         fclose(arch_bloques);
 
         // liberar bloques
-        for(int i = bloque_inicial; i < ultimo_bloque_actual; i++) {
+        for(int i = bloque_inicial; i <= ultimo_bloque_actual; i++) {
             bitarray_clean_bit(bitarray,i); // lo marco libre
         }
         // asignar bloques
-        for(int i = nuevo_bloque_inicial; i < ultimo_bloque_nuevo; i++) {
+        for(int i = nuevo_bloque_inicial; i <= ultimo_bloque_nuevo; i++) {
             bitarray_set_bit(bitarray,i); // lo marco lleno
         }
-        sincronizar_bitarray();
+        actualizar_bitmap();
     }
 
-    // caso 6: no tengo espacio contiguo en el FS
-    // else (/*no tengo espacio contiguo en el FS*/) {
-    //     /*
-    //     -> tengo que compactar
-    //     /duda: deberia compactar incluido el archivo si ya se que lo voy a tener que mover al final? me quedaria el hueco libre
-    //     lo ideal seria primero quitar el archivo que voy a ampliar y luego compactar en si, 
-    //     y agregar al final el archivo ampliado despues de compactar (se podria )
+    // caso 6: no tengo espacio contiguo en el FS, debo compactar
+    else {
+        /*
+        Luego de compactar podria volver a llamar a esta funcion ya que habria que volver a ver que 
+        */
 
-    //     Luego de compactar podria volver a llamar a esta funcion ya que habria que volver 
+        // leo el contenido del archivo
+        FILE* arch_bloques = fopen("/home/utnso/dialfs/bloques.dat", "r+b"); // El puntero se posiciona al inicio
+        char* buffer = (char*)malloc(tamanio_actual);
+        fseek(arch_bloques, bloque_inicial * tamanio_bloque, SEEK_SET);
+        fread(buffer, tamanio_actual, 1, arch_bloques);
+        fclose(arch_bloques);
 
-    //     */
-    // }
+        // libero bloques actuales
+        for(int i = bloque_inicial; i <= ultimo_bloque_actual; i++) {
+            bitarray_clean_bit(bitarray,i); // lo marco libre
+        }
+
+        // compacto
+        //compactar_FS();
+
+        // busco nueva posicion para el archivo inicial
+        nuevo_bloque_inicial = hay_espacio_contiguo_libre_en_algun_lado(cantidad_bloques_nueva);
+    
+        // escribo el contenido del archivo en el nuevo lugar
+        arch_bloques = fopen("/home/utnso/dialfs/bloques.dat", "r+b"); // El puntero se posiciona al inicio
+        fseek(arch_bloques, nuevo_bloque_inicial * tamanio_bloque, SEEK_SET);
+        fwrite(buffer, tamanio_actual, 1, arch_bloques);
+        fclose(arch_bloques);
+        free(buffer);
+
+        ultimo_bloque_nuevo = nuevo_bloque_inicial + cantidad_bloques_nueva - 1;
+
+        // asigno bloques nuevos
+        for(int i = nuevo_bloque_inicial; i <= ultimo_bloque_nuevo; i++) {
+            bitarray_set_bit(bitarray,i); // lo marco lleno
+        }
+        actualizar_bitmap();
+    }
 
     // FIN AMPLIAR ARCHIVO
 
     //log_info(logger_IO, "PID: <PID> - Truncar Archivo: %s - Tamaño: %u", nombre_archivo, nuevo_tamanio); // LOG OBLIGATORIO
 }
+
+// void compactar_FS() {
+    
+
+//     mover_a_primer_lugar_libre(archivo);
+
+// }
+
 
 uint32_t contar_bloques_siguientes_libres(uint32_t ultimo_bloque_actual) {
     // bibitarray: global
@@ -471,52 +498,9 @@ uint32_t hay_espacio_contiguo_libre_en_algun_lado (uint32_t cantidad_bloques_nue
 
 /*
 typedef struct{
-    char* tipo_interfaz;
-    int tiempo_unidad_trabajo;
-    char* ip_kernel;
-    int puerto_kernel;
-    char* ip_memoria;
-    int puerto_memoria;
     char* path_base_dialfs;
     int block_size;
     int block_count;
     int retraso_compactacion;
 } t_config_IO_DIALFS;
 */
-
-
-// para truncate puede que tenga que cambiar el bloque inicial, para eso 1ro debo buscar 
-// el primer espacio contiguo de bloques donde quepa el archivo, incluyendo los bloques actuales ya asignados
-
-// caso feliz: puedo agrandar el archivo sin mover lo actual
-// caso menos feliz: tengo espacio contiguo pero debo cambiar de primer bloque
-// caso feo: no tengo espacio contiguo, tengo que compactar
-
-// ya desde el caso menos feliz al feo se podria de entrada liberar los bloques del archivo ya que sabemos que no 
-// se puede mantener el bloque inicial y habra que mover de lugar el archivo en el "FS"
-
-// esto es suponiendo que quiera agrandarlo, en caso de achicar seria mas sencillo, si o si voy a tener espacio contiguo
-
-
-
-/*
-int buscar_espacio_contiguo(tamanio){
-    // para cuando hago truncate
-
-    // tengo que el tamanio contiguo que necesito dividirlo por el tamanio
-    // de bloque para saber la cantidad de bloques necesarios
-    
-
-    // devuelvo el nro de bloque
-}*/
-
-/*
-int buscar_espacio_contiguo_desde(nro_bloque){
-    // para cuando hago truncate
-
-    // tengo que el tamanio contiguo que necesito dividirlo por el tamanio
-    // de bloque para saber la cantidad de bloques necesarios
-    
-
-    // devuelvo el nro de bloque
-}*/
