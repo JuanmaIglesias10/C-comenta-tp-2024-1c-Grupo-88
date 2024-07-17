@@ -25,9 +25,9 @@ void atender_cpu()
 				usleep(config_memoria.retardo_respuesta * 1000);
 				resize();
 				break;
-			case ESCRIBIR_EN_MEMORIA:
+			case COPY_STRING_SOLICITUD:
 				usleep(config_memoria.retardo_respuesta * 1000);
-				escribiendoMemoria();
+				ejecutar_copy_string();
 				break;
 			default:
 				log_info(logger_memoria,"Se desconectó CPU");
@@ -47,10 +47,7 @@ void atender_kernel()
 				iniciar_proceso();
 				break;
 			case FINALIZAR_PROCESO_SOLICITUD:
-				// finalizarProceso();
-				break;
-			case PAGE_FAULT_SOLICITUD:
-				// atender_page_fault();
+				finalizar_proceso();
 				break;
 			default:
 				log_info(logger_memoria,"Se desconectó Kernel");
@@ -64,14 +61,15 @@ void* atender_IO(void* fd_IO_ptr) {
     free(fd_IO_ptr); // Liberamos la memoria alocada para el descriptor de archivo
 
     while (1) {
-        uint8_t cod_op = recibir_codOp(fd_IO);
+        mensajeIOMemoria cod_op = recibir_codOp(fd_IO);
         switch (cod_op) {
-            case MENSAJE:
-                // Manejo del mensaje
+            case IO_M_STDIN_READ_SOLICITUD:
+				escribir_stdin_read(fd_IO);
                 break;
-            case PAQUETE:
-                // Manejo del paquete
+            case IO_M_STDOUT_WRITE_SOLICITUD:
+				leer_stdout_write(fd_IO);
                 break;
+
             default:
                 log_info(logger_memoria, "Se desconectó IO");
                 close(fd_IO); // Cerramos la conexión

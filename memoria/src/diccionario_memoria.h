@@ -26,11 +26,7 @@ typedef struct {
 	uint32_t pidProcesoCreador;
     uint32_t nroPagina;
     uint32_t nroMarco;
-    bool bitModificado;
-    bool bitPresencia;
-    char* ultimaReferencia; //LRU
     void* direccionFisicaInicio;
-
     void* direccionLogica;
 }t_pagina;
 
@@ -44,11 +40,10 @@ extern t_config_memoria config_memoria;
 extern int fd_memoria;
 extern int fd_cpu;
 extern int fd_kernel;
-extern int fd_IO;
+// extern int fd_IO;
 
 //Listas
 extern t_list* listaProcesos;
-extern t_list* tablaGlobalPaginas;
 extern t_list* listaMarcos;
 
 

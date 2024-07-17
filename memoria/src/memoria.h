@@ -47,7 +47,7 @@ void colocar_pagina_en_marco(uint32_t pid, uint32_t nroPagina);
 
 uint32_t obtener_marco_libre();
 
-uint32_t obtener_pagina_libre();
+// uint32_t obtener_pagina_libre();
 
 void escribir_pagina(uint32_t posEnMemoria, void* pagina);
 
@@ -55,9 +55,28 @@ void liberarPaginasDeUnProcesoResize(t_proceso* procesoAReducir, uint32_t nuevoT
 
 void vaciar_marco(uint32_t nroMarco);
 
-void escribiendoMemoria();
+void escribirValorEnMemoria(uint32_t valor, size_t dirFisica, int cantBytes, t_proceso* proceso);
 
-void estoNoVaAFuncar();
+void escribirValorEnMemoriaString(char* valor, size_t dirFisica, int tamString, t_proceso* proceso);
+
+char* leerValorEnMemoriaString(size_t dirFisica, int tamString, t_proceso* proceso);
+
+uint32_t leerValorEnMemoria(size_t dirFisica, int cantBytes, t_proceso* proceso);
+
+void imprimir_memoria();
+
+void escribir_stdin_read(int fd_IO);
+
+void leer_stdout_write(int fd_IO);
+
+void ejecutar_copy_string();
+
+void finalizar_proceso();
+
+void proceso_destroy(t_proceso* proceso_a_destruir);
+
+void destruir_instrucciones(t_instruccion* instruccion_a_destruir);
+
 
 #endif /* MEMORIA_H_ */
 

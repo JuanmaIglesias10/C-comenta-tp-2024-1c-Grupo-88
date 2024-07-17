@@ -7,7 +7,6 @@
 #include <readline/readline.h>
 #include "commons/temporal.h"
 
-
 //STRUCT'S && ENUM
 typedef struct{
     int puerto_escucha;
@@ -121,7 +120,7 @@ extern pthread_mutex_t mutex_block;
 extern pthread_mutex_t mutex_pcb_en_ejecucion;
 extern pthread_mutex_t mutex_finalizados;
 extern pthread_mutex_t mutex_colasIO;
-
+extern pthread_mutex_t mutex_colaGEN;
 
 extern sem_t procesos_NEW;
 extern sem_t cpu_libre;
@@ -141,6 +140,7 @@ extern sem_t pausar_exec_a_finalizado;
 extern sem_t pausar_exec_a_ready;
 extern sem_t pausar_exec_a_blocked;
 extern sem_t pausar_blocked_a_ready;
+extern sem_t sem_colaGEN;
 
 
 // Temporal

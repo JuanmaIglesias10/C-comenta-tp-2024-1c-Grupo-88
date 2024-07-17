@@ -8,7 +8,6 @@
 void atender_cpu();
 void* atender_IO(void* fd_IO_ptr);
 void atender_kernel();
-t_pagina* existePageFault(uint32_t nro_Pagina, uint32_t pid);
 
 
 void* aceptar_conexiones_IO(void* arg);

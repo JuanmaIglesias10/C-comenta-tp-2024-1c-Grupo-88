@@ -31,7 +31,6 @@ void inicializar_config(){
 void inicializar_variables(){
 	listaProcesos = list_create();
 	listaMarcos = list_create();
-	tablaGlobalPaginas = list_create();
 
 	// sem_init(&finalizacion, 0, 0);
 	// sem_init(&sem_pagina_cargada, 0, 0);
@@ -41,15 +40,9 @@ void inicializar_variables(){
 	for(int i = 0; i < cantMarcos; i++)
 		list_add(listaMarcos, NULL); //Inicializo la lista de marcos
 
-	for(int i = 0; i < cantMarcos; i++)
-		list_add(tablaGlobalPaginas, NULL); //Inicializo la lista de marcos
-
-
-
 	memoriaPrincipal = malloc(config_memoria.tam_memoria);
 	memset(memoriaPrincipal, 0, config_memoria.tam_memoria);
 	
-	// indicePorFifo = 0;
 }
 
 void inicializar_conexiones() {
@@ -124,8 +117,9 @@ void iniciar_proceso(){
 	enviar_codOp(fd_kernel,INICIAR_PROCESO_OK);
 	
 	// list_destroy_and_destroy_elements(listaInstrucciones, (void*)instrucciones_destroy);  
-	//Al hacer esto, libero las instrucciones en proceso, aunque ya las pasé en la linea 90 ,1 hora debuggeando para encontrar esta mrd :D
+
 	free(rutaArchivoInstrucciones);
+	free(nombreArchivoInstrucciones);
 
 }
 
@@ -176,6 +170,7 @@ t_list* obtener_instrucciones(char* pathArchivo){
     }
 
     fclose(archivo);
+	free(parametros);
     return listaInstrucciones;
 }
 
@@ -291,8 +286,6 @@ void enviar_instruccion(){
 	destruir_buffer(buffer);
 }
 
-// luego de recibir MOV_OUT_SOLICITUD del CPU
-// escribe un valor de 8 o 32 bits en memoria
 void ejecutar_MOV_OUT(){
 	t_buffer* buffer = recibir_buffer(fd_cpu);
 	uint32_t dirFisica = leer_buffer_uint32(buffer);
@@ -303,48 +296,74 @@ void ejecutar_MOV_OUT(){
 		valorAEscribir8 = leer_buffer_uint8(buffer);
 	} else if (tamValor == 32){
 		valorAEscribir32 = leer_buffer_uint32(buffer);
-	}
-	
+	}	
 	uint32_t pid = leer_buffer_uint32(buffer);
 	uint32_t numPagina = leer_buffer_uint32(buffer);
 	destruir_buffer(buffer);
 
-	if(tamValor == 8){
-		memcpy(memoriaPrincipal + dirFisica, &valorAEscribir8, sizeof(uint8_t));
-	} else if (tamValor == 32){
-		memcpy(memoriaPrincipal + dirFisica, &valorAEscribir32, sizeof(uint32_t));
-	}
 	t_proceso* proceso  = buscarProcesoPorPid(pid);
-	t_pagina* pagModificada = buscarPaginaPorNroYPid(proceso , numPagina);
-	pagModificada->ultimaReferencia = temporal_get_string_time("%H:%M:%S:%MS");
-	pagModificada->bitModificado = true;
 	
+	if(tamValor == 8){
+    	// escribirValorEnMemoria(memoriaPrincipal, valorAEscribir8, dirFisica, 1, proceso);
+        memcpy(memoriaPrincipal + dirFisica, &valorAEscribir8, 1);
+
+	} else if (tamValor == 32){
+   		 escribirValorEnMemoria(valorAEscribir32, dirFisica, 4, proceso);
+	}
+
+
 	enviar_codOp(fd_cpu, MOV_OUT_OK);
-	estoNoVaAFuncar();
-
-
-	// // log_info(logger_memoria, "PID: %d - Acción: ESCRIBIR - Dirección física: %d", pid, dirFisica);
-	// // Simulación de recibir y procesar el buffer
-    // // Supongamos que valorAEscribir es 10 y dirFisica es 0 en este ejemplo
-    // // Simulación de recibir y procesar el buffer
-    // uint8_t valorAEscribir = 10; // Aquí está el valor que queremos escribir (10 en este caso)
-    // uint32_t dirFisica = 0; // Supongamos que la dirección física es 0 en este ejemplo
-
-    // // Copiar el valor a memoriaPrincipal en la dirección especificada
-    // memcpy(memoriaPrincipal + dirFisica, &valorAEscribir, sizeof(uint8_t));
-
-    // // Simulación de otras operaciones
-    // // Supongamos que estos son ejemplos de las funciones reales
-    // // enviar_codOp(fd_cpu, MOV_OUT_OK);
-    // // log_info(logger_memoria, "Acción: ESCRIBIR - Dirección física: %d", dirFisica);
-
-    // // Llamada a la función para imprimir el contenido de memoriaPrincipal
-    // estoNoVaAFuncar();
+	// imprimir_memoria();
 
 }
 
-// luego de recibir MOV_IN_SOLICITUD del CPU
-// lee un valor de 8 o 32 bits en memoria
+void escribirValorEnMemoria(uint32_t valor, size_t dirFisica, int cantBytes, t_proceso* proceso){
+    uint8_t bytesValor[cantBytes];
+    memcpy(bytesValor, &valor, cantBytes);
+
+    size_t bytesRestantes = cantBytes;
+    size_t bytesEscritos = 0;
+
+    // Inicializar el primer marco y el offset inicial
+    size_t offsetActual = dirFisica % config_memoria.tam_pagina;
+	size_t nroMarcoActual  = (dirFisica - offsetActual)/config_memoria.tam_pagina;
+	uint32_t siguientePagina = 0;
+	for (size_t i = 0; i < list_size(proceso->listaPaginasProceso); i++)
+	{
+    	t_pagina* pagina = list_get(proceso->listaPaginasProceso, i);
+		if(pagina->nroMarco == nroMarcoActual){
+			siguientePagina = i + 1;
+			if(siguientePagina == list_size(proceso->listaPaginasProceso)){
+				siguientePagina = 0;
+			}
+		}
+	}
+	
+    while (bytesRestantes > 0) {
+        // Calcular la cantidad de bytes a escribir en el marco actual
+        size_t espacioDisponible = config_memoria.tam_pagina - offsetActual;
+        size_t bytesAEescribir = (bytesRestantes < espacioDisponible) ? bytesRestantes : espacioDisponible;
+
+        // Escribir los bytes correspondientes en el marco actual
+        memcpy(memoriaPrincipal + nroMarcoActual * config_memoria.tam_pagina + offsetActual, bytesValor + bytesEscritos, bytesAEescribir);
+
+        // Actualizar contadores
+
+		t_pagina* pagina = list_get(proceso->listaPaginasProceso, siguientePagina);
+		nroMarcoActual = pagina->nroMarco;
+
+		siguientePagina++;
+		if(siguientePagina == list_size(proceso->listaPaginasProceso)){
+			siguientePagina = 0;
+		}
+        bytesRestantes -= bytesAEescribir;
+        bytesEscritos += bytesAEescribir;
+
+        // Pasar al siguiente marco y reiniciar el offset
+        offsetActual = 0;  // Después del primer marco, el offset es 0
+    }
+}
+
 void ejecutar_MOV_IN(){
 	uint32_t tamanio;
 	uint32_t dirFisica;
@@ -363,19 +382,16 @@ void ejecutar_MOV_IN(){
 	// aca voy a guardar lo que lea en memoria
 	uint8_t valorLeido8 = 0; 
 	uint32_t valorLeido32 = 0;
+	t_proceso* proceso  = buscarProcesoPorPid(pid);
 
 	if (tamanio == 8) {
 		memcpy(&valorLeido8, memoriaPrincipal + dirFisica, sizeof(uint8_t));
 	} else if (tamanio == 32) { 
-	  	memcpy(&valorLeido32, memoriaPrincipal + dirFisica, sizeof(uint32_t));
+	  	valorLeido32 = leerValorEnMemoria(dirFisica, 4, proceso);
 	} else {
 		log_warning(logger_memoria, "tamanio invalido del valor a leer");
 	}
-	t_proceso* proceso  = buscarProcesoPorPid(pid);
-	t_pagina* pagLeida = buscarPaginaPorNroYPid(proceso, nroPag);
 
-	pagLeida->ultimaReferencia = temporal_get_string_time("%H:%M:%S:%MS"); //LRU
-	
 	enviar_codOp(fd_cpu, MOV_IN_OK); // Lo recibe ejecutar_mov_in() en instrucciones.c en CPU
 	log_info(logger_memoria, "PID: %d - Acción: LEER - Dirección física: %d", pid, dirFisica);
 	buffer = crear_buffer();
@@ -386,6 +402,51 @@ void ejecutar_MOV_IN(){
 	}
 	enviar_buffer(buffer, fd_cpu);
 	destruir_buffer(buffer);
+}
+
+uint32_t leerValorEnMemoria(size_t dirFisica, int cantBytes, t_proceso* proceso){
+	void* valorARetornar = malloc(cantBytes); 
+
+    size_t bytesRestantesPorLeer = cantBytes;
+    size_t bytesLeidos = 0;
+
+    // Inicializar el primer marco y el offset inicial
+    size_t offsetActual = dirFisica % config_memoria.tam_pagina;
+	size_t nroMarcoActual  = (dirFisica - offsetActual)/config_memoria.tam_pagina;
+	uint32_t siguientePagina = 0;
+	for (size_t i = 0; i < list_size(proceso->listaPaginasProceso); i++)
+	{
+    	t_pagina* pagina = list_get(proceso->listaPaginasProceso, i);
+		if(pagina->nroMarco == nroMarcoActual){
+			siguientePagina = i + 1;
+			if(siguientePagina == list_size(proceso->listaPaginasProceso)){
+				siguientePagina = 0;
+			}
+		}
+	}
+	
+    while (bytesRestantesPorLeer > 0) {
+        // Calcular la cantidad de bytes a escribir en el marco actual
+        size_t espacioDisponible = config_memoria.tam_pagina - offsetActual;
+        size_t bytesALeer = (bytesRestantesPorLeer < espacioDisponible) ? bytesRestantesPorLeer : espacioDisponible;
+
+        memcpy(valorARetornar + bytesLeidos, memoriaPrincipal + nroMarcoActual * config_memoria.tam_pagina + offsetActual, bytesALeer);
+
+		t_pagina* pagina = list_get(proceso->listaPaginasProceso, siguientePagina);
+		nroMarcoActual = pagina->nroMarco;
+
+		siguientePagina++;
+		if(siguientePagina == list_size(proceso->listaPaginasProceso)){
+			siguientePagina = 0;
+		}
+        bytesRestantesPorLeer -= bytesALeer;
+        bytesLeidos += bytesALeer;
+
+        offsetActual = 0;  // Después del primer marco, el offset es 0
+    }
+	uint32_t* uint32_valorARetornar = (uint32_t*)valorARetornar;
+    uint32_t valor = *uint32_valorARetornar;
+	return valor;
 }
 
 t_proceso* buscarProcesoPorPid(uint32_t pid){
@@ -417,7 +478,6 @@ void devolver_nro_marco(){
 
 t_pagina* buscarPaginaPorNroYPid(t_proceso* proceso , uint32_t nroPag){
 	for(int i = 0; i < list_size(proceso->listaPaginasProceso); i++){
-
 		t_pagina* pag = list_get(proceso->listaPaginasProceso, i);
 		if(pag->nroPagina == nroPag)
 			return pag;
@@ -482,17 +542,10 @@ void resize() {
 
 t_pagina* crear_pagina(uint32_t nroPag, uint32_t nroMarco, void* dirreccionInicio, uint32_t pid){
 	t_pagina* paginaCreada= malloc(sizeof(t_pagina));
-
-	paginaCreada->bitModificado = false; //--------------------------- Recordar esto
-	paginaCreada->bitPresencia = true;
 	paginaCreada->direccionFisicaInicio = dirreccionInicio;
 	paginaCreada->nroMarco = nroMarco;
 	paginaCreada->nroPagina = nroPag;
 	paginaCreada->pidProcesoCreador = pid;
-	paginaCreada->ultimaReferencia = temporal_get_string_time("%H:%M:%S:%MS");
-
-	// list_replace(tablaGlobalPaginas, nroPag , paginaCreada);
-
 
 	return paginaCreada;
 }
@@ -508,8 +561,6 @@ void colocar_pagina_en_marco(uint32_t pid, uint32_t nroPagina){
 
 	escribir_pagina(posEnMemoria, pagNueva);
 	
-	pagNueva->bitModificado = false;
-	pagNueva->bitPresencia = true;
 	pagNueva->direccionFisicaInicio = memoriaPrincipal + posEnMemoria;
 	pagNueva->pidProcesoCreador = pid;
 	pagNueva->nroMarco = numeroMarco;
@@ -538,27 +589,15 @@ uint32_t obtener_marco_libre(){
 	return -1;
 }
 
-uint32_t obtener_pagina_libre(){
-	for(int i = 0; i < cantMarcos; i++){
-		t_pagina* pagina = list_get(tablaGlobalPaginas, i);
-		if(pagina == NULL)
-			return i;
-	}
-	return -1;
-}
-
 void escribir_pagina(uint32_t posEnMemoria, void* pagina){
 	memcpy(memoriaPrincipal + posEnMemoria, pagina, config_memoria.tam_pagina);
 }
 
-
 void liberarPaginasDeUnProcesoResize(t_proceso* procesoAReducir, uint32_t nuevoTamaño){
 	uint32_t cantPaginasAEliminar = (uint32_t)ceil((double)(procesoAReducir->tamaño - nuevoTamaño)/config_memoria.tam_pagina);
-	log_warning(logger_memoria, "///////////////////77");
 	for(int j = list_size(procesoAReducir->listaPaginasProceso) - 1; j >= 0; j--){		
 		t_pagina* pagina = list_get(procesoAReducir->listaPaginasProceso, j);
 		vaciar_marco(pagina->nroMarco);
-		// list_remove(tablaGlobalPaginas, j);
 		list_remove(procesoAReducir->listaPaginasProceso, j);
 		free(pagina);
 		cantPaginasAEliminar--;
@@ -577,27 +616,50 @@ void vaciar_marco(uint32_t nroMarco){
 // log_info(logger_memoria, "Destrucción: PID: %d - Tamaño: %d", procesoAEliminar->pid, cantPaginas);
 
 // TODO: revisar esta funcion que esta mal
-void escribiendoMemoria(){
+void escribir_stdin_read(int fd_IO){
     t_buffer* buffer_recibido = recibir_buffer(fd_IO);
     uint32_t dirFisica = leer_buffer_uint32(buffer_recibido);
+	uint32_t pid = leer_buffer_uint32(buffer_recibido);
     char* valor_ingresado = leer_buffer_string(buffer_recibido);
     uint32_t tamanio = leer_buffer_uint32(buffer_recibido);
     destruir_buffer(buffer_recibido);
-
-	if (tamanio == 8) {
-		memcpy(&valor_ingresado, memoriaPrincipal + dirFisica, sizeof(uint8_t));
-	} else { 
-	  	memcpy(&valor_ingresado, memoriaPrincipal + dirFisica, sizeof(uint32_t));
-	}
+	t_proceso* proceso = buscarProcesoPorPid(pid);
+	escribirValorEnMemoriaString(valor_ingresado, dirFisica, tamanio, proceso);
+	
+	enviar_codOp(fd_IO, IO_M_STDIN_READ_OK);
+	// imprimir_memoria();
+	free(valor_ingresado);
 }
 
+void leer_stdout_write(int fd_IO){
+    t_buffer* buffer_recibido = recibir_buffer(fd_IO);
+    uint32_t dirFisica 		  = leer_buffer_uint32(buffer_recibido);
+	uint32_t pid 			  = leer_buffer_uint32(buffer_recibido);
+    uint32_t tamanio          = leer_buffer_uint32(buffer_recibido);
 
-void estoNoVaAFuncar() {
+    destruir_buffer(buffer_recibido);
+	
+	t_proceso* proceso = buscarProcesoPorPid(pid);
+	
+	char* string_leido = leerValorEnMemoriaString(dirFisica, tamanio, proceso);
+	log_info(logger_memoria,"%s",string_leido);
+	
+	enviar_codOp(fd_IO, IO_M_STDOUT_WRITE_OK);
+	t_buffer* buffer_a_enviar = crear_buffer();
+	agregar_buffer_string(buffer_a_enviar, string_leido);
+	enviar_buffer(buffer_a_enviar,fd_IO);
+    destruir_buffer(buffer_a_enviar);
+	free(string_leido);
+
+	// imprimir_memoria();
+}
+
+void imprimir_memoria() {
     int nroMarcoVariable = 0;
     int i = 0;
 
     while (nroMarcoVariable * config_memoria.tam_pagina < config_memoria.tam_memoria) {
-        printf("Nro Marco %d, contenido:", nroMarcoVariable);
+        printf("Marco %d:", nroMarcoVariable);
         for (i = 0; i < config_memoria.tam_pagina; i++) {
             unsigned char obtenido;
             memcpy(&obtenido, (unsigned char *)memoriaPrincipal + nroMarcoVariable * config_memoria.tam_pagina + i, 1);
@@ -606,5 +668,160 @@ void estoNoVaAFuncar() {
         printf("\n");
         nroMarcoVariable++;
     }
+	log_warning(logger_memoria , "-------------------------------------------");
 }
 
+void escribirValorEnMemoriaString(char* valor, size_t dirFisica, int tamString, t_proceso* proceso) {
+    // Convertir el string a bytes individuales
+    uint8_t bytesValor[tamString];
+    memcpy(bytesValor, valor, tamString);
+
+    size_t bytesRestantes = tamString;
+    size_t bytesEscritos = 0;
+
+    size_t offsetActual = dirFisica % config_memoria.tam_pagina;
+    size_t nroMarcoActual = (dirFisica - offsetActual) / config_memoria.tam_pagina;
+    uint32_t siguientePagina = 0;
+
+    // Iterar sobre las páginas del proceso para determinar la siguiente página
+    for (size_t i = 0; i < list_size(proceso->listaPaginasProceso); i++) {
+        t_pagina* pagina = list_get(proceso->listaPaginasProceso, i);
+        if (pagina->nroMarco == nroMarcoActual) {
+            siguientePagina = i + 1;
+            if (siguientePagina == list_size(proceso->listaPaginasProceso)) {
+                siguientePagina = 0;
+            }
+        }
+    }
+
+    while (bytesRestantes > 0) {
+        // Calcular la cantidad de bytes a escribir en el marco actual
+        size_t espacioDisponible = config_memoria.tam_pagina - offsetActual;
+        size_t bytesAEscribir = (bytesRestantes < espacioDisponible) ? bytesRestantes : espacioDisponible;
+
+        // Escribir los bytes correspondientes en el marco actual
+        memcpy(memoriaPrincipal + nroMarcoActual * config_memoria.tam_pagina + offsetActual, bytesValor + bytesEscritos, bytesAEscribir);
+
+        // Actualizar contadores
+        t_pagina* pagina = list_get(proceso->listaPaginasProceso, siguientePagina);
+        nroMarcoActual = pagina->nroMarco;
+
+        siguientePagina++;
+        if (siguientePagina == list_size(proceso->listaPaginasProceso)) {
+            siguientePagina = 0;
+        }
+
+        bytesRestantes -= bytesAEscribir;
+        bytesEscritos += bytesAEscribir;
+
+        // Pasar al siguiente marco y reiniciar el offset
+        offsetActual = 0;  // Después del primer marco, el offset es 0
+    }
+}
+
+char* leerValorEnMemoriaString(size_t dirFisica, int tamString, t_proceso* proceso) {
+    // Convertir el string a bytes individuales
+	char* stringARetornar = malloc(tamString + 1);  // +1 para el carácter nulo
+    if (stringARetornar == NULL) {
+        return NULL; // Manejar error de asignación de memoria
+    }
+    size_t bytesRestantesPorLeer = tamString;
+    size_t bytesLeidos = 0;
+
+    size_t offsetActual = dirFisica % config_memoria.tam_pagina;
+    size_t nroMarcoActual = (dirFisica - offsetActual) / config_memoria.tam_pagina;
+    uint32_t siguientePagina = 0;
+
+    // Iterar sobre las páginas del proceso para determinar la siguiente página
+    for (size_t i = 0; i < list_size(proceso->listaPaginasProceso); i++) {
+        t_pagina* pagina = list_get(proceso->listaPaginasProceso, i);
+        if (pagina->nroMarco == nroMarcoActual) {
+            siguientePagina = i + 1;
+            if (siguientePagina == list_size(proceso->listaPaginasProceso)) {
+                siguientePagina = 0;
+            }
+        }
+    }
+
+    while (bytesRestantesPorLeer > 0) {
+        // Calcular la cantidad de bytes a escribir en el marco actual
+        size_t espacioDisponible = config_memoria.tam_pagina - offsetActual;
+        size_t bytesALeer = (bytesRestantesPorLeer < espacioDisponible) ? bytesRestantesPorLeer : espacioDisponible;
+
+        // Escribir los bytes correspondientes en el marco actual
+        memcpy(stringARetornar + bytesLeidos, memoriaPrincipal + nroMarcoActual * config_memoria.tam_pagina + offsetActual, bytesALeer);
+
+
+        // Actualizar contadores
+        t_pagina* pagina = list_get(proceso->listaPaginasProceso, siguientePagina);
+        nroMarcoActual = pagina->nroMarco;
+
+        siguientePagina++;
+        if (siguientePagina == list_size(proceso->listaPaginasProceso)) {
+            siguientePagina = 0;
+        }
+
+        bytesRestantesPorLeer -= bytesALeer;
+        bytesLeidos += bytesALeer;
+
+        // Pasar al siguiente marco y reiniciar el offset
+        offsetActual = 0;  // Después del primer marco, el offset es 0
+    }
+	stringARetornar[tamString] = '\0'; // Asegurar que la cadena esté terminada en null
+	return stringARetornar;
+}
+
+void ejecutar_copy_string(){
+	
+	t_buffer* buffer_recibido = recibir_buffer(fd_cpu);
+
+    uint32_t tamString = leer_buffer_uint32(buffer_recibido);
+    uint32_t direccion_fisica_si = leer_buffer_uint32(buffer_recibido);
+    uint32_t direccion_fisica_di = leer_buffer_uint32(buffer_recibido);
+    uint32_t pid = leer_buffer_uint32(buffer_recibido);
+    destruir_buffer(buffer_recibido);
+	t_proceso* proceso = buscarProcesoPorPid(pid);
+	char* string_a_escribir = leerValorEnMemoriaString(direccion_fisica_si, tamString, proceso);
+	
+	escribirValorEnMemoriaString(string_a_escribir, direccion_fisica_di, tamString, proceso);
+
+	enviar_codOp(fd_cpu, COPY_STRING_OK);
+
+	// imprimir_memoria();
+	free(string_a_escribir);
+}
+
+void finalizar_proceso(){
+	t_buffer* buffer 		= recibir_buffer(fd_kernel);
+	uint32_t pidAFinalizar  = leer_buffer_uint32(buffer);
+	destruir_buffer(buffer);
+	
+	t_proceso* proceso_a_eliminar = buscarProcesoPorPid(pidAFinalizar);
+
+	log_info(logger_memoria, "Destrucción: PID: %d - Tamaño: %d", proceso_a_eliminar->pid, proceso_a_eliminar->cantPaginas);
+
+	liberarPaginasDeUnProcesoResize(proceso_a_eliminar , 0);
+
+	// proceso_destroy(proceso_a_eliminar);
+
+	// imprimir_memoria();
+	enviar_codOp(fd_kernel, FINALIZAR_PROCESO_OK);
+}
+
+void proceso_destroy(t_proceso* proceso_a_destruir){
+	list_destroy_and_destroy_elements(proceso_a_destruir->instrucciones, (void* ) destruir_instrucciones);
+	free(proceso_a_destruir);
+
+	return;
+}
+
+void destruir_instrucciones(t_instruccion* instruccion_a_destruir){
+	free(instruccion_a_destruir->par1);
+	free(instruccion_a_destruir->par2);
+	free(instruccion_a_destruir->par3);
+	free(instruccion_a_destruir->par4);
+	free(instruccion_a_destruir->par5);
+	free(instruccion_a_destruir);
+
+	return;
+}

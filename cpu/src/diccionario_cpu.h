@@ -15,10 +15,21 @@ typedef struct{
     char* algoritmo_tlb;
 } t_config_cpu;
 
-
+typedef struct{
+    uint32_t pid;
+    uint32_t nro_pagina;
+    uint32_t nro_marco;
+    uint32_t cont_lru;
+} t_entrada_tlb;
 
 
 // Variables globales CPU
+
+// Colas
+extern t_list* lista_TLB;
+
+// Contador LRU
+extern uint32_t cont_lru;
 
 // Logger Y Config
 extern t_log* logger_cpu;
@@ -37,6 +48,7 @@ extern int fd_kernel_int;
 extern pthread_mutex_t mutex_realizar_desalojo;
 extern pthread_mutex_t mutex_cde_ejecutando;
 extern pthread_mutex_t mutex_instruccion_actualizada;
+extern pthread_mutex_t mutex_interrupcion_consola;
 
 // Registro
 extern t_registros* registros_cpu;
@@ -44,6 +56,7 @@ extern t_registros* registros_cpu;
 //Interrupciones
 extern int interrupcion;
 extern int realizar_desalojo;
+extern int interrupcion_consola;
 extern uint32_t tam_pagina;
 
 extern uint8_t algoritmo_planificacion;

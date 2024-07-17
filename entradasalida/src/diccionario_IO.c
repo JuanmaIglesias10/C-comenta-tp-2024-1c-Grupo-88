@@ -11,3 +11,8 @@ t_config* config;
 // Files Descriptors 
 int fd_kernel;
 int fd_memoria;
+
+// FS
+int tamanio_bitmap;
+t_bitarray* bitarray;
+t_list* lista_info_archivos;

@@ -116,7 +116,7 @@ void ejecutar_set32(char* registro, uint32_t valor_recibido){
     }
 }
 
-uint8_t  buscar_valor_registro8(void* registro) {
+uint8_t  buscar_valor_registro8(char* registro) {
 	uint8_t  valorLeido8;
 	if(strcmp(registro, "AX") == 0){
 		valorLeido8 = registros_cpu->AX;
@@ -139,12 +139,12 @@ uint8_t  buscar_valor_registro8(void* registro) {
 
 }
 
-uint32_t  buscar_valor_registro32(void* registro){
+uint32_t  buscar_valor_registro32(char* registro){
     uint32_t valorLeido32;
-     if(strcmp(registro, "EAX") == 0){
-            valorLeido32 = registros_cpu->EAX;
-            return valorLeido32;
-        }
+    if(strcmp(registro, "EAX") == 0){
+        valorLeido32 = registros_cpu->EAX;
+        return valorLeido32;
+    }
     else if(strcmp(registro, "EBX") == 0){
         valorLeido32 = registros_cpu->EBX;
         return valorLeido32;
@@ -156,45 +156,93 @@ uint32_t  buscar_valor_registro32(void* registro){
     else if(strcmp(registro, "EDX") == 0){
         valorLeido32 = registros_cpu->EDX;
         return valorLeido32;
-    } else{
+    }
+    else if(strcmp(registro, "SI") == 0 ) {
+        valorLeido32 = registros_cpu->SI;
+        return valorLeido32;
+    }
+    else if(strcmp(registro, "DI") == 0 ) {
+        valorLeido32 = registros_cpu->DI;
+        return valorLeido32;
+    }
+    else{
         return 1000;
     }
-
 
 }
 
 void ejecutar_sum(char* reg_dest, char* reg_origen) {
     if(strcmp(reg_dest, "AX") == 0){
-        uint8_t  valor_reg_origen = buscar_valor_registro8(reg_origen);
-        registros_cpu->AX += valor_reg_origen;
+        if(es_uint8(reg_origen)){
+            uint8_t  valor_reg_origen = buscar_valor_registro8(reg_origen);
+            registros_cpu->AX += valor_reg_origen;
+        } else {
+            uint32_t  valor_reg_origen = buscar_valor_registro32(reg_origen);
+            registros_cpu->AX += valor_reg_origen;
+        }
     }    
     else if(strcmp(reg_dest, "BX") == 0){
-        uint8_t valor_reg_origen = buscar_valor_registro8(reg_origen);
-        registros_cpu->BX += valor_reg_origen;
+        if(es_uint8(reg_origen)){
+            uint8_t  valor_reg_origen = buscar_valor_registro8(reg_origen);
+            registros_cpu->BX += valor_reg_origen;
+        } else {
+            uint32_t  valor_reg_origen = buscar_valor_registro32(reg_origen);
+            registros_cpu->BX += valor_reg_origen;
+        }
     }
     else if(strcmp(reg_dest, "CX") == 0){
-        uint8_t valor_reg_origen = buscar_valor_registro8(reg_origen);
-        registros_cpu->CX += valor_reg_origen;
+        if(es_uint8(reg_origen)){
+            uint8_t  valor_reg_origen = buscar_valor_registro8(reg_origen);
+            registros_cpu->CX += valor_reg_origen;
+        } else {
+            uint32_t  valor_reg_origen = buscar_valor_registro32(reg_origen);
+            registros_cpu->CX += valor_reg_origen;
+        }
     }
     else if(strcmp(reg_dest, "DX") == 0){
-        uint8_t valor_reg_origen = buscar_valor_registro8(reg_origen);
-        registros_cpu->DX += valor_reg_origen;
+        if(es_uint8(reg_origen)){
+            uint8_t  valor_reg_origen = buscar_valor_registro8(reg_origen);
+            registros_cpu->DX += valor_reg_origen;
+        } else {
+            uint32_t  valor_reg_origen = buscar_valor_registro32(reg_origen);
+            registros_cpu->DX += valor_reg_origen;
+        }
     }
     else if(strcmp(reg_dest, "EAX") == 0){
-        uint32_t valor_reg_origen = buscar_valor_registro32(reg_origen);
-        registros_cpu->EAX += valor_reg_origen;
+        if(es_uint8(reg_origen)){
+            uint8_t  valor_reg_origen = buscar_valor_registro8(reg_origen);
+            registros_cpu->EAX += valor_reg_origen;
+        } else {
+            uint32_t  valor_reg_origen = buscar_valor_registro32(reg_origen);
+            registros_cpu->EAX += valor_reg_origen;
+        }
     }
     else if(strcmp(reg_dest, "EBX") == 0){
-        uint32_t valor_reg_origen = buscar_valor_registro32(reg_origen);
-        registros_cpu->EBX += valor_reg_origen;
+        if(es_uint8(reg_origen)){
+            uint8_t  valor_reg_origen = buscar_valor_registro8(reg_origen);
+            registros_cpu->EBX += valor_reg_origen;
+        } else {
+            uint32_t  valor_reg_origen = buscar_valor_registro32(reg_origen);
+            registros_cpu->EBX += valor_reg_origen;
+        }
     }
     else if(strcmp(reg_dest, "ECX") == 0){
-        uint32_t valor_reg_origen = buscar_valor_registro32(reg_origen);
-        registros_cpu->ECX += valor_reg_origen;
+        if(es_uint8(reg_origen)){
+            uint8_t  valor_reg_origen = buscar_valor_registro8(reg_origen);
+            registros_cpu->ECX += valor_reg_origen;
+        } else {
+            uint32_t  valor_reg_origen = buscar_valor_registro32(reg_origen);
+            registros_cpu->ECX += valor_reg_origen;
+        }
     }
     else if(strcmp(reg_dest, "EDX") == 0){
-        uint32_t valor_reg_origen = buscar_valor_registro32(reg_origen);
-        registros_cpu->EDX += valor_reg_origen;
+        if(es_uint8(reg_origen)){
+            uint8_t  valor_reg_origen = buscar_valor_registro8(reg_origen);
+            registros_cpu->EDX += valor_reg_origen;
+        } else {
+            uint32_t  valor_reg_origen = buscar_valor_registro32(reg_origen);
+            registros_cpu->EDX += valor_reg_origen;
+        }
     }
     else
         log_warning(logger_cpu, "Registro no valido");
@@ -202,36 +250,76 @@ void ejecutar_sum(char* reg_dest, char* reg_origen) {
 
 void ejecutar_sub(char* reg_dest, char* reg_origen) {
     if(strcmp(reg_dest, "AX") == 0){
-        uint8_t  valor_reg_origen = buscar_valor_registro8(reg_origen);
-        registros_cpu->AX -= valor_reg_origen;
+        if(es_uint8(reg_origen)){
+            uint8_t  valor_reg_origen = buscar_valor_registro8(reg_origen);
+            registros_cpu->AX -= valor_reg_origen;
+        } else {
+            uint32_t  valor_reg_origen = buscar_valor_registro32(reg_origen);
+            registros_cpu->AX -= valor_reg_origen;
+        }
     }    
     else if(strcmp(reg_dest, "BX") == 0){
-        uint8_t valor_reg_origen = buscar_valor_registro8(reg_origen);
-        registros_cpu->BX -= valor_reg_origen;
+        if(es_uint8(reg_origen)){
+            uint8_t  valor_reg_origen = buscar_valor_registro8(reg_origen);
+            registros_cpu->BX -= valor_reg_origen;
+        } else {
+            uint32_t  valor_reg_origen = buscar_valor_registro32(reg_origen);
+            registros_cpu->BX -= valor_reg_origen;
+        }
     }
     else if(strcmp(reg_dest, "CX") == 0){
-        uint8_t valor_reg_origen = buscar_valor_registro8(reg_origen);
-        registros_cpu->CX -= valor_reg_origen;
+        if(es_uint8(reg_origen)){
+            uint8_t  valor_reg_origen = buscar_valor_registro8(reg_origen);
+            registros_cpu->CX -= valor_reg_origen;
+        } else {
+            uint32_t  valor_reg_origen = buscar_valor_registro32(reg_origen);
+            registros_cpu->CX -= valor_reg_origen;
+        }
     }
     else if(strcmp(reg_dest, "DX") == 0){
-        uint8_t valor_reg_origen = buscar_valor_registro8(reg_origen);
-        registros_cpu->DX -= valor_reg_origen;
+        if(es_uint8(reg_origen)){
+            uint8_t  valor_reg_origen = buscar_valor_registro8(reg_origen);
+            registros_cpu->DX -= valor_reg_origen;
+        } else {
+            uint32_t  valor_reg_origen = buscar_valor_registro32(reg_origen);
+            registros_cpu->DX -= valor_reg_origen;
+        }
     }
     else if(strcmp(reg_dest, "EAX") == 0){
-        uint32_t valor_reg_origen = buscar_valor_registro32(reg_origen);
-        registros_cpu->EAX -= valor_reg_origen;
+        if(es_uint8(reg_origen)){
+            uint8_t  valor_reg_origen = buscar_valor_registro8(reg_origen);
+            registros_cpu->EAX -= valor_reg_origen;
+        } else {
+            uint32_t  valor_reg_origen = buscar_valor_registro32(reg_origen);
+            registros_cpu->EAX -= valor_reg_origen;
+        }
     }
     else if(strcmp(reg_dest, "EBX") == 0){
-        uint32_t valor_reg_origen = buscar_valor_registro32(reg_origen);
-        registros_cpu->EBX -= valor_reg_origen;
+        if(es_uint8(reg_origen)){
+            uint8_t  valor_reg_origen = buscar_valor_registro8(reg_origen);
+            registros_cpu->EBX -= valor_reg_origen;
+        } else {
+            uint32_t  valor_reg_origen = buscar_valor_registro32(reg_origen);
+            registros_cpu->EBX -= valor_reg_origen;
+        }
     }
     else if(strcmp(reg_dest, "ECX") == 0){
-        uint32_t valor_reg_origen = buscar_valor_registro32(reg_origen);
-        registros_cpu->ECX -= valor_reg_origen;
+        if(es_uint8(reg_origen)){
+            uint8_t  valor_reg_origen = buscar_valor_registro8(reg_origen);
+            registros_cpu->ECX -= valor_reg_origen;
+        } else {
+            uint32_t  valor_reg_origen = buscar_valor_registro32(reg_origen);
+            registros_cpu->ECX -= valor_reg_origen;
+        }
     }
     else if(strcmp(reg_dest, "EDX") == 0){
-        uint32_t valor_reg_origen = buscar_valor_registro32(reg_origen);
-        registros_cpu->EDX -= valor_reg_origen;
+        if(es_uint8(reg_origen)){
+            uint8_t  valor_reg_origen = buscar_valor_registro8(reg_origen);
+            registros_cpu->EDX -= valor_reg_origen;
+        } else {
+            uint32_t  valor_reg_origen = buscar_valor_registro32(reg_origen);
+            registros_cpu->EDX -= valor_reg_origen;
+        }
     }
     else
         log_warning(logger_cpu, "Registro no valido");
@@ -283,16 +371,15 @@ void ejecutar_jnz(void* registro, char* char_nro_instruccion) {
 }
 
 void ejecutar_io_gen_sleep(char* nombreInterfaz, char* charUnidadesDeTrabajo) {
-    uint32_t unidadesDeTrabajo = atoi(charUnidadesDeTrabajo);
-    // log_info(logger_cpu, unidadesDeTrabajo);
-    enviar_codOp(fd_kernel_int, INTERRUPT);
-    t_buffer* buffer_a_enviar = crear_buffer();
-    agregar_buffer_uint8(buffer_a_enviar,unidadesDeTrabajo);
-    agregar_buffer_string(buffer_a_enviar,nombreInterfaz);
-    enviar_buffer(buffer_a_enviar,fd_kernel_int);
-    destruir_buffer(buffer_a_enviar);
+    //uint32_t unidadesDeTrabajo = atoi(charUnidadesDeTrabajo);
+    //// log_info(logger_cpu, unidadesDeTrabajo);
+    //enviar_codOp(fd_kernel_int, INTERRUPT);
+    //t_buffer* buffer_a_enviar = crear_buffer();
+    //agregar_buffer_uint8(buffer_a_enviar,unidadesDeTrabajo);
+    //agregar_buffer_string(buffer_a_enviar,nombreInterfaz);
+    //enviar_buffer(buffer_a_enviar,fd_kernel_int);
+    //destruir_buffer(buffer_a_enviar);
     interrupcion = 1;
-    
 }
 
 void ejecutar_wait(char* recurso){ //solicitar a kernel que se asigne una instancia del recurso
@@ -368,11 +455,10 @@ void ejecutar_mov_in(char* registro, char* registroDirLogica){ //MOV_IN BX EAX -
     destruir_buffer(buffer);
     
     if (codigoMemoria == MOV_IN_OK) 
-        log_info(logger_cpu,"PID: %d - Acción: LEER - Dirección Física: %d - Valor: %d", pid_de_cde_ejecutando, dirFisica, es_uint8(registro) ? valorLeido8 : valorLeido32);
+        log_info(logger_cpu,"PID: %d - Acción: LEER - Dirección Física: %d - Valor: %u", pid_de_cde_ejecutando, dirFisica, es_uint8(registro) ? valorLeido8 : valorLeido32);
 
     if (es_uint8(registro)) {
         ejecutar_set8(registro, valorLeido8);
-        log_warning(logger_cpu, "%d", valorLeido8);
     } else {
         ejecutar_set32(registro, valorLeido32);
     }
@@ -394,7 +480,7 @@ void ejecutar_mov_out(char* registroDirLogica, char* registro){ //MOV_OUT EAX AX
     } else {
         valorAEscribir32 = buscar_valor_registro32(registro);
     }
-    
+    log_warning(logger_cpu , "%d<---------------------- ",dirLogica );
     uint32_t dirFisica = calcular_direccion_fisica(dirLogica); //0
     uint32_t numPagina = obtener_numero_pagina(dirLogica); //0
 
@@ -424,9 +510,9 @@ void ejecutar_mov_out(char* registroDirLogica, char* registro){ //MOV_OUT EAX AX
     if(codigoMemoria == MOV_OUT_OK){
 
         if(es_uint8(registro)){
-            log_info(logger_cpu,"PID: %d - Acción: ESCRIBIR - Dirección Física: %d - Valor: %d", pid_de_cde_ejecutando, dirFisica, valorAEscribir8);
+            log_info(logger_cpu,"PID: %d - Acción: ESCRIBIR - Dirección Física: %d - Valor: %u", pid_de_cde_ejecutando, dirFisica, valorAEscribir8);
         }else {
-            log_info(logger_cpu,"PID: %d - Acción: ESCRIBIR - Dirección Física: %d - Valor: %d", pid_de_cde_ejecutando, dirFisica, valorAEscribir32);
+            log_info(logger_cpu,"PID: %d - Acción: ESCRIBIR - Dirección Física: %d - Valor: %u", pid_de_cde_ejecutando, dirFisica, valorAEscribir32);
         }
     }
 }
@@ -435,35 +521,97 @@ bool es_uint8(char* registro){
     return (strcmp(registro, "AX") == 0 || strcmp(registro, "BX") == 0 || strcmp(registro, "CX") == 0 || strcmp(registro, "DX") == 0);
 }
 
-void ejecutar_io_stdin_read(char* interfaz, char* dir_logica, char* registro_tamaño){
+void ejecutar_io_stdin_read(char* interfaz, char** dir_logica, char** registro_tamanio){
+    uint32_t direccion_logica;
+    uint32_t tamanio_a_escribir;
     
-    uint32_t direccion_Logica;
-    uint32_t direccion_Fisica;
-    uint32_t tamaño_registro;
-    enviar_codOp(fd_kernel_dis, INTERRUPT);
-
-    t_buffer* buffer_a_enviar = crear_buffer();
-    
-    if (es_uint8(registro_tamaño)){
-        tamaño_registro = (uint32_t)buscar_valor_registro8(registro_tamaño);
+    if (es_uint8(*registro_tamanio)){
+        tamanio_a_escribir = (uint32_t)buscar_valor_registro8(*registro_tamanio);
     } else {
-        tamaño_registro = buscar_valor_registro32(registro_tamaño);
+        tamanio_a_escribir = buscar_valor_registro32(*registro_tamanio);
     }
-    agregar_buffer_uint32(buffer_a_enviar, tamaño_registro);
 
-
-    if (es_uint8(dir_logica)){
-        direccion_Logica = (uint32_t)buscar_valor_registro8(dir_logica);
+    if (es_uint8(*dir_logica)){
+        direccion_logica = (uint32_t)buscar_valor_registro8(*dir_logica);
     } else {
-        direccion_Logica  = buscar_valor_registro32(dir_logica);
+        direccion_logica  = buscar_valor_registro32(*dir_logica);
     }
-    direccion_Fisica = calcular_direccion_fisica(direccion_Logica);
+    uint32_t direccion_fisica = calcular_direccion_fisica(direccion_logica);
+        
+    // Convertir los valores a cadenas de texto
+    char dir_logica_str[20];
+    char tamanio_a_escribir_str[20];
     
-    agregar_buffer_uint32(buffer_a_enviar,direccion_Fisica);
+    sprintf(dir_logica_str, "%u", direccion_fisica);
+    sprintf(tamanio_a_escribir_str, "%u", tamanio_a_escribir);
 
-    agregar_buffer_string(buffer_a_enviar,interfaz);
-    
-    enviar_buffer(buffer_a_enviar,fd_kernel_dis);
-    destruir_buffer(buffer_a_enviar);
+    // Asignar las cadenas a los parámetros, liberando previamente la memoria si es necesario
+    free(*dir_logica);
+    free(*registro_tamanio);
+
+    *dir_logica = strdup(dir_logica_str);
+    *registro_tamanio = strdup(tamanio_a_escribir_str);
+
+    log_warning(logger_cpu , "////%s" , *dir_logica);
+    log_warning(logger_cpu , "////%s" , *registro_tamanio);
     interrupcion = 1;
+}
+
+void ejecutar_io_stdout_write(char* interfaz, char** dir_logica, char** registro_tamanio){
+    uint32_t direccion_logica;
+    uint32_t tamanio_a_escribir;
+    
+    if (es_uint8(*registro_tamanio)){
+        tamanio_a_escribir = (uint32_t)buscar_valor_registro8(*registro_tamanio);
+    } else {
+        tamanio_a_escribir = buscar_valor_registro32(*registro_tamanio);
+    }
+
+    if (es_uint8(*dir_logica)){
+        direccion_logica = (uint32_t)buscar_valor_registro8(*dir_logica);
+    } else {
+        direccion_logica  = buscar_valor_registro32(*dir_logica);
+    }
+    uint32_t direccion_fisica = calcular_direccion_fisica(direccion_logica);
+    
+    // Convertir los valores a cadenas de texto
+    char dir_logica_str[20];
+    char tamanio_a_escribir_str[20];
+    
+    sprintf(dir_logica_str, "%u", direccion_fisica);
+    sprintf(tamanio_a_escribir_str, "%u", tamanio_a_escribir);
+
+    // Asignar las cadenas a los parámetros, liberando previamente la memoria si es necesario
+    free(*dir_logica);
+    free(*registro_tamanio);
+
+    *dir_logica = strdup(dir_logica_str);
+    *registro_tamanio = strdup(tamanio_a_escribir_str);
+
+    log_warning(logger_cpu , "////%s" , *dir_logica);
+    log_warning(logger_cpu , "////%s" , *registro_tamanio);
+    interrupcion = 1;
+}
+
+void ejecutar_copy_string(char* char_tamanio){
+    uint32_t tamanio = atoi(char_tamanio);
+    uint32_t SI = buscar_valor_registro32("SI");
+    uint32_t DI = buscar_valor_registro32("DI");
+
+    uint32_t direccion_fisica_si = calcular_direccion_fisica(SI);
+    uint32_t direccion_fisica_di = calcular_direccion_fisica(DI);
+
+    enviar_codOp(fd_memoria, COPY_STRING_SOLICITUD);
+    t_buffer* buffer = crear_buffer();
+
+    agregar_buffer_uint32(buffer, tamanio);
+    agregar_buffer_uint32(buffer, direccion_fisica_si);
+    agregar_buffer_uint32(buffer, direccion_fisica_di);
+    agregar_buffer_uint32(buffer, pid_de_cde_ejecutando);
+    enviar_buffer(buffer, fd_memoria);
+    destruir_buffer(buffer);
+
+    mensajeCpuMemoria codOp = recibir_codOp(fd_memoria);
+    if (codOp == COPY_STRING_OK){
+    }
 }

@@ -31,8 +31,12 @@ t_codigo_operacion get_codigo_operacion(char* , int );
 t_list* ejecutar_script(char* pathScript);
 t_list* obtener_lista_script(char* pathScript);
 void iniciar_proceso(char* path);
+void finalizar_proceso(char* pid_string);
+void liberar_recursos_pcb(t_pcb* pcb);
+void signal_recursos_asignados_pcb(t_pcb* pcb, char* nombre_recurso_pedido);
 void detenerPlanificacion();
 void iniciarPlanificacion();
+void procesosPorEstado();
 t_pcb* crear_PCB();
 void cambiar_grado_multiprogramacion(char* nuevo_grado);
 void destruir_pcb(t_pcb* pcb);
@@ -41,10 +45,14 @@ void destruir_pcb(t_pcb* pcb);
 t_codigo_operacion obtener_codigo_operacion(char* parametro);
 t_pcb* retirar_pcb_de_ready_segun_algoritmo();
 t_pcb* retirar_pcb_de(t_queue* cola, pthread_mutex_t* mutex);
+void retirar_pcb_de_su_respectivo_estado(uint32_t pid, int* resultado);
+void enviar_a_finalizado(t_pcb* pcb_a_finalizar, char* razon);
+t_pcb* encontrar_pcb_por_pid(uint32_t pid, int* encontrado);
 void agregar_pcb_a(t_queue* cola, t_pcb* pcb_a_agregar, pthread_mutex_t* mutex);
 char* obtener_elementos_cargados_en(t_queue* );
 int esta_proceso_en_cola_bloqueados(t_pcb* pcb);
 bool es_RR_o_VRR();
+char* obtener_nombre_estado(t_estado_proceso estado);
 
 // INTERACCIONES CON CPU
 void enviar_cde_a_cpu();
@@ -59,8 +67,9 @@ void timer_vrr();
 
 // EVALUAR INSTRUCCIONES
 void evaluar_instruccion(t_instruccion* instruccion_actual);
-void io_gen_sleep();
-void io_stdin_read();
+void io_gen_sleep(char* interfaz, char* char_unidadesDeTrabajo);
+void io_stdin_read(char* interfaz, char* char_direccion_fisica, char* char_tamanio);
+void io_stdout_write();
 void evaluar_wait(char* nombre_recurso_pedido);
 void evaluar_signal(char* nombre_recurso_pedido);
 
