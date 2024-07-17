@@ -75,6 +75,11 @@ typedef struct {
     int fd;
 } t_interfaz;
 
+typedef struct {
+	char* interfaz;
+    char* char_direccion_fisica;
+    char* char_tamanio;
+}parametros_read_t;
 
 /* VARIABLES GLOBALES */
 extern int pid_a_asignar;
@@ -141,6 +146,7 @@ extern sem_t pausar_exec_a_ready;
 extern sem_t pausar_exec_a_blocked;
 extern sem_t pausar_blocked_a_ready;
 extern sem_t sem_colaGEN;
+extern sem_t sem_colaREAD;
 
 
 // Temporal

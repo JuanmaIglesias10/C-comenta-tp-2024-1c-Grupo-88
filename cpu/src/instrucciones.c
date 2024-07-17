@@ -478,7 +478,6 @@ void ejecutar_mov_out(char* registroDirLogica, char* registro){ //MOV_OUT EAX AX
     } else {
         valorAEscribir32 = buscar_valor_registro32(registro);
     }
-    log_warning(logger_cpu , "%d<---------------------- ",dirLogica );
     uint32_t dirFisica = calcular_direccion_fisica(dirLogica); //0
 
     enviar_codOp(fd_memoria, MOV_OUT_SOLICITUD);
@@ -547,9 +546,6 @@ void ejecutar_io_stdin_read(char* interfaz, char** dir_logica, char** registro_t
 
     *dir_logica = strdup(dir_logica_str);
     *registro_tamanio = strdup(tamanio_a_escribir_str);
-
-    log_warning(logger_cpu , "////%s" , *dir_logica);
-    log_warning(logger_cpu , "////%s" , *registro_tamanio);
     interrupcion = 1;
 }
 
@@ -584,8 +580,6 @@ void ejecutar_io_stdout_write(char* interfaz, char** dir_logica, char** registro
     *dir_logica = strdup(dir_logica_str);
     *registro_tamanio = strdup(tamanio_a_escribir_str);
 
-    log_warning(logger_cpu , "////%s" , *dir_logica);
-    log_warning(logger_cpu , "////%s" , *registro_tamanio);
     interrupcion = 1;
 }
 

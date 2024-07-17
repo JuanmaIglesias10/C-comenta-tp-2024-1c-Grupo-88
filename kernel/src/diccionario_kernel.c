@@ -62,6 +62,7 @@ sem_t pausar_exec_a_ready;
 sem_t pausar_exec_a_blocked;
 sem_t pausar_blocked_a_ready;
 sem_t sem_colaGEN;
+sem_t sem_colaREAD;
 
 
 //Temporal

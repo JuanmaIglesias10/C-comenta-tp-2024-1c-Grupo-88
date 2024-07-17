@@ -62,20 +62,15 @@ void ready_a_exec(){
 
 		sem_post(&cont_exec); 
         enviar_cde_a_cpu(); 
-
         if(strcmp(config_kernel.algoritmo_planificacion, "RR") == 0 || strcmp(config_kernel.algoritmo_planificacion, "VRR") == 0){
             pcb_ejecutando->fin_q = false;
             sem_wait(&sem_reiniciar_quantum);
+
             sem_post(&sem_iniciar_quantum);
             if(strcmp(config_kernel.algoritmo_planificacion, "VRR") == 0){
                 timer_vrr();
             }
         }
-		
-
-            // pcb_ejecutando->fin_q = false;
-            // sem_wait(&sem_reiniciar_quantum);
-            // sem_post(&sem_iniciar_quantum);
 
     }
 }

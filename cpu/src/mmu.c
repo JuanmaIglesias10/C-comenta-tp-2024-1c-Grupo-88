@@ -53,7 +53,6 @@ uint32_t pedir_marco_memoria(uint32_t nro_pagina){
 	enviar_codOp(fd_memoria,NUMERO_MARCO_SOLICITUD); //Hacia atender_cpu en atender_memoria.c
 
     t_buffer* buffer = crear_buffer();
-	log_warning(logger_cpu , "-------> %d" ,  nro_pagina);
 	agregar_buffer_uint32(buffer, nro_pagina); //0
 	agregar_buffer_uint32(buffer, pid_de_cde_ejecutando);
 	enviar_buffer(buffer, fd_memoria);

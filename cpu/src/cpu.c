@@ -205,18 +205,14 @@ void ejecutar_proceso(t_cde* cde){
         desalojar_cde(cde, instruccion_a_ejecutar);
     }
     else{
-        log_warning(logger_cpu , "me quiero ir a dormir  %d", interrupcion_consola);
         interrupcion = 0;
         pthread_mutex_lock(&mutex_interrupcion_consola);
         interrupcion_consola = 0;
         pthread_mutex_unlock(&mutex_interrupcion_consola);
-        log_warning(logger_cpu , "me quiero ir a dormir 2");
         pthread_mutex_lock(&mutex_realizar_desalojo);
         realizar_desalojo = 0;
         pthread_mutex_unlock(&mutex_realizar_desalojo);
-        log_warning(logger_cpu , "me quiero ir a dormir 3");
         instruccion_a_ejecutar->codigo = EXIT_POR_CONSOLA;
-        log_warning(logger_cpu , "me quiero ir a dormir 4");
         instruccion_a_ejecutar->par1 = NULL;
         instruccion_a_ejecutar->par2 = NULL;
         instruccion_a_ejecutar->par3 = NULL;

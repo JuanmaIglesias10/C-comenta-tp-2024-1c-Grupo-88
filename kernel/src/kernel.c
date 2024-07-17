@@ -132,6 +132,7 @@ void inicializar_semaforos(){
     sem_init(&pausar_exec_a_blocked, 0, 0);
     sem_init(&pausar_blocked_a_ready, 0, 0);
     sem_init(&sem_colaGEN, 0, 1);
+    sem_init(&sem_colaREAD, 0, 1);
 }
 
 t_recurso* inicializar_recurso(char* nombre_recurso, int instancias_totales){
@@ -552,7 +553,6 @@ void enviar_cde_a_cpu() {
 
     enviar_buffer(buffer, fd_cpu_dis);
     destruir_buffer(buffer);
-
     sem_post(&bin_recibir_cde); 
 
 }
@@ -670,7 +670,15 @@ void evaluar_instruccion(t_instruccion* instruccion_actual){
             if(es_RR_o_VRR()){
                 pcb_ejecutando->flag_clock = true;
             }
-            io_stdin_read(instruccion_actual->par1,instruccion_actual->par2,instruccion_actual->par3);
+            /*CONCHA */
+            parametros_read_t* parametros = malloc(sizeof(parametros_read_t));
+            parametros->interfaz = strdup(instruccion_actual->par1);
+            parametros->char_direccion_fisica = strdup(instruccion_actual->par2);
+            parametros->char_tamanio = strdup(instruccion_actual->par3);
+
+            pthread_t hilo_interfaz_read;
+            pthread_create(&hilo_interfaz_read, NULL, io_stdin_read, (void*)parametros);
+            pthread_detach(hilo_interfaz_read);
             destruir_instruccion(instruccion_actual);
             break;
         case IO_STDOUT_WRITE:
@@ -718,6 +726,7 @@ void evaluar_instruccion(t_instruccion* instruccion_actual){
 void io_gen_sleep(char* interfaz, char* char_unidadesDeTrabajo) {
     uint8_t unidadesDeTrabajo = atoi(char_unidadesDeTrabajo);
 
+    sem_wait(&sem_colaGEN);
 
     pthread_mutex_lock(&mutex_colaGEN);
     t_interfaz* aux = queue_pop(colaGenerica);
@@ -873,12 +882,21 @@ bool es_RR_o_VRR() {
     return (strcmp(config_kernel.algoritmo_planificacion,"RR")== 0 || strcmp(config_kernel.algoritmo_planificacion,"VRR")== 0);
 }
 
-void io_stdin_read(char* interfaz, char* char_direccion_fisica, char* char_tamanio) {
+void* io_stdin_read(void* arg) {
+    parametros_read_t* params = (parametros_read_t*)arg;
+    char* interfaz = params->interfaz;
+    char* char_direccion_fisica = params->char_direccion_fisica;
+    char* char_tamanio = params->char_tamanio;
+
     uint32_t direccion_fisica = atoi(char_direccion_fisica);
     uint32_t tamanio = atoi(char_tamanio);
-
+    log_warning(logger_kernel,"%s",interfaz);
+    log_warning(logger_kernel,"%d",direccion_fisica);
+    log_warning(logger_kernel,"%d",tamanio);
+    
+    sem_wait(&sem_colaREAD);
     t_interfaz* aux = queue_pop(colaSTDIN);
-
+    
     if (strcmp(aux->nombre, interfaz) == 0) {
         if (strcmp(aux->tipo, "STDIN") == 0) {
             enviar_codOp(aux->fd, STDIN_READ);
@@ -900,8 +918,13 @@ void io_stdin_read(char* interfaz, char* char_direccion_fisica, char* char_taman
                 log_info(logger_kernel, "Llegue a STDIN_READ_OK");
                 if (strcmp(config_kernel.algoritmo_planificacion, "VRR") == 0 && ms_transcurridos < pcb_read_stdin->quantum) {
                     pcb_read_stdin->quantum -= ms_transcurridos;
+                    queue_push(colaSTDIN, aux);
+                    sem_post(&sem_colaREAD);
+
                     enviar_pcb_de_block_a_ready_mas(pcb_read_stdin);
                 } else {
+                    sem_post(&sem_colaREAD);
+                    queue_push(colaSTDIN, aux);
                     enviar_pcb_de_block_a_ready(pcb_read_stdin);
                 }
             }
@@ -911,7 +934,9 @@ void io_stdin_read(char* interfaz, char* char_direccion_fisica, char* char_taman
     } else {
         agregar_a_cola_finished("INVALID_INTERFACE");
     }
-    queue_push(colaSTDIN, aux);
+    
+    free(arg);
+
 }
 
 
