@@ -40,6 +40,11 @@ typedef struct{
     int retraso_compactacion;
 } t_config_IO_DIALFS;
 
+typedef struct{
+    char* nombre_archivo;
+    t_config* config_archivo;
+} t_info_archivo;
+
 // Logger Y Config
 extern t_config_IO_GENERICA config_IO_GENERICA;
 extern t_config_IO_STDIN config_IO_STDIN;
@@ -55,6 +60,6 @@ extern int fd_memoria;
 // FS
 extern int tamanio_bitmap;
 extern t_bitarray* bitarray;
-
+extern t_list* lista_info_archivos;
 
 #endif /* DICCIONARIO_IO_H_ */
