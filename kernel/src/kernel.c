@@ -204,7 +204,6 @@ void finalizar_proceso(char* pid_string){
 
 t_pcb* encontrar_pcb_por_pid(uint32_t pid, int* encontrado){
     t_pcb* pcb;
-    int i = 0;
     
     *(encontrado) = 0;
 
@@ -218,13 +217,17 @@ t_pcb* encontrar_pcb_por_pid(uint32_t pid, int* encontrado){
 
     if(*(encontrado))
         return pcb;
-    else
+    else {
         log_warning(logger_kernel, "PCB no encontrado de PID: %d", pid);
+        return NULL;
+    }
 }
 
 void retirar_pcb_de_su_respectivo_estado(uint32_t pid, int* resultado){
     t_pcb* pcb_a_retirar = encontrar_pcb_por_pid(pid, resultado);
-
+    if(pcb_a_retirar == NULL){
+        log_warning(logger_kernel , "PCB encontrado se encuentra en NULL");
+    }
     if(resultado){
         switch(pcb_a_retirar->estado){
             case NEW:

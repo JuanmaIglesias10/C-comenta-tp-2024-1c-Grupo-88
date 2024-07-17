@@ -27,9 +27,8 @@ void* atender_IO(void* arg) {
         queue_push(colaDIALFS, interfaz);
     }
     pthread_mutex_unlock(&mutex_colasIO);
-    //free(nombre);
-    //free(tipo);
-    // while(1);
+    //Recien agregado
+    return 0;
 }
 
 

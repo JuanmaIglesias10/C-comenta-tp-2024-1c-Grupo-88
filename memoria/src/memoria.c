@@ -298,7 +298,6 @@ void ejecutar_MOV_OUT(){
 		valorAEscribir32 = leer_buffer_uint32(buffer);
 	}	
 	uint32_t pid = leer_buffer_uint32(buffer);
-	uint32_t numPagina = leer_buffer_uint32(buffer);
 	destruir_buffer(buffer);
 
 	t_proceso* proceso  = buscarProcesoPorPid(pid);
@@ -367,15 +366,12 @@ void escribirValorEnMemoria(uint32_t valor, size_t dirFisica, int cantBytes, t_p
 void ejecutar_MOV_IN(){
 	uint32_t tamanio;
 	uint32_t dirFisica;
-	uint32_t pid;
-	uint32_t nroPag;
-	
+	uint32_t pid;	
 	t_buffer* buffer = recibir_buffer(fd_cpu);
 
 	tamanio = leer_buffer_uint32(buffer);
 	dirFisica = leer_buffer_uint32(buffer);
 	pid = leer_buffer_uint32(buffer);
-	nroPag = leer_buffer_uint32(buffer);
 
 	destruir_buffer(buffer);
 

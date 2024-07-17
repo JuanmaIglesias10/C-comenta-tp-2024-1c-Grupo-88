@@ -425,7 +425,6 @@ void ejecutar_mov_in(char* registro, char* registroDirLogica){ //MOV_IN BX EAX -
     }
 
     uint32_t dirFisica = calcular_direccion_fisica(dirLogica);
-    uint32_t numPagina = obtener_numero_pagina(dirLogica);
 
     enviar_codOp(fd_memoria, MOV_IN_SOLICITUD);
     
@@ -438,7 +437,6 @@ void ejecutar_mov_in(char* registro, char* registroDirLogica){ //MOV_IN BX EAX -
     }
     agregar_buffer_uint32(buffer, dirFisica);
     agregar_buffer_uint32(buffer, pid_de_cde_ejecutando);
-    agregar_buffer_uint32(buffer, numPagina);
     enviar_buffer(buffer, fd_memoria);
     destruir_buffer(buffer);
     
@@ -482,7 +480,6 @@ void ejecutar_mov_out(char* registroDirLogica, char* registro){ //MOV_OUT EAX AX
     }
     log_warning(logger_cpu , "%d<---------------------- ",dirLogica );
     uint32_t dirFisica = calcular_direccion_fisica(dirLogica); //0
-    uint32_t numPagina = obtener_numero_pagina(dirLogica); //0
 
     enviar_codOp(fd_memoria, MOV_OUT_SOLICITUD);
     
@@ -500,7 +497,6 @@ void ejecutar_mov_out(char* registroDirLogica, char* registro){ //MOV_OUT EAX AX
     }
 
     agregar_buffer_uint32(buffer, pid_de_cde_ejecutando);
-    agregar_buffer_uint32(buffer, numPagina);
     enviar_buffer(buffer, fd_memoria);
     destruir_buffer(buffer);
 

@@ -57,11 +57,12 @@ void atender_consola(char* input) {
             switch_comandos(comando->codigo_operacion, comando->par1);
             actual = actual->next;
         }
-        liberar_lista_script(lista_script);
+		//--CHECK--
+        // liberar_lista_script(lista_script);
     } else {
         switch_comandos(cod_operacion, lista_mensaje[1]);
     }
-    string_array_destroy(lista_mensaje);
+    // string_array_destroy(lista_mensaje);
 }
 
 
