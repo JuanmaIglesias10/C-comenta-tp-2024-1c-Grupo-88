@@ -40,31 +40,31 @@ void mostrar_opciones_consola(){
 //INICIAR_PROCESO PATH
 //INICIAR_PLANIFICACION
 
-void atender_consola(char* input){
-	char** lista_mensaje = string_split(input, " ");
-	int cant_par = string_array_size(lista_mensaje) - 1;
-	if(lista_mensaje[1] == NULL){
-		lista_mensaje[1] = NULL;
-	}
-	t_codigo_operacion cod_operacion = get_codigo_operacion(lista_mensaje[0], cant_par);
-	if(cod_operacion == EJECUTAR_SCRIPT){
-		t_list* lista_script = ejecutar_script(lista_mensaje[1]);
-		string_array_destroy(lista_mensaje);
-
-		t_link_element *actual = lista_script->head;                    
-		while(actual != NULL){
-			t_script* comando = (t_script *)(actual->data); 
-			switch_comandos(comando->codigo_operacion, comando->par1);  
-			// free(comando);
-			actual = actual->next;
-		}
-		
-		// list_destroy_and_destroy_elements(lista_script, (void*)script_destroy);
-	} else {
-		switch_comandos(cod_operacion, lista_mensaje[1]);
-	}
-	
+void atender_consola(char* input) {
+    char** lista_mensaje = string_split(input, " ");
+    int cant_par = string_array_size(lista_mensaje) - 1;
+    if (lista_mensaje[1] == NULL) {
+        lista_mensaje[1] = NULL;
+    }
+    t_codigo_operacion cod_operacion = get_codigo_operacion(lista_mensaje[0], cant_par);
+    if (cod_operacion == EJECUTAR_SCRIPT) {
+        t_list* lista_script = ejecutar_script(lista_mensaje[1]);
+        string_array_destroy(lista_mensaje);
+        
+        t_link_element* actual = lista_script->head;
+        while (actual != NULL) {
+            t_script* comando = (t_script*)(actual->data);
+            switch_comandos(comando->codigo_operacion, comando->par1);
+            actual = actual->next;
+        }
+        liberar_lista_script(lista_script);
+    } else {
+        switch_comandos(cod_operacion, lista_mensaje[1]);
+    }
+    string_array_destroy(lista_mensaje);
 }
+
+
 t_codigo_operacion get_codigo_operacion(char* comando, int cant_par){
 	if(strcmp(comando, "EJECUTAR_SCRIPT") == 0){
 		if(cant_par != 1){return E_PARAMETROS;}
@@ -160,9 +160,20 @@ void switch_comandos(uint8_t codOp, char* lista_mensaje){
 }
 
 
-void script_destroy(t_script* script_a_destruir){
-	// free(script_a_destruir->codigo_operacion);
-	free(script_a_destruir->par1);
-	free(script_a_destruir);
-	return;
+//void script_destroy(t_script* script_a_destruir){
+//	// free(script_a_destruir->codigo_operacion);
+//	free(script_a_destruir->par1);
+//	free(script_a_destruir);
+//	return;
+//}
+
+void liberar_lista_script(t_list* lista) {
+    for (int i = 0; i < list_size(lista); i++) {
+        t_script* script = list_get(lista, i);
+        if (script->par1 != NULL) {
+            free(script->par1);
+        }
+        free(script);
+    }
+    list_destroy(lista);
 }
