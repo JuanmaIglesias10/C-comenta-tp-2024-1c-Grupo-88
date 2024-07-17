@@ -53,20 +53,27 @@ void testeo_FS() {
 
     tamanio_bitmap = config_IO_DIALFS.block_count / 8 ; // ej: si son 8 bloques necesito 8 bits = 1 byte
     crear_bitarray();
-    lista_metadata_archivos = list_create();
+    lista_info_archivos = list_create();
     if(!archivos_base_existen()) { // si no existen los archivos base
         crear_archivos_base();
+        fs_crear_archivo("manzanas.txt"); // 1 bloque
+        fs_crear_archivo("peras.txt"); // 1 bloque
 
-        fs_crear_archivo("manzanas.txt");
-        fs_truncar_archivo("manzanas.txt",10);
+        mostrar_bitarray(bitarray);
+        mostrar_info_archivos();
+
+        fs_truncar_archivo("manzanas.txt", 496); // 31 bloques
+
+        mostrar_bitarray(bitarray);
+        mostrar_info_archivos();
     }
     else { // si ya exixten los archivos base
         leer_bitmap();
-        leer_metadatas();
-        //list_remove();
-        t_config* config_aux = list_get(lista_metadata_archivos,0);
-        int value = config_get_int_value(config_aux,"TAMANIO_ARCHIVO");
-        printf("%d", value);
+        leer_info_archivos();
+
+        mostrar_bitarray(bitarray);
+        mostrar_info_archivos();
+
     }
 
     
@@ -78,12 +85,11 @@ void testeo_FS() {
     // leer_bitmap();
     // mostrar_bitarray(bitarray);
 
-
-
-    
     // fs_write(); // leo algo de la RAM -> lo escribo en el archivo
     // fs_read(); // leo de un archivo -> lo escribo en la RAM
     // fs_delete(); // elimino un archivo
+
+    printf("\n\n");
 }
 
 void crear_bitarray() {
@@ -165,24 +171,48 @@ bool existe_archivo(char* nombre_archivo) {
     return 0; // El archivo no existe en el directorio
 }
 
-void leer_metadatas(){
+void leer_info_archivos(){
     char* directory = config_IO_DIALFS.path_base_dialfs;
     struct dirent *entry;
     DIR *dp = opendir(directory);
-
+    printf("Lectura inicial de archivos en el FS:\n");
     while ((entry = readdir(dp))) {
-        if ((strcmp(entry->d_name, "bloques.dat") != 0) && (strcmp(entry->d_name, "bitmap.dat") != 0)) {
+        char* nombre_archivo = entry->d_name;
+        // ignorar las entradas de directorio actual y directorio padre
+        if (strcmp(nombre_archivo, ".") == 0 || strcmp(nombre_archivo, "..") == 0) {
+            continue;
+        } 
+        if ((strcmp(nombre_archivo, "bloques.dat") != 0) && (strcmp(nombre_archivo, "bitmap.dat") != 0)) {
+            printf("- Archivo encontrado: %s\n", nombre_archivo);
             char* path_archivo_metadata = string_new();
             string_append(&path_archivo_metadata, config_IO_DIALFS.path_base_dialfs);
-            string_append(&path_archivo_metadata, entry->d_name); 
+            string_append(&path_archivo_metadata, nombre_archivo); 
 
             t_config* config_md = config_create(path_archivo_metadata);
-            list_add(lista_metadata_archivos, config_md);
+            t_info_archivo* info_archivo = (t_info_archivo*)malloc(sizeof(t_info_archivo));
+            info_archivo->nombre_archivo = nombre_archivo;
+            info_archivo->config_archivo = config_md;
+
+            list_add(lista_info_archivos, info_archivo);
 
             free(path_archivo_metadata);
         }
     }
     closedir(dp);
+}
+
+void mostrar_info_archivos() {
+    printf("Mostrando informacion de los archivos en el FS\n");
+    for(int i = 0; i < list_size(lista_info_archivos); i++) {
+        t_info_archivo* info_archivo = list_get(lista_info_archivos,i);
+        t_config* config_archivo = info_archivo->config_archivo;
+        int bloque = config_get_int_value(config_archivo,"BLOQUE_INICIAL");
+        int tamanio = config_get_int_value(config_archivo,"TAMANIO_ARCHIVO");
+        char* nombre_archivo = info_archivo->nombre_archivo;
+        printf("- nombre: %s\n", nombre_archivo);
+        printf("- bloque inicial: %d\n", bloque);
+        printf("- tamanio: %d\n", tamanio);
+    }
 }
 
 
@@ -233,7 +263,12 @@ void fs_crear_archivo(char* nombre_archivo) {
     config_set_value(config_md, "BLOQUE_INICIAL", string_itoa(nro_bloque_libre));
     config_set_value(config_md, "TAMANIO_ARCHIVO", "0");
 
-    list_add(lista_metadata_archivos, config_md);
+    t_info_archivo* info_archivo = (t_info_archivo*)malloc(sizeof(t_info_archivo));
+    info_archivo->nombre_archivo = nombre_archivo;
+    info_archivo->config_archivo = config_md;
+
+    list_add(lista_info_archivos, info_archivo);
+
     config_save(config_md);
     //config_destroy(config_md);
     fclose(archivo_metadata);
@@ -258,33 +293,23 @@ int encontrarPrimerBloqueLibre() {
     return -1;
 }
 
-t_config* obtener_metadata(char* nombre_archivo) {
-    char* path_archivo_metadata = string_new();
-    string_append(&path_archivo_metadata, config_IO_DIALFS.path_base_dialfs);
-    string_append(&path_archivo_metadata, nombre_archivo); 
-    t_config* config_md = config_create(path_archivo_metadata);
-    return config_md;
-}
-
-uint32_t tamanio_archivo(char* nombre_archivo) {
-    t_config* config_md = obtener_metadata(nombre_archivo);
-    uint32_t bloque_inicial_archivo = config_get_int_value(config_md, "TAMANIO_ARCHIVO");
-    config_destroy(config_md);
-    return bloque_inicial_archivo;
-}
-
-uint32_t bloque_inicial_archivo(char* nombre_archivo) {
-    t_config* config_md = obtener_metadata(nombre_archivo);
-    uint32_t tamanio = config_get_int_value(config_md, "BLOQUE_INICIAL");
-    config_destroy(config_md);
-    return tamanio;
+t_info_archivo* obtener_info_archivo(char* nombre_archivo_buscado) {
+    int i = 0;
+    t_info_archivo* info_archivo;
+    do {
+        info_archivo = list_get(lista_info_archivos, i);
+        i++;
+    } while(strcmp(info_archivo->nombre_archivo, nombre_archivo_buscado) != 0);
+    
+    return info_archivo;
 }
 
 void fs_truncar_archivo(char* nombre_archivo, uint32_t nuevo_tamanio) {
 
     int tamanio_bloque = config_IO_DIALFS.block_size;
     //int cantidad_bloques_FS = config_IO_DIALFS.block_count;
-    t_config* config_md = obtener_metadata(nombre_archivo);
+    t_info_archivo* info_archivo = obtener_info_archivo(nombre_archivo);
+    t_config* config_md = info_archivo->config_archivo;
     uint32_t bloque_inicial = config_get_int_value(config_md, "BLOQUE_INICIAL");
     uint32_t tamanio_actual = config_get_int_value(config_md, "TAMANIO_ARCHIVO");
 
@@ -311,7 +336,7 @@ void fs_truncar_archivo(char* nombre_archivo, uint32_t nuevo_tamanio) {
     uint32_t cantidad_bloques_a_agregar = cantidad_bloques_nueva - cantidad_bloques_actual; // caso 4 y 5
     uint32_t cant_bloques_siguientes_libres = contar_bloques_siguientes_libres(ultimo_bloque_actual); // caso 4
 
-    uint32_t nuevo_bloque_inicial = hay_espacio_contiguo_libre_en_algun_lado(cantidad_bloques_nueva); // caso 5
+    uint32_t nuevo_bloque_inicial;
 
     // caso 1: si el tamanio es igual al actual
     if (nuevo_tamanio == tamanio_actual) {
@@ -369,7 +394,7 @@ void fs_truncar_archivo(char* nombre_archivo, uint32_t nuevo_tamanio) {
     }
 
     // Caso 5: tengo espacio contiguo en el FS pero no al final del archivo. No hay que compactar porque entra pero en otro lado
-    else if (nuevo_bloque_inicial != -1) {
+    else if ((nuevo_bloque_inicial = buscar_primer_lugar_libre(cantidad_bloques_nueva)) != -1) {
         log_debug(logger_IO,"Truncar. Caso 5: Mover para ampliar");
 
         ultimo_bloque_nuevo = nuevo_bloque_inicial + cantidad_bloques_nueva - 1;
@@ -402,29 +427,38 @@ void fs_truncar_archivo(char* nombre_archivo, uint32_t nuevo_tamanio) {
 
     // caso 6: no tengo espacio contiguo en el FS, debo compactar
     else {
-        /*
-        Luego de compactar podria volver a llamar a esta funcion ya que habria que volver a ver que 
-        */
-
-        // leo el contenido del archivo
+        log_debug(logger_IO,"Truncar. Caso 6: Compactar y mover para ampliar");
+        // leer el contenido del archivo
         FILE* arch_bloques = fopen("/home/utnso/dialfs/bloques.dat", "r+b"); // El puntero se posiciona al inicio
         char* buffer = (char*)malloc(tamanio_actual);
         fseek(arch_bloques, bloque_inicial * tamanio_bloque, SEEK_SET);
         fread(buffer, tamanio_actual, 1, arch_bloques);
         fclose(arch_bloques);
 
-        // libero bloques actuales
+        // liberar bloques actuales
         for(int i = bloque_inicial; i <= ultimo_bloque_actual; i++) {
             bitarray_clean_bit(bitarray,i); // lo marco libre
         }
 
-        // compacto
-        //compactar_FS();
+        // eliminar la info del archivo de la lista
+        list_remove_element(lista_info_archivos, info_archivo);
 
-        // busco nueva posicion para el archivo inicial
-        nuevo_bloque_inicial = hay_espacio_contiguo_libre_en_algun_lado(cantidad_bloques_nueva);
-    
-        // escribo el contenido del archivo en el nuevo lugar
+        // compactar sin tener en cuenta el archivo a truncar
+        compactar_FS();
+
+        // buscar nueva posicion para el bloque inicial
+        nuevo_bloque_inicial = buscar_primer_lugar_libre(cantidad_bloques_nueva);
+
+        // cambiar tamanio y bloque inicial
+        config_set_value(config_md, "TAMANIO_ARCHIVO", string_itoa(nuevo_tamanio));
+        config_set_value(config_md, "BLOQUE_INICIAL", string_itoa(nuevo_bloque_inicial));
+        config_save(config_md);
+
+        // actualizar info del archivo
+        info_archivo->config_archivo = config_md;
+        list_add(lista_info_archivos, info_archivo);
+
+        // escribir el contenido del archivo en el nuevo lugar
         arch_bloques = fopen("/home/utnso/dialfs/bloques.dat", "r+b"); // El puntero se posiciona al inicio
         fseek(arch_bloques, nuevo_bloque_inicial * tamanio_bloque, SEEK_SET);
         fwrite(buffer, tamanio_actual, 1, arch_bloques);
@@ -433,7 +467,7 @@ void fs_truncar_archivo(char* nombre_archivo, uint32_t nuevo_tamanio) {
 
         ultimo_bloque_nuevo = nuevo_bloque_inicial + cantidad_bloques_nueva - 1;
 
-        // asigno bloques nuevos
+        // asignar bloques nuevos
         for(int i = nuevo_bloque_inicial; i <= ultimo_bloque_nuevo; i++) {
             bitarray_set_bit(bitarray,i); // lo marco lleno
         }
@@ -442,16 +476,64 @@ void fs_truncar_archivo(char* nombre_archivo, uint32_t nuevo_tamanio) {
 
     // FIN AMPLIAR ARCHIVO
 
-    //log_info(logger_IO, "PID: <PID> - Truncar Archivo: %s - Tamaño: %u", nombre_archivo, nuevo_tamanio); // LOG OBLIGATORIO
+    log_info(logger_IO, "PID: %d - Truncar Archivo: %s - Tamaño: %u", 9999, nombre_archivo, nuevo_tamanio); // LOG OBLIGATORIO
 }
 
-// void compactar_FS() {
-    
+void compactar_FS() {
+    // global: lista_info_archivos
+    uint32_t tamanio_bloque = config_IO_DIALFS.block_size;
 
-//     mover_a_primer_lugar_libre(archivo);
+    for(int i = 0; i < list_size(lista_info_archivos); i++){
+        
+        t_info_archivo* info_archivo = list_get(lista_info_archivos,i);
+        t_config* config_archivo = info_archivo->config_archivo;
+        uint32_t bloque_inicial = config_get_int_value(config_archivo, "BLOQUE_INICIAL");
+        uint32_t tamanio_archivo = config_get_int_value(config_archivo, "TAMANIO_ARCHIVO");
 
-// }
+        uint32_t cantidad_bloques_actual;
+        if (tamanio_archivo == 0) 
+            cantidad_bloques_actual = 1;
+        else 
+            cantidad_bloques_actual = ceil((double)tamanio_archivo / (double)tamanio_bloque);
 
+        uint32_t ultimo_bloque_actual = bloque_inicial + cantidad_bloques_actual - 1;
+
+        // leo el contenido del archivo
+        FILE* arch_bloques = fopen("/home/utnso/dialfs/bloques.dat", "r+b"); // El puntero se posiciona al inicio
+        char* buffer = (char*)malloc(tamanio_archivo);
+        fseek(arch_bloques, bloque_inicial * tamanio_bloque, SEEK_SET);
+        fread(buffer, tamanio_archivo, 1, arch_bloques);
+
+        // libero bloques actuales
+        for(int i = bloque_inicial; i <= ultimo_bloque_actual; i++) {
+            bitarray_clean_bit(bitarray,i);
+        }
+
+        // busco nueva posicion para el bloque inicial
+        uint32_t nuevo_bloque_inicial = buscar_primer_lugar_libre(cantidad_bloques_actual);
+
+        // actualizo el config con el nuevo bloque inicial
+        config_set_value(config_archivo, "BLOQUE_INICIAL", string_itoa(nuevo_bloque_inicial));
+        config_save(config_archivo);
+
+        // escribo el contenido del archivo en el nuevo lugar
+        fseek(arch_bloques, nuevo_bloque_inicial * tamanio_bloque, SEEK_SET);
+        fwrite(buffer, tamanio_archivo, 1, arch_bloques);
+        fclose(arch_bloques);
+        free(buffer);
+
+        // calculo el nuevo ultimo bloque
+        uint32_t nuevo_ultimo_bloque = nuevo_bloque_inicial + cantidad_bloques_actual - 1;
+
+        // asigno bloques nuevos
+        for(int i = nuevo_bloque_inicial; i <= nuevo_ultimo_bloque; i++) {
+            bitarray_set_bit(bitarray,i); // lo marco lleno
+        }
+        actualizar_bitmap();
+    }
+    log_debug(logger_IO, "esperando %.1f segundos para terminar la compactacion", (double)config_IO_DIALFS.retraso_compactacion / 1000);
+    usleep(config_IO_DIALFS.retraso_compactacion * 1000); // retraso en la compactacion
+}
 
 uint32_t contar_bloques_siguientes_libres(uint32_t ultimo_bloque_actual) {
     // bibitarray: global
@@ -467,13 +549,13 @@ uint32_t contar_bloques_siguientes_libres(uint32_t ultimo_bloque_actual) {
     return cantidad_bloques_libres;
 }
 
-uint32_t hay_espacio_contiguo_libre_en_algun_lado (uint32_t cantidad_bloques_nueva) {
+uint32_t buscar_primer_lugar_libre(uint32_t cantidad_bloques_nueva) {
     
     uint32_t cantidad_bloques_libres_contiguos = 0;
     uint32_t i = 0;
     uint32_t pos_primer_bloque_contiguo_libre;
 
-    while ( i <= (config_IO_DIALFS.block_count - 1 ) && cantidad_bloques_libres_contiguos != cantidad_bloques_nueva) {
+    while ( (i <= config_IO_DIALFS.block_count - 1) && (cantidad_bloques_libres_contiguos != cantidad_bloques_nueva) ) {
 
         // si esta ocupado
         if (bitarray_test_bit(bitarray,i)) {
@@ -493,7 +575,7 @@ uint32_t hay_espacio_contiguo_libre_en_algun_lado (uint32_t cantidad_bloques_nue
     if (cantidad_bloques_libres_contiguos == cantidad_bloques_nueva) 
         return pos_primer_bloque_contiguo_libre;
     else 
-        return -1; //no hay bloques contiguos libre suficientes para mover al archivo -> hay que hacer compactacion
+        return -1;
 }
 
 /*

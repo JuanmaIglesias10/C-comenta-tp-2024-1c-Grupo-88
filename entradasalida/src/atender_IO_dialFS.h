@@ -27,18 +27,17 @@ void mostrar_bitarray(t_bitarray* un_bitarray);
 char* bool_to_string(bool value);
 void bitarray_clean(t_bitarray* un_bitarray);
 bool existe_archivo(char *nombre_archivo);
-void leer_metadatas(void);
+void leer_info_archivos(void);
+void mostrar_info_archivos(void);
+t_info_archivo* obtener_info_archivo(char* nombre_archivo_buscado);
 
 void fs_crear_archivo(char* nombre_archivo);
 int encontrarPrimerBloqueLibre(void);
 
-t_config* obtener_metadata(char* nombre_archivo);
-uint32_t tamanio_archivo(char* nombre_archivo);
-uint32_t bloque_inicial_archivo(char* nombre_archivo);
-
 void fs_truncar_archivo(char* nombre_archivo, uint32_t nuevo_tamanio);
 uint32_t contar_bloques_siguientes_libres(uint32_t ultimo_bloque_actual);
-uint32_t hay_espacio_contiguo_libre_en_algun_lado (uint32_t cantidad_bloques_nueva);
+void compactar_FS(void);
+uint32_t buscar_primer_lugar_libre(uint32_t cantidad_bloques_necesaria);
 
 
 

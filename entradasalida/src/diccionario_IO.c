@@ -15,4 +15,4 @@ int fd_memoria;
 // FS
 int tamanio_bitmap;
 t_bitarray* bitarray;
-t_list* lista_metadata_archivos;
+t_list* lista_info_archivos;
