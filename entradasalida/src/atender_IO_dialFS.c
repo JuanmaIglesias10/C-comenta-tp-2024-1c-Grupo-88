@@ -55,39 +55,41 @@ void testeo_FS() {
     crear_bitarray();
     lista_info_archivos = list_create();
     if(!archivos_base_existen()) { // si no existen los archivos base
-        crear_archivos_base();
+        crear_archivos_base(); // obligatorio
+
         fs_crear_archivo("manzanas.txt"); // 1 bloque
         fs_crear_archivo("peras.txt"); // 1 bloque
 
-        mostrar_bitarray(bitarray);
-        mostrar_info_archivos();
+        //mostrar_bitarray(bitarray);
+        //mostrar_info_archivos();
 
         fs_truncar_archivo("manzanas.txt", 496); // 31 bloques
 
+        //mostrar_bitarray(bitarray);
+        //mostrar_info_archivos();
+
+        fs_eliminar_archivo("manzanas.txt");
+
+        char* cadena = "Hola, mundo!";
+        size_t longitud = strlen(cadena) + 1;
+
+
+        fs_escribir_archivo("peras.txt", 2, longitud, cadena);
+        char* cadena_leida = fs_leer_archivo("peras.txt", 2, longitud);
+
+        printf("Cadena leída: %s\n", cadena_leida);
+        
         mostrar_bitarray(bitarray);
         mostrar_info_archivos();
     }
     else { // si ya exixten los archivos base
-        leer_bitmap();
-        leer_info_archivos();
+        leer_bitmap(); // obligatorio
+        leer_info_archivos(); // obligatorio
 
         mostrar_bitarray(bitarray);
         mostrar_info_archivos();
 
     }
-
-    
-    // fs_crear_archivo("peras.txt");
-    // fs_truncar_archivo("peras.txt",12);
-
-    // fs_truncar_archivo("manzanas.txt",18);
-
-    // leer_bitmap();
-    // mostrar_bitarray(bitarray);
-
-    // fs_write(); // leo algo de la RAM -> lo escribo en el archivo
-    // fs_read(); // leo de un archivo -> lo escribo en la RAM
-    // fs_delete(); // elimino un archivo
 
     printf("\n\n");
 }
@@ -215,7 +217,6 @@ void mostrar_info_archivos() {
     }
 }
 
-
 bool archivos_base_existen() {
     if(existe_archivo("bloques.dat") && existe_archivo("bitmap.dat")) {
         return 1;
@@ -317,7 +318,6 @@ void fs_truncar_archivo(char* nombre_archivo, uint32_t nuevo_tamanio) {
     if (tamanio_actual == 0) 
         cantidad_bloques_actual = 1;
     else {
-        //double aux = double(tamanio_actual / tamanio_bloque);
         cantidad_bloques_actual = ceil((double)tamanio_actual / (double)tamanio_bloque);
     }
     uint32_t cantidad_bloques_nueva;
@@ -480,6 +480,7 @@ void fs_truncar_archivo(char* nombre_archivo, uint32_t nuevo_tamanio) {
 }
 
 void compactar_FS() {
+    log_info(logger_IO, "PID: <PID> - Inicio Compactación."); // LOG OBLIGATORIO
     // global: lista_info_archivos
     uint32_t tamanio_bloque = config_IO_DIALFS.block_size;
 
@@ -533,6 +534,7 @@ void compactar_FS() {
     }
     log_debug(logger_IO, "esperando %.1f segundos para terminar la compactacion", (double)config_IO_DIALFS.retraso_compactacion / 1000);
     usleep(config_IO_DIALFS.retraso_compactacion * 1000); // retraso en la compactacion
+    log_info(logger_IO, "PID: <PID> - Fin Compactación."); // LOG OBLIGATORIO
 }
 
 uint32_t contar_bloques_siguientes_libres(uint32_t ultimo_bloque_actual) {
@@ -578,11 +580,64 @@ uint32_t buscar_primer_lugar_libre(uint32_t cantidad_bloques_nueva) {
         return -1;
 }
 
-/*
-typedef struct{
-    char* path_base_dialfs;
-    int block_size;
-    int block_count;
-    int retraso_compactacion;
-} t_config_IO_DIALFS;
-*/
+void fs_eliminar_archivo(char* nombre_archivo) {
+    int tamanio_bloque = config_IO_DIALFS.block_size;
+    t_info_archivo* info_archivo = obtener_info_archivo(nombre_archivo);
+    t_config* config_md = info_archivo->config_archivo;
+    uint32_t bloque_inicial = config_get_int_value(config_md, "BLOQUE_INICIAL");
+    uint32_t tamanio_actual = config_get_int_value(config_md, "TAMANIO_ARCHIVO");
+
+    uint32_t cantidad_bloques_actual;
+    if (tamanio_actual == 0) 
+        cantidad_bloques_actual = 1;
+    else {
+        cantidad_bloques_actual = ceil((double)tamanio_actual / (double)tamanio_bloque);
+    }
+    uint32_t ultimo_bloque_actual = bloque_inicial + cantidad_bloques_actual - 1;
+    
+    // libero los bloques
+    for(int i = bloque_inicial; i <= ultimo_bloque_actual; i++) {
+        bitarray_clean_bit(bitarray,i); // lo marco libre
+    }
+
+    // lo elimino de la lista de archivos
+    list_remove_element(lista_info_archivos, info_archivo);
+
+    config_destroy(info_archivo->config_archivo);
+    //free(info_archivo->nombre_archivo);
+    free(info_archivo);
+
+    log_info(logger_IO, "PID: <PID> - Eliminar Archivo: %s", nombre_archivo); // LOG OBLIGATORIO
+}
+
+char* fs_leer_archivo(char* nombre_archivo, uint32_t puntero_archivo, uint32_t tamanio_a_leer) {
+    uint32_t tamanio_bloque = config_IO_DIALFS.block_size;
+    t_info_archivo* info_archivo = obtener_info_archivo(nombre_archivo);
+    t_config* config_archivo = info_archivo->config_archivo;
+    uint32_t bloque_inicial = config_get_int_value(config_archivo, "BLOQUE_INICIAL");
+    //uint32_t tamanio_archivo = config_get_int_value(config_archivo, "TAMANIO_ARCHIVO");
+
+    char* buffer_leido = (char*)malloc(tamanio_a_leer);
+    FILE* arch_bloques = fopen("/home/utnso/dialfs/bloques.dat", "rb"); // solo lectura, puntero al inicio
+    fseek(arch_bloques, bloque_inicial * tamanio_bloque + puntero_archivo, SEEK_SET); // muevo el puntero
+    fread(buffer_leido, tamanio_a_leer, 1, arch_bloques);
+    fclose(arch_bloques);
+    
+    log_info(logger_IO, "PID: <PID> - Leer Archivo: %s - Tamaño a Leer: %d - Puntero Archivo: %d", nombre_archivo, tamanio_a_leer, puntero_archivo);
+    return buffer_leido;
+}
+
+void fs_escribir_archivo(char* nombre_archivo, uint32_t puntero_archivo, uint32_t tamanio_a_escribir, char* info_a_escribir) {
+    uint32_t tamanio_bloque = config_IO_DIALFS.block_size;
+    t_info_archivo* info_archivo = obtener_info_archivo(nombre_archivo);
+    t_config* config_archivo = info_archivo->config_archivo;
+    uint32_t bloque_inicial = config_get_int_value(config_archivo, "BLOQUE_INICIAL");
+    //uint32_t tamanio_archivo = config_get_int_value(config_archivo, "TAMANIO_ARCHIVO");
+
+    FILE* arch_bloques = fopen("/home/utnso/dialfs/bloques.dat", "r+b"); // lectura y escritura, puntero al inicio
+    fseek(arch_bloques, bloque_inicial * tamanio_bloque + puntero_archivo, SEEK_SET); // muevo el puntero
+    fwrite(info_a_escribir, tamanio_a_escribir, 1, arch_bloques);
+    fclose(arch_bloques);
+
+    log_info(logger_IO, "PID: <PID> - Escribir Archivo: %s - Tamaño a Escribir: %d - Puntero Archivo: %d", nombre_archivo, tamanio_a_escribir, puntero_archivo);
+}

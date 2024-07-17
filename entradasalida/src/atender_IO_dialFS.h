@@ -39,7 +39,10 @@ uint32_t contar_bloques_siguientes_libres(uint32_t ultimo_bloque_actual);
 void compactar_FS(void);
 uint32_t buscar_primer_lugar_libre(uint32_t cantidad_bloques_necesaria);
 
+void fs_eliminar_archivo(char* nombre_archivo);
 
+char* fs_leer_archivo(char* nombre_archivo, uint32_t puntero_archivo, uint32_t tamanio_a_leer);
+void fs_escribir_archivo(char* nombre_archivo, uint32_t puntero_archivo, uint32_t tamanio_a_escribir, char* info_a_escribir);
 
 
 #endif /* ATENDER_IO_DIALFS_H_ */
