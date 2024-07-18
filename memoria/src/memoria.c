@@ -821,3 +821,41 @@ void destruir_instrucciones(t_instruccion* instruccion_a_destruir){
 
 	return;
 }
+
+void escribir_fs_read(int fd_IO){
+	t_buffer* buffer_recibido = recibir_buffer(fd_IO);
+	uint32_t pid 			  = leer_buffer_uint32(buffer_recibido);
+    uint32_t dirFisica		  = leer_buffer_uint32(buffer_recibido);
+    char* valor_a_escribir 	  = leer_buffer_string(buffer_recibido);
+    uint32_t tamanio		  = leer_buffer_uint32(buffer_recibido);
+    destruir_buffer(buffer_recibido);
+	t_proceso* proceso = buscarProcesoPorPid(pid);
+	escribirValorEnMemoriaString(valor_a_escribir, dirFisica, tamanio, proceso);
+	log_warning(logger_memoria , "estoy llegando");
+	
+	enviar_codOp(fd_IO, IO_M_FS_READ_OK);
+	// imprimir_memoria();
+	free(valor_a_escribir);
+}
+
+void leer_fs_write(int fd_IO){
+    t_buffer* buffer_recibido = recibir_buffer(fd_IO);
+	uint32_t pid 			  = leer_buffer_uint32(buffer_recibido);
+    uint32_t dirFisica 		  = leer_buffer_uint32(buffer_recibido);
+    uint32_t tamanio          = leer_buffer_uint32(buffer_recibido);
+
+    destruir_buffer(buffer_recibido);
+	
+	t_proceso* proceso = buscarProcesoPorPid(pid);
+	
+	char* string_leido = leerValorEnMemoriaString(dirFisica, tamanio, proceso);
+	log_info(logger_memoria,"%s",string_leido);
+	
+	enviar_codOp(fd_IO, IO_M_FS_WRITE_OK);
+	t_buffer* buffer_a_enviar = crear_buffer();
+	agregar_buffer_string(buffer_a_enviar, string_leido);
+	enviar_buffer(buffer_a_enviar,fd_IO);
+    destruir_buffer(buffer_a_enviar);
+	free(string_leido);
+}
+

@@ -44,5 +44,13 @@ void fs_eliminar_archivo(char* nombre_archivo);
 char* fs_leer_archivo(char* nombre_archivo, uint32_t puntero_archivo, uint32_t tamanio_a_leer);
 void fs_escribir_archivo(char* nombre_archivo, uint32_t puntero_archivo, uint32_t tamanio_a_escribir, char* info_a_escribir);
 
+void inicializar_FS();
+
+void ejecutar_IO_FS_CREATE();
+void ejecutar_IO_FS_DELETE();
+void ejecutar_IO_FS_TRUNCATE();
+void ejecutar_IO_FS_WRITE();
+void ejecutar_IO_FS_READ();
+
 
 #endif /* ATENDER_IO_DIALFS_H_ */

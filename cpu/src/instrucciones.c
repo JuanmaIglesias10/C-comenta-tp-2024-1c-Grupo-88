@@ -605,3 +605,104 @@ void ejecutar_copy_string(char* char_tamanio){
     if (codOp == COPY_STRING_OK){
     }
 }
+
+void ejecutar_io_fs_create(char* interfaz, char* nombre_archivo){
+    interrupcion = 1;
+}
+
+void ejecutar_io_fs_delete(char* interfaz, char* nombre_archivo){
+    interrupcion = 1;
+}
+
+void ejecutar_io_fs_truncate(char* interfaz, char* nombre_archivo, char** registro_tamanio){
+    uint32_t tamanio_a_escribir;
+    if (es_uint8(*registro_tamanio)){
+        tamanio_a_escribir = (uint32_t)buscar_valor_registro8(*registro_tamanio);
+    } else {
+        tamanio_a_escribir = buscar_valor_registro32(*registro_tamanio);
+    }
+    char tamanio_a_escribir_str[20];
+
+    sprintf(tamanio_a_escribir_str, "%u", tamanio_a_escribir);
+
+    *registro_tamanio = strdup(tamanio_a_escribir_str);
+
+    interrupcion = 1;
+}
+
+void ejecutar_io_fs_write(char* intefaz, char* nombre_archivo, char** dir_logica, char** registro_tamanio, char** registro_punt_arch) {
+    uint32_t tamanio_a_leer;
+    uint32_t registro_punt_arch_a_leer;
+    uint32_t direccion_logica;
+
+    if (es_uint8(*registro_tamanio)){
+        tamanio_a_leer = (uint32_t)buscar_valor_registro8(*registro_tamanio);
+    } else {
+        tamanio_a_leer = buscar_valor_registro32(*registro_tamanio);
+    }
+
+
+    if (es_uint8(*registro_punt_arch)){
+        registro_punt_arch_a_leer = (uint32_t)buscar_valor_registro8(*registro_punt_arch);
+    } else {
+        registro_punt_arch_a_leer = buscar_valor_registro32(*registro_punt_arch);
+    }
+
+    if (es_uint8(*dir_logica)){
+            direccion_logica = (uint32_t)buscar_valor_registro8(*dir_logica);
+        } else {
+            direccion_logica  = buscar_valor_registro32(*dir_logica);
+        }
+    uint32_t direccion_fisica = calcular_direccion_fisica(direccion_logica);
+
+    char tamanio_a_leer_str[20];
+    char registro_punt_arch_a_leer_str[20];
+    char dir_logica_str[20];
+
+    sprintf(tamanio_a_leer_str, "%u", tamanio_a_leer);
+    sprintf(registro_punt_arch_a_leer_str, "%u", registro_punt_arch_a_leer);
+    sprintf(dir_logica_str, "%u", direccion_fisica);
+
+    *registro_tamanio = strdup(tamanio_a_leer_str);
+    *registro_punt_arch = strdup(registro_punt_arch_a_leer_str);
+    *dir_logica = strdup(dir_logica_str);
+    interrupcion = 1;
+}
+
+void ejecutar_io_fs_read(char* intefaz, char* nombre_archivo, char** dir_logica, char** registro_tamanio, char** registro_punt_arch) {
+    uint32_t tamanio_a_escribir;
+    uint32_t registro_punt_arch_a_escribir;
+    uint32_t direccion_logica;
+
+    if (es_uint8(*registro_tamanio)){
+        tamanio_a_escribir = (uint32_t)buscar_valor_registro8(*registro_tamanio);
+    } else {
+        tamanio_a_escribir = buscar_valor_registro32(*registro_tamanio);
+    }
+
+    if (es_uint8(*registro_punt_arch)){
+        registro_punt_arch_a_escribir = (uint32_t)buscar_valor_registro8(*registro_punt_arch);
+    } else {
+        registro_punt_arch_a_escribir = buscar_valor_registro32(*registro_punt_arch);
+    }
+
+    if (es_uint8(*dir_logica)){
+            direccion_logica = (uint32_t)buscar_valor_registro8(*dir_logica);
+        } else {
+            direccion_logica  = buscar_valor_registro32(*dir_logica);
+        }
+    uint32_t direccion_fisica = calcular_direccion_fisica(direccion_logica);
+
+    char tamanio_a_escribir_str[20];
+    char registro_punt_arch_a_escribir_str[20];
+    char dir_logica_str[20];
+
+    sprintf(tamanio_a_escribir_str, "%u", tamanio_a_escribir);
+    sprintf(registro_punt_arch_a_escribir_str, "%u", registro_punt_arch_a_escribir);
+    sprintf(dir_logica_str, "%u", direccion_fisica);
+
+    *registro_tamanio = strdup(tamanio_a_escribir_str);
+    *registro_punt_arch = strdup(registro_punt_arch_a_escribir_str);
+    *dir_logica = strdup(dir_logica_str);
+    interrupcion = 1;
+}

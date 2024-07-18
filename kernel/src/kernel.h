@@ -7,6 +7,7 @@
 #include <utils.h>
 #include "commons/temporal.h"
 #include "cambio_de_estado.h"
+#include "manejoIO.h"
 
 // INIT
 void inicializar_kernel();
@@ -67,9 +68,7 @@ void timer_vrr();
 
 // EVALUAR INSTRUCCIONES
 void evaluar_instruccion(t_instruccion* instruccion_actual);
-void io_gen_sleep(char* interfaz, char* char_unidadesDeTrabajo);
-void* io_stdin_read(void* arg);
-void io_stdout_write();
+
 void evaluar_wait(char* nombre_recurso_pedido);
 void evaluar_signal(char* nombre_recurso_pedido);
 

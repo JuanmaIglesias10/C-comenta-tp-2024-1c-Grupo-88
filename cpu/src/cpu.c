@@ -317,19 +317,34 @@ void ejecutar_instruccion(t_cde* cde, t_instruccion* instruccion_a_ejecutar){
                     destruir_instruccion(instruccion_a_ejecutar);
             break;
         case IO_FS_CREATE:
-			//
+			log_info(logger_cpu, "PID: %d - Ejecutando: %s - %s %s ", cde->pid, obtener_nombre_instruccion(instruccion_a_ejecutar), instruccion_a_ejecutar->par1, instruccion_a_ejecutar->par2);
+            ejecutar_io_fs_create(instruccion_a_ejecutar->par1, instruccion_a_ejecutar->par2);
+            if (interrupcion == 0 && realizar_desalojo == 0 && interrupcion_consola == 0)
+                    destruir_instruccion(instruccion_a_ejecutar);
             break;
         case IO_FS_DELETE:
-			//
+			log_info(logger_cpu, "PID: %d - Ejecutando: %s - %s %s", cde->pid, obtener_nombre_instruccion(instruccion_a_ejecutar), instruccion_a_ejecutar->par1, instruccion_a_ejecutar->par2);
+            ejecutar_io_fs_delete(instruccion_a_ejecutar->par1, instruccion_a_ejecutar->par2);
+            if (interrupcion == 0 && realizar_desalojo == 0 && interrupcion_consola == 0)
+                    destruir_instruccion(instruccion_a_ejecutar);
             break;
         case IO_FS_TRUNCATE:
-            //
+            log_info(logger_cpu, "PID: %d - Ejecutando: %s - %s %s %s", cde->pid, obtener_nombre_instruccion(instruccion_a_ejecutar), instruccion_a_ejecutar->par1, instruccion_a_ejecutar->par2, instruccion_a_ejecutar->par3);
+            ejecutar_io_fs_truncate(instruccion_a_ejecutar->par1, instruccion_a_ejecutar->par2,&(instruccion_a_ejecutar->par3));
+            if (interrupcion == 0 && realizar_desalojo == 0 && interrupcion_consola == 0)
+                    destruir_instruccion(instruccion_a_ejecutar);
             break;
         case IO_FS_WRITE:
-            //
+            log_info(logger_cpu, "PID: %d - Ejecutando: %s - %s %s %s %s %s", cde->pid, obtener_nombre_instruccion(instruccion_a_ejecutar), instruccion_a_ejecutar->par1, instruccion_a_ejecutar->par2, instruccion_a_ejecutar->par3, instruccion_a_ejecutar->par4, instruccion_a_ejecutar->par5);
+            ejecutar_io_fs_write(instruccion_a_ejecutar->par1, instruccion_a_ejecutar->par2, &(instruccion_a_ejecutar->par3), &(instruccion_a_ejecutar->par4), &(instruccion_a_ejecutar->par5));
+            if (interrupcion == 0 && realizar_desalojo == 0 && interrupcion_consola == 0)
+                    destruir_instruccion(instruccion_a_ejecutar);
             break;
         case IO_FS_READ:
-            //
+            log_info(logger_cpu, "PID: %d - Ejecutando: %s - %s %s %s %s %s", cde->pid, obtener_nombre_instruccion(instruccion_a_ejecutar), instruccion_a_ejecutar->par1, instruccion_a_ejecutar->par2, instruccion_a_ejecutar->par3, instruccion_a_ejecutar->par4, instruccion_a_ejecutar->par5);
+            ejecutar_io_fs_read(instruccion_a_ejecutar->par1, instruccion_a_ejecutar->par2, &(instruccion_a_ejecutar->par3), &(instruccion_a_ejecutar->par4), &(instruccion_a_ejecutar->par5));
+            if (interrupcion == 0 && realizar_desalojo == 0 && interrupcion_consola == 0)
+                    destruir_instruccion(instruccion_a_ejecutar);
             break;
         case EXIT:
             log_info(logger_cpu, "PID: %d - Ejecutando: %s", cde->pid, obtener_nombre_instruccion(instruccion_a_ejecutar));
@@ -383,19 +398,19 @@ bool es_bloqueante(t_codigo_instruccion instruccion){
         return true;
         break;
     case IO_FS_CREATE:
-        //
+        return true; 
         break;
     case IO_FS_DELETE:
-        //
+        return true; 
         break;
     case IO_FS_WRITE: 
-        //
+        return true; 
         break;
     case IO_FS_READ:
-        //
+        return true; 
         break;
     case IO_FS_TRUNCATE:
-        //
+        return true; 
         break;
     case EXIT:
         return true;

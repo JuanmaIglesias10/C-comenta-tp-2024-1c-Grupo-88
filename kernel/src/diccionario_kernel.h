@@ -81,6 +81,20 @@ typedef struct {
     char* char_tamanio;
 }parametros_read_t;
 
+typedef struct {
+	char* interfaz;
+    char* nombreArchivo;
+    char* tamanio;
+}parametros_truncate_t;
+
+typedef struct {
+	char* interfaz;
+    char* nombreArchivo;
+    char* dir_fisica;
+    char* tamanio;
+    char* valor_puntero;
+}parametros_fs_write_read_t;
+
 /* VARIABLES GLOBALES */
 extern int pid_a_asignar;
 extern int planificacion_detenida;
@@ -147,6 +161,8 @@ extern sem_t pausar_exec_a_blocked;
 extern sem_t pausar_blocked_a_ready;
 extern sem_t sem_colaGEN;
 extern sem_t sem_colaREAD;
+extern sem_t sem_colaWRITE;
+extern sem_t sem_colaFS;
 
 
 // Temporal

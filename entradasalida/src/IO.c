@@ -90,18 +90,12 @@ void inicializar_IO_DIALFS(char* nombre_interfaz){
 	config_IO_DIALFS.path_base_dialfs = config_get_string_value(config,"PATH_BASE_DIALFS"); 
 	config_IO_DIALFS.block_size = config_get_int_value(config,"BLOCK_SIZE"); 
 	config_IO_DIALFS.block_count = config_get_int_value(config,"BLOCK_COUNT"); 
-	config_IO_DIALFS.retraso_compactacion = config_get_int_value(config,"RETRASO_COMPACTACION"); 
+	config_IO_DIALFS.retraso_compactacion = config_get_int_value(config,"RETRASO_COMPACTACION");
 
-	//testeo_FS();
+	fd_memoria = conectarse(config_IO_DIALFS.ip_memoria,config_IO_DIALFS.puerto_memoria, "MEMORIA", logger_IO);
+	fd_kernel = conectarse(config_IO_DIALFS.ip_kernel,config_IO_DIALFS.puerto_kernel, "KERNEL", logger_IO);
 
-	//fd_memoria = conectarse(config_IO_DIALFS.ip_memoria,config_IO_DIALFS.puerto_memoria, "MEMORIA", logger_IO);
-	//fd_kernel = conectarse(config_IO_DIALFS.ip_kernel,config_IO_DIALFS.puerto_kernel, "KERNEL", logger_IO);
-
-	//enviar_info_kernel(nombre_interfaz,config_IO_DIALFS.tipo_interfaz);
-
-	pthread_t hilo_memoria;
-	pthread_create(&hilo_memoria, NULL, (void*)atender_memoria_IO_DIALFS, NULL);
-	pthread_detach(hilo_memoria);
+	enviar_info_kernel(nombre_interfaz,config_IO_DIALFS.tipo_interfaz);
 
 	pthread_t hilo_kernel;
 	pthread_create(&hilo_kernel, NULL, (void*)atender_kernel_IO_DIALFS, NULL);

@@ -26,3 +26,9 @@ bool es_uint8(char* registro);
 void ejecutar_io_stdin_read(char* interfaz, char** dir_logica, char** registro_tamanio);
 void ejecutar_io_stdout_write(char* interfaz, char** dir_logica, char** registro_tamanio);
 void ejecutar_copy_string(char* char_tamanio);
+void ejecutar_io_fs_create(char* interfaz, char* nombre_archivo);
+void ejecutar_io_fs_delete(char* interfaz, char* nombre_archivo);
+void ejecutar_io_fs_truncate(char* interfaz, char* nombre_archivo, char** registro_tamanio);
+void ejecutar_io_fs_write(char* intefaz, char* nombre_archivo, char** dir_logica, char** registro_tamanio, char** registro_punt_arch);
+void ejecutar_io_fs_read(char* intefaz, char* nombre_archivo, char** dir_logica, char** registro_tamanio, char** registro_punt_arch);
+

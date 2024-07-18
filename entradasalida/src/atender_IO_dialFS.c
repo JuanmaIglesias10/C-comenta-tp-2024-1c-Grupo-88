@@ -1,42 +1,154 @@
 #include "atender_IO_dialFS.h"
 
-void atender_memoria_IO_DIALFS() {
-    while (1) {
-        // por ahora no se usa
-        sleep(10);
-    }
-}
-
 void atender_kernel_IO_DIALFS() {
-    testeo_FS(); // luego cambiar
+    inicializar_FS();
 
     while (1) {
-        mensajeKernelIO cod_op = recibir_codOp(fd_kernel);
+        // mostrar_info_archivos();
+        // char* valor_leido = fs_leer_archivo("salida.txt", 0, 69);
 
-        // recibir PID
-        // recibir nombre del archivo
+        mensajeKernelIO cod_op = recibir_codOp(fd_kernel);
 
         switch (cod_op) {
             case FS_CREATE:
-                // TODO
+                ejecutar_IO_FS_CREATE();
                 break;
             case FS_DELETE:
-                // TODO
+                ejecutar_IO_FS_DELETE();
                 break;
             case FS_TRUNCATE:
-                // TODO
+                ejecutar_IO_FS_TRUNCATE();
                 break;
             case FS_WRITE:
-                // TODO
+                ejecutar_IO_FS_WRITE();
                 break;
             case FS_READ:
-                // TODO
+                ejecutar_IO_FS_READ();
                 break;
             default:
+                log_warning(logger_IO, "CODIGO DE OPERACION NO RECONOCIDO");
                 return;
-        }
+         }
     }
 }
+
+void inicializar_FS() {
+    tamanio_bitmap = config_IO_DIALFS.block_count / 8 ; // ej: si son 8 bloques necesito 8 bits = 1 byte
+    crear_bitarray();
+    lista_info_archivos = list_create();
+    if(!archivos_base_existen()) { // si no existen los archivos base
+        crear_archivos_base(); // obligatorio
+
+        //mostrar_bitarray(bitarray);
+        //mostrar_info_archivos();
+    }
+    else { // si ya exixten los archivos base
+        leer_bitmap(); // obligatorio
+        leer_info_archivos(); // obligatorio
+
+        //mostrar_bitarray(bitarray);
+        //mostrar_info_archivos();
+    }
+
+    printf("\n\n");
+}
+
+void ejecutar_IO_FS_CREATE() {
+    t_buffer* buffer_recibido =  recibir_buffer(fd_kernel);
+    uint32_t pid = leer_buffer_uint32(buffer_recibido);
+    char* nombre_archivo = leer_buffer_string(buffer_recibido);
+
+    fs_crear_archivo(nombre_archivo);
+
+    log_info(logger_IO, "PID: %d - Crear Archivo: %s", pid, nombre_archivo); // LOG OBLIGATORIO
+    enviar_codOp(fd_kernel, FS_CREATE_OK);
+}
+
+void ejecutar_IO_FS_DELETE() {
+    t_buffer* buffer_recibido =  recibir_buffer(fd_kernel);
+    uint32_t pid = leer_buffer_uint32(buffer_recibido);
+    char* nombre_archivo = leer_buffer_string(buffer_recibido);
+
+    fs_eliminar_archivo(nombre_archivo);
+
+    log_info(logger_IO, "PID: %d - Eliminar Archivo: %s", pid, nombre_archivo); // LOG OBLIGATORIO
+    enviar_codOp(fd_kernel, FS_DELETE_OK);
+}
+    
+void ejecutar_IO_FS_TRUNCATE(){
+    t_buffer* buffer_recibido =  recibir_buffer(fd_kernel);
+    uint32_t pid = leer_buffer_uint32(buffer_recibido);
+    char* nombre_archivo = leer_buffer_string(buffer_recibido);
+    uint32_t nuevo_tamanio = leer_buffer_uint32(buffer_recibido);
+
+    fs_truncar_archivo(nombre_archivo, nuevo_tamanio);
+
+    log_info(logger_IO, "PID: %d - Truncar Archivo: %s - Tamaño: %u", pid, nombre_archivo, nuevo_tamanio); // LOG OBLIGATORIO
+    enviar_codOp(fd_kernel, FS_TRUNCATE_OK);
+}
+
+void ejecutar_IO_FS_WRITE() {
+    t_buffer* buffer_recibido =  recibir_buffer(fd_kernel);
+    uint32_t pid = leer_buffer_uint32(buffer_recibido);
+    char* nombre_archivo = leer_buffer_string(buffer_recibido);
+    uint32_t direccion_fisica = leer_buffer_uint32(buffer_recibido); // enviar a memoria
+    uint32_t tamanio_a_escribir = leer_buffer_uint32(buffer_recibido);
+    uint32_t puntero_archivo = leer_buffer_uint32(buffer_recibido);
+	destruir_buffer(buffer_recibido);
+
+    enviar_codOp(fd_memoria, IO_M_FS_WRITE_SOLICITUD);
+	t_buffer* buffer = crear_buffer();
+    agregar_buffer_uint32(buffer,pid);
+    agregar_buffer_uint32(buffer,direccion_fisica);
+    agregar_buffer_uint32(buffer,tamanio_a_escribir);
+    enviar_buffer(buffer,fd_memoria); 
+    destruir_buffer(buffer);
+
+    mensajeIOMemoria cod_op = recibir_codOp(fd_memoria);
+
+    if(cod_op == IO_M_FS_WRITE_OK) {
+        t_buffer* buffer_string = recibir_buffer(fd_memoria);
+        char* string_recibido = leer_buffer_string(buffer_string);
+        destruir_buffer(buffer_string);
+
+        log_warning(logger_IO, "%s" , string_recibido);
+        //Pongo el string en el archivo
+        fs_escribir_archivo(nombre_archivo, puntero_archivo, tamanio_a_escribir, string_recibido);
+
+        enviar_codOp(fd_kernel, FS_WRITE_OK);
+        log_info(logger_IO, "PID: %d - Escribir Archivo: %s - Tamaño a Escribir: %d - Puntero Archivo: %d", pid, nombre_archivo, tamanio_a_escribir, puntero_archivo);
+    }
+}
+
+void ejecutar_IO_FS_READ() {
+    t_buffer* buffer_recibido = recibir_buffer(fd_kernel);
+    uint32_t pid = leer_buffer_uint32(buffer_recibido);
+    char* nombre_archivo = leer_buffer_string(buffer_recibido);
+    uint32_t direccion_fisica = leer_buffer_uint32(buffer_recibido);
+    uint32_t tamanio_a_leer = leer_buffer_uint32(buffer_recibido);
+    uint32_t puntero_archivo = leer_buffer_uint32(buffer_recibido);
+    destruir_buffer(buffer_recibido);
+    
+    char* valor_leido = fs_leer_archivo(nombre_archivo, puntero_archivo, tamanio_a_leer);
+
+    enviar_codOp(fd_memoria, IO_M_FS_READ_SOLICITUD);
+    t_buffer* buffer = crear_buffer();
+    agregar_buffer_uint32(buffer, pid);
+    agregar_buffer_uint32(buffer, direccion_fisica);
+    agregar_buffer_string(buffer, valor_leido);
+    agregar_buffer_uint32(buffer, tamanio_a_leer);
+    enviar_buffer(buffer, fd_memoria);
+
+    mensajeIOMemoria cod_op = recibir_codOp(fd_memoria);
+    
+    if(cod_op == IO_M_FS_READ_OK) {
+        enviar_codOp(fd_kernel, FS_READ_OK);
+        log_info(logger_IO, "PID: %d - Leer Archivo: %s - Tamaño a Leer: %d - Puntero Archivo: %d", pid, nombre_archivo, tamanio_a_leer, puntero_archivo);
+    } 
+}
+
+
+
 
 /*
 
@@ -271,14 +383,8 @@ void fs_crear_archivo(char* nombre_archivo) {
     list_add(lista_info_archivos, info_archivo);
 
     config_save(config_md);
-    //config_destroy(config_md);
     fclose(archivo_metadata);
     free(path_archivo_metadata);
-
-    log_info(logger_IO, "PID: <PID> - Crear Archivo: %s", nombre_archivo); // LOG OBLIGATORIO // to do: agregar pid
-
-    // los archivos no hace falta vincularlos a un PID luego de creados
-    // un proceso puede interactuar con los archivos de otros
 }
 
 int encontrarPrimerBloqueLibre() {
@@ -475,8 +581,6 @@ void fs_truncar_archivo(char* nombre_archivo, uint32_t nuevo_tamanio) {
     }
 
     // FIN AMPLIAR ARCHIVO
-
-    log_info(logger_IO, "PID: %d - Truncar Archivo: %s - Tamaño: %u", 9999, nombre_archivo, nuevo_tamanio); // LOG OBLIGATORIO
 }
 
 void compactar_FS() {
@@ -606,8 +710,6 @@ void fs_eliminar_archivo(char* nombre_archivo) {
     config_destroy(info_archivo->config_archivo);
     //free(info_archivo->nombre_archivo);
     free(info_archivo);
-
-    log_info(logger_IO, "PID: <PID> - Eliminar Archivo: %s", nombre_archivo); // LOG OBLIGATORIO
 }
 
 char* fs_leer_archivo(char* nombre_archivo, uint32_t puntero_archivo, uint32_t tamanio_a_leer) {
@@ -622,8 +724,7 @@ char* fs_leer_archivo(char* nombre_archivo, uint32_t puntero_archivo, uint32_t t
     fseek(arch_bloques, bloque_inicial * tamanio_bloque + puntero_archivo, SEEK_SET); // muevo el puntero
     fread(buffer_leido, tamanio_a_leer, 1, arch_bloques);
     fclose(arch_bloques);
-    
-    log_info(logger_IO, "PID: <PID> - Leer Archivo: %s - Tamaño a Leer: %d - Puntero Archivo: %d", nombre_archivo, tamanio_a_leer, puntero_archivo);
+
     return buffer_leido;
 }
 
@@ -638,6 +739,4 @@ void fs_escribir_archivo(char* nombre_archivo, uint32_t puntero_archivo, uint32_
     fseek(arch_bloques, bloque_inicial * tamanio_bloque + puntero_archivo, SEEK_SET); // muevo el puntero
     fwrite(info_a_escribir, tamanio_a_escribir, 1, arch_bloques);
     fclose(arch_bloques);
-
-    log_info(logger_IO, "PID: <PID> - Escribir Archivo: %s - Tamaño a Escribir: %d - Puntero Archivo: %d", nombre_archivo, tamanio_a_escribir, puntero_archivo);
 }

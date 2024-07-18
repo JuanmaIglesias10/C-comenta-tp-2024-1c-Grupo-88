@@ -26,7 +26,9 @@ void atender_kernel_IO_GENERICA()
                 case SLEEP:
                     t_buffer* buffer_recibido = recibir_buffer(fd_kernel);
                     uint8_t unidadesDeTrabajo = leer_buffer_uint8(buffer_recibido);
+                    log_warning(logger_IO, "empiezo sleep");
                     usleep(unidadesDeTrabajo * config_IO_GENERICA.tiempo_unidad_trabajo);
+                    log_warning(logger_IO, "termino sleep");
                     destruir_buffer(buffer_recibido);
                     enviar_codOp(fd_kernel,SLEEP_OK);
                     break;
