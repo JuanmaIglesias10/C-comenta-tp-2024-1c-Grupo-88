@@ -16,3 +16,5 @@ int fd_memoria;
 int tamanio_bitmap;
 t_bitarray* bitarray;
 t_list* lista_info_archivos;
+char* path_archivo_bloques;
+char* path_archivo_bitmap;

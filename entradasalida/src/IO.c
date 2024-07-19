@@ -92,6 +92,8 @@ void inicializar_IO_DIALFS(char* nombre_interfaz){
 	config_IO_DIALFS.block_count = config_get_int_value(config,"BLOCK_COUNT"); 
 	config_IO_DIALFS.retraso_compactacion = config_get_int_value(config,"RETRASO_COMPACTACION");
 
+	// testeo_FS();
+
 	fd_memoria = conectarse(config_IO_DIALFS.ip_memoria,config_IO_DIALFS.puerto_memoria, "MEMORIA", logger_IO);
 	fd_kernel = conectarse(config_IO_DIALFS.ip_kernel,config_IO_DIALFS.puerto_kernel, "KERNEL", logger_IO);
 

@@ -2,7 +2,6 @@
 
 void atender_kernel_IO_DIALFS() {
     inicializar_FS();
-    //testeo_FS();
 
     while (1) {
         mensajeKernelIO cod_op = recibir_codOp(fd_kernel);
@@ -38,6 +37,15 @@ void atender_kernel_IO_DIALFS() {
 void testeo_FS() {
 
     tamanio_bitmap = config_IO_DIALFS.block_count / 8 ; // ej: si son 8 bloques necesito 8 bits = 1 byte
+
+    path_archivo_bloques = string_new();
+    string_append(&path_archivo_bloques, config_IO_DIALFS.path_base_dialfs);
+    string_append(&path_archivo_bloques, "bloques.dat");
+
+    path_archivo_bitmap = string_new();
+    string_append(&path_archivo_bitmap, config_IO_DIALFS.path_base_dialfs);
+    string_append(&path_archivo_bitmap, "bitmap.dat");
+
     crear_bitarray();
     lista_info_archivos = list_create();
     if(!archivos_base_existen()) { // si no existen los archivos base
@@ -91,23 +99,24 @@ void testeo_FS() {
 
 void inicializar_FS() {
     tamanio_bitmap = config_IO_DIALFS.block_count / 8 ; // ej: si son 8 bloques necesito 8 bits = 1 byte
+
+    path_archivo_bloques = string_new();
+    string_append(&path_archivo_bloques, config_IO_DIALFS.path_base_dialfs);
+    string_append(&path_archivo_bloques, "bloques.dat");
+
+    path_archivo_bitmap = string_new();
+    string_append(&path_archivo_bitmap, config_IO_DIALFS.path_base_dialfs);
+    string_append(&path_archivo_bitmap, "bitmap.dat");
+
     crear_bitarray();
     lista_info_archivos = list_create();
     if(!archivos_base_existen()) { // si no existen los archivos base
         crear_archivos_base(); // obligatorio
-
-        //mostrar_bitarray(bitarray);
-        //mostrar_info_archivos();
     }
     else { // si ya exixten los archivos base
         leer_bitmap(); // obligatorio
         leer_info_archivos(); // obligatorio
-
-        //mostrar_bitarray(bitarray);
-        //mostrar_info_archivos();
     }
-
-    printf("\n\n");
 }
 
 void ejecutar_IO_FS_CREATE() {
@@ -212,13 +221,13 @@ void crear_bitarray() {
 
 void crear_archivos_base(){
     // Crear archivo de Bloques
-    FILE* archBloques = fopen("/home/utnso/dialfs/bloques.dat", "wb"); // lo creo
+    FILE* archBloques = fopen(path_archivo_bloques, "wb"); // lo creo
     // Establecer tamaño del archivo de Bloques
     ftruncate(fileno(archBloques), config_IO_DIALFS.block_size * config_IO_DIALFS.block_count);
     fclose(archBloques);
     
     // Crear archivo Bitmap
-    FILE* archBitmap = fopen("/home/utnso/dialfs/bitmap.dat", "wb"); // lo creo
+    FILE* archBitmap = fopen(path_archivo_bitmap, "wb"); // lo creo
     // Establecer tamaño del archivo bitmap
     ftruncate(fileno(archBitmap), tamanio_bitmap);
     fclose(archBitmap);
@@ -245,16 +254,6 @@ void mostrar_bitarray(t_bitarray* unBitarray) {
 
     // muestra un pedazo de memoria por pantalla en forma hexa
     // mem_hexdump(bitarray->bitarray,bitarray->size);
-}
-
-void mostrar_bitmap() {
-    // TESTING: Mostrar el bitmap
-    FILE* archBitmapTest = fopen("/home/utnso/dialfs/bitmap.dat", "r+b"); // lo abro como read
-    t_bitarray* bitarrayLeido = bitarray_create_with_mode(malloc(tamanio_bitmap), tamanio_bitmap, LSB_FIRST);
-    rewind(archBitmapTest);
-    fread(bitarrayLeido->bitarray, tamanio_bitmap, 1, archBitmapTest);   
-    mem_hexdump(bitarrayLeido->bitarray,bitarrayLeido->size); 
-    mostrar_bitarray(bitarrayLeido);
 }
 
 char* bool_to_string(bool value) {
@@ -338,14 +337,14 @@ bool archivos_base_existen() {
 }
 
 void actualizar_bitmap() {
-    FILE* archivo_bitmap = fopen("/home/utnso/dialfs/bitmap.dat", "r+b");
+    FILE* archivo_bitmap = fopen(path_archivo_bitmap, "r+b");
     fwrite(bitarray->bitarray, tamanio_bitmap, 1, archivo_bitmap);
     fclose(archivo_bitmap);
     log_debug(logger_IO, "bitmap actualizado");
 }
 
 void leer_bitmap() {
-    FILE* archivo_bitmap = fopen("/home/utnso/dialfs/bitmap.dat", "rb");
+    FILE* archivo_bitmap = fopen(path_archivo_bitmap, "rb");
     fread(bitarray->bitarray, tamanio_bitmap, 1, archivo_bitmap);
     fclose(archivo_bitmap);
     log_debug(logger_IO, "bitmap leido");
@@ -510,7 +509,7 @@ void fs_truncar_archivo(char* nombre_archivo, uint32_t nuevo_tamanio, uint32_t p
         config_save(config_md);
 
         // mover "archivo" de lugar dentro del archivo de bloques
-        FILE* arch_bloques = fopen("/home/utnso/dialfs/bloques.dat", "r+b"); // El puntero se posiciona al inicio
+        FILE* arch_bloques = fopen(path_archivo_bloques, "r+b"); // El puntero se posiciona al inicio
         char* buffer = (char*)malloc(tamanio_actual);
         fseek(arch_bloques, bloque_inicial * tamanio_bloque, SEEK_SET);
         fread(buffer, tamanio_actual, 1, arch_bloques);
@@ -534,7 +533,7 @@ void fs_truncar_archivo(char* nombre_archivo, uint32_t nuevo_tamanio, uint32_t p
     else {
         log_debug(logger_IO,"Truncar. Caso 6: Compactar y mover para ampliar");
         // leer el contenido del archivo
-        FILE* arch_bloques = fopen("/home/utnso/dialfs/bloques.dat", "r+b"); // El puntero se posiciona al inicio
+        FILE* arch_bloques = fopen(path_archivo_bloques, "r+b"); // El puntero se posiciona al inicio
         char* buffer = (char*)malloc(tamanio_actual);
         fseek(arch_bloques, bloque_inicial * tamanio_bloque, SEEK_SET);
         fread(buffer, tamanio_actual, 1, arch_bloques);
@@ -566,7 +565,7 @@ void fs_truncar_archivo(char* nombre_archivo, uint32_t nuevo_tamanio, uint32_t p
         list_add_sorted(lista_info_archivos, info_archivo, comparador_bloque_inicial);
 
         // escribir el contenido del archivo en el nuevo lugar
-        arch_bloques = fopen("/home/utnso/dialfs/bloques.dat", "r+b"); // El puntero se posiciona al inicio
+        arch_bloques = fopen(path_archivo_bloques, "r+b"); // El puntero se posiciona al inicio
         fseek(arch_bloques, nuevo_bloque_inicial * tamanio_bloque, SEEK_SET);
         fwrite(buffer, tamanio_actual, 1, arch_bloques);
         fclose(arch_bloques);
@@ -611,7 +610,7 @@ void compactar_FS() {
         uint32_t ultimo_bloque_actual = bloque_inicial + cantidad_bloques_actual - 1;
 
         // leo el contenido del archivo
-        FILE* arch_bloques = fopen("/home/utnso/dialfs/bloques.dat", "r+b"); // El puntero se posiciona al inicio
+        FILE* arch_bloques = fopen(path_archivo_bloques, "r+b"); // El puntero se posiciona al inicio
         char* buffer = (char*)malloc(tamanio_archivo);
         fseek(arch_bloques, bloque_inicial * tamanio_bloque, SEEK_SET);
         fread(buffer, tamanio_archivo, 1, arch_bloques);
@@ -732,7 +731,7 @@ char* fs_leer_archivo(char* nombre_archivo, uint32_t puntero_archivo, uint32_t t
     uint32_t bloque_inicial = config_get_int_value(config_archivo, "BLOQUE_INICIAL");
     
     char* buffer_leido = (char*)malloc(tamanio_a_leer);
-    FILE* arch_bloques = fopen("/home/utnso/dialfs/bloques.dat", "rb"); // solo lectura, puntero al inicio
+    FILE* arch_bloques = fopen(path_archivo_bloques, "rb"); // solo lectura, puntero al inicio
     fseek(arch_bloques, bloque_inicial * tamanio_bloque + puntero_archivo, SEEK_SET); // muevo el puntero
     fread(buffer_leido, tamanio_a_leer, 1, arch_bloques); // ACA PASA ALGO
     fclose(arch_bloques);
@@ -745,7 +744,7 @@ void fs_escribir_archivo(char* nombre_archivo, uint32_t puntero_archivo, uint32_
     t_config* config_archivo = info_archivo->config_archivo;
     uint32_t bloque_inicial = config_get_int_value(config_archivo, "BLOQUE_INICIAL");
 
-    FILE* arch_bloques = fopen("/home/utnso/dialfs/bloques.dat", "r+b"); // lectura y escritura, puntero al inicio
+    FILE* arch_bloques = fopen(path_archivo_bloques, "r+b"); // lectura y escritura, puntero al inicio
     fseek(arch_bloques, bloque_inicial * tamanio_bloque + puntero_archivo, SEEK_SET); // muevo el puntero
     fwrite(info_a_escribir, tamanio_a_escribir, 1, arch_bloques);
     fclose(arch_bloques);
