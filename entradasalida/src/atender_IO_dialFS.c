@@ -1,35 +1,95 @@
 #include "atender_IO_dialFS.h"
 
 void atender_kernel_IO_DIALFS() {
-    inicializar_FS();
+    // inicializar_FS();
+    testeo_FS();
 
-    while (1) {
+    // while (1) {
         // mostrar_info_archivos();
         // char* valor_leido = fs_leer_archivo("salida.txt", 0, 69);
 
-        mensajeKernelIO cod_op = recibir_codOp(fd_kernel);
+    //     mensajeKernelIO cod_op = recibir_codOp(fd_kernel);
 
-        switch (cod_op) {
-            case FS_CREATE:
-                ejecutar_IO_FS_CREATE();
-                break;
-            case FS_DELETE:
-                ejecutar_IO_FS_DELETE();
-                break;
-            case FS_TRUNCATE:
-                ejecutar_IO_FS_TRUNCATE();
-                break;
-            case FS_WRITE:
-                ejecutar_IO_FS_WRITE();
-                break;
-            case FS_READ:
-                ejecutar_IO_FS_READ();
-                break;
-            default:
-                log_warning(logger_IO, "CODIGO DE OPERACION NO RECONOCIDO");
-                return;
-         }
+    //     switch (cod_op) {
+    //         case FS_CREATE:
+    //             mostrar_info_archivos();
+    //             ejecutar_IO_FS_CREATE();
+    //             mostrar_info_archivos();
+    //             break;
+    //         case FS_DELETE:
+    //             mostrar_info_archivos();
+    //             ejecutar_IO_FS_DELETE();
+    //             mostrar_info_archivos();
+    //             break;
+    //         case FS_TRUNCATE:
+    //             mostrar_info_archivos();
+    //             ejecutar_IO_FS_TRUNCATE();
+    //             mostrar_info_archivos();
+    //             break;
+    //         case FS_WRITE:
+    //             mostrar_info_archivos();
+    //             ejecutar_IO_FS_WRITE();
+    //             mostrar_info_archivos();
+    //             break;
+    //         case FS_READ:
+    //             mostrar_info_archivos();
+    //             ejecutar_IO_FS_READ();
+    //             mostrar_info_archivos();
+    //             break;
+    //         default:
+    //             log_warning(logger_IO, "CODIGO DE OPERACION NO RECONOCIDO");
+    //             return;
+    //      }
+    // }
+}
+
+void testeo_FS() {
+
+    tamanio_bitmap = config_IO_DIALFS.block_count / 8 ; // ej: si son 8 bloques necesito 8 bits = 1 byte
+    crear_bitarray();
+    lista_info_archivos = list_create();
+    if(!archivos_base_existen()) { // si no existen los archivos base
+        crear_archivos_base(); // obligatorio
+
+        mostrar_info_archivos();
+
+        // FS_1
+        fs_crear_archivo("salida.txt"); // bloque 0 (desactualizado)
+        fs_crear_archivo("cronologico.txt"); // bloque 1 (desactualizado)
+        fs_truncar_archivo("salida.txt", 80); // bloque 2 al 6
+        fs_truncar_archivo("cronologico.txt", 80); // bloque 7 al 11
+        fs_escribir_archivo("salida.txt", 0, 69, "Fallout 1 Fallout 2 Fallout 3 Fallout: New Vegas Fallout 4 Fallout 76");
+        fs_escribir_archivo("cronologico.txt", 0, 69, "Fallout 76 Fallout 1 Fallout 2 Fallout 3 Fallout: New Vegas Fallout 4");
+
+        // FS_2
+        fs_crear_archivo("archivo1.txt"); // bloque 0 (desactualizado)
+        fs_crear_archivo("archivo2.txt"); // bloque 1 (desactualizado)
+        fs_truncar_archivo("archivo1.txt", 10); // bloque 0
+        fs_truncar_archivo("archivo2.txt", 10); // bloque 1
+
+        mostrar_info_archivos();
+        mostrar_bitarray(bitarray);
+
+        // char* cadena_leida;
+        // cadena_leida = fs_leer_archivo("salida.txt", 0, 69);
+        // printf("Cadena leída: %s\n", cadena_leida);
+        // cadena_leida = fs_leer_archivo("cronologico.txt", 0, 69);
+        // printf("Cadena leída: %s\n", cadena_leida);
+        
     }
+    else { // si ya exixten los archivos base
+        leer_bitmap(); // obligatorio
+        leer_info_archivos(); // obligatorio
+
+        char* cadena_leida;
+        cadena_leida = fs_leer_archivo("salida.txt", 0, 69);
+        printf("Cadena leída: %s\n", cadena_leida);
+        cadena_leida = fs_leer_archivo("cronologico.txt", 0, 69);
+        printf("Cadena leída: %s\n", cadena_leida);
+
+    }
+
+    printf("\n\n");
 }
 
 void inicializar_FS() {
@@ -145,65 +205,6 @@ void ejecutar_IO_FS_READ() {
         enviar_codOp(fd_kernel, FS_READ_OK);
         log_info(logger_IO, "PID: %d - Leer Archivo: %s - Tamaño a Leer: %d - Puntero Archivo: %d", pid, nombre_archivo, tamanio_a_leer, puntero_archivo);
     } 
-}
-
-
-
-
-/*
-
-1. Inicializar los archivos de bloques y el bitmap.
-2. Implementar funciones CREATE, DELETE, TRUNCATE, RWRITE, READ
-3. Implementar la compactación del sistema de archivos.
-
-Libreria Bitarray:
-https://github.com/sisoputnfrba/so-commons-library/blob/master/src/commons/bitarray.h
-
-*/
-
-void testeo_FS() {
-
-    tamanio_bitmap = config_IO_DIALFS.block_count / 8 ; // ej: si son 8 bloques necesito 8 bits = 1 byte
-    crear_bitarray();
-    lista_info_archivos = list_create();
-    if(!archivos_base_existen()) { // si no existen los archivos base
-        crear_archivos_base(); // obligatorio
-
-        fs_crear_archivo("manzanas.txt"); // 1 bloque
-        fs_crear_archivo("peras.txt"); // 1 bloque
-
-        //mostrar_bitarray(bitarray);
-        //mostrar_info_archivos();
-
-        fs_truncar_archivo("manzanas.txt", 496); // 31 bloques
-
-        //mostrar_bitarray(bitarray);
-        //mostrar_info_archivos();
-
-        fs_eliminar_archivo("manzanas.txt");
-
-        char* cadena = "Hola, mundo!";
-        size_t longitud = strlen(cadena) + 1;
-
-
-        fs_escribir_archivo("peras.txt", 2, longitud, cadena);
-        char* cadena_leida = fs_leer_archivo("peras.txt", 2, longitud);
-
-        printf("Cadena leída: %s\n", cadena_leida);
-        
-        mostrar_bitarray(bitarray);
-        mostrar_info_archivos();
-    }
-    else { // si ya exixten los archivos base
-        leer_bitmap(); // obligatorio
-        leer_info_archivos(); // obligatorio
-
-        mostrar_bitarray(bitarray);
-        mostrar_info_archivos();
-
-    }
-
-    printf("\n\n");
 }
 
 void crear_bitarray() {
@@ -718,13 +719,14 @@ char* fs_leer_archivo(char* nombre_archivo, uint32_t puntero_archivo, uint32_t t
     t_config* config_archivo = info_archivo->config_archivo;
     uint32_t bloque_inicial = config_get_int_value(config_archivo, "BLOQUE_INICIAL");
     //uint32_t tamanio_archivo = config_get_int_value(config_archivo, "TAMANIO_ARCHIVO");
-
+    
     char* buffer_leido = (char*)malloc(tamanio_a_leer);
     FILE* arch_bloques = fopen("/home/utnso/dialfs/bloques.dat", "rb"); // solo lectura, puntero al inicio
     fseek(arch_bloques, bloque_inicial * tamanio_bloque + puntero_archivo, SEEK_SET); // muevo el puntero
-    fread(buffer_leido, tamanio_a_leer, 1, arch_bloques);
+    mostrar_info_archivos();
+    fread(buffer_leido, tamanio_a_leer, 1, arch_bloques); // ACA PASA ALGO
+    mostrar_info_archivos();
     fclose(arch_bloques);
-
     return buffer_leido;
 }
 
