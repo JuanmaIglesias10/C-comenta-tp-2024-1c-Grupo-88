@@ -207,7 +207,7 @@ void io_fs_delete(char* interfaz, char* nombreArchivo){
             enviar_codOp(aux->fd, FS_DELETE);
             t_buffer* buffer_a_enviar = crear_buffer();
 
-            agregar_buffer_uint32(buffer_a_enviar, pcb_ejecutando->cde->pid);
+            agregar_buffer_uint32(buffer_a_enviar, pcb_aux->cde->pid);
             agregar_buffer_string(buffer_a_enviar, nombreArchivo);
 
 

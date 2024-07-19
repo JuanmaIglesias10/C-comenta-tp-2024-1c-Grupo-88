@@ -34,10 +34,11 @@ t_info_archivo* obtener_info_archivo(char* nombre_archivo_buscado);
 void fs_crear_archivo(char* nombre_archivo);
 int encontrarPrimerBloqueLibre(void);
 
-void fs_truncar_archivo(char* nombre_archivo, uint32_t nuevo_tamanio);
+void fs_truncar_archivo(char* nombre_archivo, uint32_t nuevo_tamanio, uint32_t pid);
 uint32_t contar_bloques_siguientes_libres(uint32_t ultimo_bloque_actual);
 void compactar_FS(void);
 uint32_t buscar_primer_lugar_libre(uint32_t cantidad_bloques_necesaria);
+bool comparador_bloque_inicial(void* a, void* b);
 
 void fs_eliminar_archivo(char* nombre_archivo);
 

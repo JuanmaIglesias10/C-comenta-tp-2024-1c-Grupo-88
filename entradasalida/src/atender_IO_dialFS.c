@@ -1,46 +1,38 @@
 #include "atender_IO_dialFS.h"
 
 void atender_kernel_IO_DIALFS() {
-    // inicializar_FS();
-    testeo_FS();
+    inicializar_FS();
+    //testeo_FS();
 
-    // while (1) {
-        // mostrar_info_archivos();
-        // char* valor_leido = fs_leer_archivo("salida.txt", 0, 69);
+    while (1) {
+        mensajeKernelIO cod_op = recibir_codOp(fd_kernel);
 
-    //     mensajeKernelIO cod_op = recibir_codOp(fd_kernel);
-
-    //     switch (cod_op) {
-    //         case FS_CREATE:
-    //             mostrar_info_archivos();
-    //             ejecutar_IO_FS_CREATE();
-    //             mostrar_info_archivos();
-    //             break;
-    //         case FS_DELETE:
-    //             mostrar_info_archivos();
-    //             ejecutar_IO_FS_DELETE();
-    //             mostrar_info_archivos();
-    //             break;
-    //         case FS_TRUNCATE:
-    //             mostrar_info_archivos();
-    //             ejecutar_IO_FS_TRUNCATE();
-    //             mostrar_info_archivos();
-    //             break;
-    //         case FS_WRITE:
-    //             mostrar_info_archivos();
-    //             ejecutar_IO_FS_WRITE();
-    //             mostrar_info_archivos();
-    //             break;
-    //         case FS_READ:
-    //             mostrar_info_archivos();
-    //             ejecutar_IO_FS_READ();
-    //             mostrar_info_archivos();
-    //             break;
-    //         default:
-    //             log_warning(logger_IO, "CODIGO DE OPERACION NO RECONOCIDO");
-    //             return;
-    //      }
-    // }
+        switch (cod_op) {
+            case FS_CREATE:
+                ejecutar_IO_FS_CREATE();
+                mostrar_info_archivos();
+                break;
+            case FS_DELETE:
+                ejecutar_IO_FS_DELETE();
+                mostrar_info_archivos();
+                break;
+            case FS_TRUNCATE:
+                ejecutar_IO_FS_TRUNCATE();
+                mostrar_info_archivos();
+                break;
+            case FS_WRITE:
+                ejecutar_IO_FS_WRITE();
+                mostrar_info_archivos();
+                break;
+            case FS_READ:
+                ejecutar_IO_FS_READ();
+                mostrar_info_archivos();
+                break;
+            default:
+                log_warning(logger_IO, "CODIGO DE OPERACION NO RECONOCIDO");
+                return;
+         }
+    }
 }
 
 void testeo_FS() {
@@ -51,42 +43,47 @@ void testeo_FS() {
     if(!archivos_base_existen()) { // si no existen los archivos base
         crear_archivos_base(); // obligatorio
 
-        mostrar_info_archivos();
-
         // FS_1
         fs_crear_archivo("salida.txt"); // bloque 0 (desactualizado)
         fs_crear_archivo("cronologico.txt"); // bloque 1 (desactualizado)
-        fs_truncar_archivo("salida.txt", 80); // bloque 2 al 6
-        fs_truncar_archivo("cronologico.txt", 80); // bloque 7 al 11
+        fs_truncar_archivo("salida.txt", 80, 0); // bloque 2 al 6
+        fs_truncar_archivo("cronologico.txt", 80, 0); // bloque 7 al 11
         fs_escribir_archivo("salida.txt", 0, 69, "Fallout 1 Fallout 2 Fallout 3 Fallout: New Vegas Fallout 4 Fallout 76");
         fs_escribir_archivo("cronologico.txt", 0, 69, "Fallout 76 Fallout 1 Fallout 2 Fallout 3 Fallout: New Vegas Fallout 4");
 
         // FS_2
         fs_crear_archivo("archivo1.txt"); // bloque 0 (desactualizado)
         fs_crear_archivo("archivo2.txt"); // bloque 1 (desactualizado)
-        fs_truncar_archivo("archivo1.txt", 10); // bloque 0
-        fs_truncar_archivo("archivo2.txt", 10); // bloque 1
+        fs_truncar_archivo("archivo1.txt", 10, 1); // bloque 0
+        fs_truncar_archivo("archivo2.txt", 10, 1); // bloque 1
 
         mostrar_info_archivos();
         mostrar_bitarray(bitarray);
-
-        // char* cadena_leida;
-        // cadena_leida = fs_leer_archivo("salida.txt", 0, 69);
-        // printf("Cadena leída: %s\n", cadena_leida);
-        // cadena_leida = fs_leer_archivo("cronologico.txt", 0, 69);
-        // printf("Cadena leída: %s\n", cadena_leida);
         
     }
     else { // si ya exixten los archivos base
         leer_bitmap(); // obligatorio
         leer_info_archivos(); // obligatorio
 
+        // FS_3
         char* cadena_leida;
         cadena_leida = fs_leer_archivo("salida.txt", 0, 69);
         printf("Cadena leída: %s\n", cadena_leida);
         cadena_leida = fs_leer_archivo("cronologico.txt", 0, 69);
         printf("Cadena leída: %s\n", cadena_leida);
 
+        // FS_4
+        fs_crear_archivo("pesado.txt"); // bloque 12 (desactualizado)
+        fs_truncar_archivo("pesado.txt", 250, 1); // bloque 12 a 27
+        fs_eliminar_archivo("archivo1.txt"); // se libera bloque 0
+
+        mostrar_info_archivos();
+
+        fs_truncar_archivo("archivo2.txt", 70, 1); 
+        // necesito 5 bloques pero solo tendria libres los primeros 2 y los ultimos 4 -> tengo que compactar
+
+        mostrar_info_archivos();
+        mostrar_bitarray(bitarray);
     }
 
     printf("\n\n");
@@ -141,7 +138,7 @@ void ejecutar_IO_FS_TRUNCATE(){
     char* nombre_archivo = leer_buffer_string(buffer_recibido);
     uint32_t nuevo_tamanio = leer_buffer_uint32(buffer_recibido);
 
-    fs_truncar_archivo(nombre_archivo, nuevo_tamanio);
+    fs_truncar_archivo(nombre_archivo, nuevo_tamanio, pid);
 
     log_info(logger_IO, "PID: %d - Truncar Archivo: %s - Tamaño: %u", pid, nombre_archivo, nuevo_tamanio); // LOG OBLIGATORIO
     enviar_codOp(fd_kernel, FS_TRUNCATE_OK);
@@ -305,10 +302,10 @@ void leer_info_archivos(){
 
             t_config* config_md = config_create(path_archivo_metadata);
             t_info_archivo* info_archivo = (t_info_archivo*)malloc(sizeof(t_info_archivo));
-            info_archivo->nombre_archivo = nombre_archivo;
+            info_archivo->nombre_archivo = strdup(nombre_archivo);
             info_archivo->config_archivo = config_md;
 
-            list_add(lista_info_archivos, info_archivo);
+            list_add_sorted(lista_info_archivos, info_archivo, comparador_bloque_inicial);
 
             free(path_archivo_metadata);
         }
@@ -381,7 +378,8 @@ void fs_crear_archivo(char* nombre_archivo) {
     info_archivo->nombre_archivo = nombre_archivo;
     info_archivo->config_archivo = config_md;
 
-    list_add(lista_info_archivos, info_archivo);
+    //list_add(lista_info_archivos, info_archivo);
+    list_add_sorted(lista_info_archivos, info_archivo, comparador_bloque_inicial);
 
     config_save(config_md);
     fclose(archivo_metadata);
@@ -412,7 +410,7 @@ t_info_archivo* obtener_info_archivo(char* nombre_archivo_buscado) {
     return info_archivo;
 }
 
-void fs_truncar_archivo(char* nombre_archivo, uint32_t nuevo_tamanio) {
+void fs_truncar_archivo(char* nombre_archivo, uint32_t nuevo_tamanio, uint32_t pid) {
 
     int tamanio_bloque = config_IO_DIALFS.block_size;
     //int cantidad_bloques_FS = config_IO_DIALFS.block_count;
@@ -550,8 +548,10 @@ void fs_truncar_archivo(char* nombre_archivo, uint32_t nuevo_tamanio) {
         // eliminar la info del archivo de la lista
         list_remove_element(lista_info_archivos, info_archivo);
 
+        log_info(logger_IO, "PID: %d - Inicio Compactación.", pid); // LOG OBLIGATORIO
         // compactar sin tener en cuenta el archivo a truncar
         compactar_FS();
+        log_info(logger_IO, "PID: %d - Fin Compactación.", pid); // LOG OBLIGATORIO
 
         // buscar nueva posicion para el bloque inicial
         nuevo_bloque_inicial = buscar_primer_lugar_libre(cantidad_bloques_nueva);
@@ -563,7 +563,7 @@ void fs_truncar_archivo(char* nombre_archivo, uint32_t nuevo_tamanio) {
 
         // actualizar info del archivo
         info_archivo->config_archivo = config_md;
-        list_add(lista_info_archivos, info_archivo);
+        list_add_sorted(lista_info_archivos, info_archivo, comparador_bloque_inicial);
 
         // escribir el contenido del archivo en el nuevo lugar
         arch_bloques = fopen("/home/utnso/dialfs/bloques.dat", "r+b"); // El puntero se posiciona al inicio
@@ -585,8 +585,6 @@ void fs_truncar_archivo(char* nombre_archivo, uint32_t nuevo_tamanio) {
 }
 
 void compactar_FS() {
-    log_info(logger_IO, "PID: <PID> - Inicio Compactación."); // LOG OBLIGATORIO
-    // global: lista_info_archivos
     uint32_t tamanio_bloque = config_IO_DIALFS.block_size;
 
     for(int i = 0; i < list_size(lista_info_archivos); i++){
@@ -595,6 +593,14 @@ void compactar_FS() {
         t_config* config_archivo = info_archivo->config_archivo;
         uint32_t bloque_inicial = config_get_int_value(config_archivo, "BLOQUE_INICIAL");
         uint32_t tamanio_archivo = config_get_int_value(config_archivo, "TAMANIO_ARCHIVO");
+
+        // busco nueva posicion para el bloque inicial
+        uint32_t nuevo_bloque_inicial = encontrarPrimerBloqueLibre();
+
+        if(bloque_inicial <= nuevo_bloque_inicial) {
+            // no se puede mover el bloque
+            continue;
+        }
 
         uint32_t cantidad_bloques_actual;
         if (tamanio_archivo == 0) 
@@ -614,9 +620,6 @@ void compactar_FS() {
         for(int i = bloque_inicial; i <= ultimo_bloque_actual; i++) {
             bitarray_clean_bit(bitarray,i);
         }
-
-        // busco nueva posicion para el bloque inicial
-        uint32_t nuevo_bloque_inicial = buscar_primer_lugar_libre(cantidad_bloques_actual);
 
         // actualizo el config con el nuevo bloque inicial
         config_set_value(config_archivo, "BLOQUE_INICIAL", string_itoa(nuevo_bloque_inicial));
@@ -639,7 +642,16 @@ void compactar_FS() {
     }
     log_debug(logger_IO, "esperando %.1f segundos para terminar la compactacion", (double)config_IO_DIALFS.retraso_compactacion / 1000);
     usleep(config_IO_DIALFS.retraso_compactacion * 1000); // retraso en la compactacion
-    log_info(logger_IO, "PID: <PID> - Fin Compactación."); // LOG OBLIGATORIO
+}
+
+bool comparador_bloque_inicial(void* a, void* b) {
+    t_info_archivo* info_a = (t_info_archivo*) a;
+    t_info_archivo* info_b = (t_info_archivo*) b;
+    
+    int bloque_a = config_get_int_value(info_a->config_archivo, "BLOQUE_INICIAL");
+    int bloque_b = config_get_int_value(info_b->config_archivo, "BLOQUE_INICIAL");
+    
+    return bloque_a < bloque_b;
 }
 
 uint32_t contar_bloques_siguientes_libres(uint32_t ultimo_bloque_actual) {
@@ -718,14 +730,11 @@ char* fs_leer_archivo(char* nombre_archivo, uint32_t puntero_archivo, uint32_t t
     t_info_archivo* info_archivo = obtener_info_archivo(nombre_archivo);
     t_config* config_archivo = info_archivo->config_archivo;
     uint32_t bloque_inicial = config_get_int_value(config_archivo, "BLOQUE_INICIAL");
-    //uint32_t tamanio_archivo = config_get_int_value(config_archivo, "TAMANIO_ARCHIVO");
     
     char* buffer_leido = (char*)malloc(tamanio_a_leer);
     FILE* arch_bloques = fopen("/home/utnso/dialfs/bloques.dat", "rb"); // solo lectura, puntero al inicio
     fseek(arch_bloques, bloque_inicial * tamanio_bloque + puntero_archivo, SEEK_SET); // muevo el puntero
-    mostrar_info_archivos();
     fread(buffer_leido, tamanio_a_leer, 1, arch_bloques); // ACA PASA ALGO
-    mostrar_info_archivos();
     fclose(arch_bloques);
     return buffer_leido;
 }
@@ -735,7 +744,6 @@ void fs_escribir_archivo(char* nombre_archivo, uint32_t puntero_archivo, uint32_
     t_info_archivo* info_archivo = obtener_info_archivo(nombre_archivo);
     t_config* config_archivo = info_archivo->config_archivo;
     uint32_t bloque_inicial = config_get_int_value(config_archivo, "BLOQUE_INICIAL");
-    //uint32_t tamanio_archivo = config_get_int_value(config_archivo, "TAMANIO_ARCHIVO");
 
     FILE* arch_bloques = fopen("/home/utnso/dialfs/bloques.dat", "r+b"); // lectura y escritura, puntero al inicio
     fseek(arch_bloques, bloque_inicial * tamanio_bloque + puntero_archivo, SEEK_SET); // muevo el puntero
