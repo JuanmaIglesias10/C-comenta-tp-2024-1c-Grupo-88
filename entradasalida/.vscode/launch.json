@@ -65,11 +65,11 @@
       "preLaunchTask": "clean-and-build"
     },
     {
-      "name": "run DIALFS",
+      "name": "run FS",
       "type": "cppdbg",
       "request": "launch",
       "program": "${workspaceFolder}/bin/${workspaceFolderBasename}",
-      "args": ["INT4-DIALFS","./dialfs.config"],
+      "args": ["FS","./FS.config"],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}",
       "environment": [],

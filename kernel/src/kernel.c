@@ -132,6 +132,9 @@ void inicializar_semaforos(){
     sem_init(&pausar_exec_a_blocked, 0, 0);
     sem_init(&pausar_blocked_a_ready, 0, 0);
     sem_init(&sem_colaGEN, 0, 1);
+    sem_init(&sem_colaREAD, 0, 1);
+    sem_init(&sem_colaWRITE, 0, 1);
+    sem_init(&sem_colaFS, 0, 1);
 }
 
 t_recurso* inicializar_recurso(char* nombre_recurso, int instancias_totales){
@@ -204,7 +207,6 @@ void finalizar_proceso(char* pid_string){
 
 t_pcb* encontrar_pcb_por_pid(uint32_t pid, int* encontrado){
     t_pcb* pcb;
-    int i = 0;
     
     *(encontrado) = 0;
 
@@ -218,13 +220,17 @@ t_pcb* encontrar_pcb_por_pid(uint32_t pid, int* encontrado){
 
     if(*(encontrado))
         return pcb;
-    else
+    else {
         log_warning(logger_kernel, "PCB no encontrado de PID: %d", pid);
+        return NULL;
+    }
 }
 
 void retirar_pcb_de_su_respectivo_estado(uint32_t pid, int* resultado){
     t_pcb* pcb_a_retirar = encontrar_pcb_por_pid(pid, resultado);
-
+    if(pcb_a_retirar == NULL){
+        log_warning(logger_kernel , "PCB encontrado se encuentra en NULL");
+    }
     if(resultado){
         switch(pcb_a_retirar->estado){
             case NEW:
@@ -549,7 +555,6 @@ void enviar_cde_a_cpu() {
 
     enviar_buffer(buffer, fd_cpu_dis);
     destruir_buffer(buffer);
-
     sem_post(&bin_recibir_cde); 
 
 }
@@ -572,8 +577,10 @@ void recibir_cde_de_cpu(){
             temporal_stop(timer);
             sem_post(&sem_timer);
         }
+        // pthread_t hilo_instrucciones;
+        // pthread_create(&hilo_instrucciones, NULL, evaluar_instruccion, (void*)instruccion_actual);
+        // pthread_detach(hilo_instrucciones);
         evaluar_instruccion(instruccion_actual);
-        
         
         destruir_buffer(buffer);
 
@@ -667,7 +674,15 @@ void evaluar_instruccion(t_instruccion* instruccion_actual){
             if(es_RR_o_VRR()){
                 pcb_ejecutando->flag_clock = true;
             }
-            io_stdin_read(instruccion_actual->par1,instruccion_actual->par2,instruccion_actual->par3);
+            /*CONCHA */
+            parametros_read_t* parametros_read = malloc(sizeof(parametros_read_t));
+            parametros_read->interfaz = strdup(instruccion_actual->par1);
+            parametros_read->char_direccion_fisica = strdup(instruccion_actual->par2);
+            parametros_read->char_tamanio = strdup(instruccion_actual->par3);
+
+            pthread_t hilo_interfaz_read;
+            pthread_create(&hilo_interfaz_read, NULL, io_stdin_read, (void*)parametros_read);
+            pthread_detach(hilo_interfaz_read);
             destruir_instruccion(instruccion_actual);
             break;
         case IO_STDOUT_WRITE:
@@ -675,6 +690,66 @@ void evaluar_instruccion(t_instruccion* instruccion_actual){
                 pcb_ejecutando->flag_clock = true;
             }
             io_stdout_write(instruccion_actual->par1,instruccion_actual->par2,instruccion_actual->par3);
+            destruir_instruccion(instruccion_actual);
+            break;
+        case IO_FS_CREATE:
+            if(es_RR_o_VRR()){
+                pcb_ejecutando->flag_clock = true;
+            }
+            io_fs_create(instruccion_actual->par1,instruccion_actual->par2);
+            destruir_instruccion(instruccion_actual);
+            break;
+        case IO_FS_DELETE:
+            if(es_RR_o_VRR()){
+                pcb_ejecutando->flag_clock = true;
+            }
+            io_fs_delete(instruccion_actual->par1,instruccion_actual->par2);
+            destruir_instruccion(instruccion_actual);
+            break;
+        case IO_FS_TRUNCATE:
+            if(es_RR_o_VRR()){
+                pcb_ejecutando->flag_clock = true;
+            }
+            parametros_truncate_t* parametros_truncate = malloc(sizeof(parametros_truncate_t));
+            parametros_truncate->interfaz = strdup(instruccion_actual->par1);
+            parametros_truncate->nombreArchivo = strdup(instruccion_actual->par2);
+            parametros_truncate->tamanio = strdup(instruccion_actual->par3);
+
+            pthread_t hilo_interfaz_fs_truncate;
+            pthread_create(&hilo_interfaz_fs_truncate, NULL, io_fs_truncate, (void*)parametros_truncate);
+            pthread_detach(hilo_interfaz_fs_truncate);
+            destruir_instruccion(instruccion_actual);
+            break;
+        case IO_FS_WRITE:
+            if(es_RR_o_VRR()){
+                pcb_ejecutando->flag_clock = true;
+            }
+            parametros_fs_write_read_t* parametros_fs_write = malloc(sizeof(parametros_fs_write_read_t));
+            parametros_fs_write->interfaz = strdup(instruccion_actual->par1);
+            parametros_fs_write->nombreArchivo = strdup(instruccion_actual->par2);
+            parametros_fs_write->dir_fisica = strdup(instruccion_actual->par3);
+            parametros_fs_write->tamanio = strdup(instruccion_actual->par4);
+            parametros_fs_write->valor_puntero = strdup(instruccion_actual->par5);
+
+            pthread_t hilo_interfaz_fs_write;
+            pthread_create(&hilo_interfaz_fs_write, NULL, io_fs_write, (void*)parametros_fs_write);
+            pthread_detach(hilo_interfaz_fs_write);
+            destruir_instruccion(instruccion_actual);
+            break;
+        case IO_FS_READ:
+            if(es_RR_o_VRR()){
+                pcb_ejecutando->flag_clock = true;
+            }
+            parametros_fs_write_read_t* parametros_fs_read = malloc(sizeof(parametros_fs_write_read_t));
+            parametros_fs_read->interfaz = strdup(instruccion_actual->par1);
+            parametros_fs_read->nombreArchivo = strdup(instruccion_actual->par2);
+            parametros_fs_read->dir_fisica = strdup(instruccion_actual->par3);
+            parametros_fs_read->tamanio = strdup(instruccion_actual->par4);
+            parametros_fs_read->valor_puntero = strdup(instruccion_actual->par5);
+
+            pthread_t hilo_interfaz_fs_read;
+            pthread_create(&hilo_interfaz_fs_read, NULL, io_fs_read, (void*)parametros_fs_read);
+            pthread_detach(hilo_interfaz_fs_read);
             destruir_instruccion(instruccion_actual);
             break;
         case OUT_OF_MEMORY_VUELTA:
@@ -712,56 +787,7 @@ void evaluar_instruccion(t_instruccion* instruccion_actual){
     }
 }
 
-void io_gen_sleep(char* interfaz, char* char_unidadesDeTrabajo) {
-    uint8_t unidadesDeTrabajo = atoi(char_unidadesDeTrabajo);
 
-
-    pthread_mutex_lock(&mutex_colaGEN);
-    t_interfaz* aux = queue_pop(colaGenerica);
-    pthread_mutex_unlock(&mutex_colaGEN);
-    
-
-    if (strcmp(aux->nombre, interfaz) == 0 ){
-        if (strcmp(aux->tipo , "GENERICA") == 0) {
-        enviar_codOp(aux->fd,SLEEP);
-        t_buffer* buffer_a_enviar = crear_buffer();
-        agregar_buffer_uint8(buffer_a_enviar,unidadesDeTrabajo);
-        enviar_buffer(buffer_a_enviar,aux->fd);
-        destruir_buffer(buffer_a_enviar);
-        
-        //Bloqueo el proceso
-        t_pcb* pcb_sleep = malloc(sizeof(t_pcb)); 
-        pcb_sleep = pcb_ejecutando;
-                     
-        enviar_de_exec_a_block();
-        
-        mensajeKernelIO codigo = recibir_codOp(aux->fd);
-            if(codigo == SLEEP_OK) {
-                if(strcmp(config_kernel.algoritmo_planificacion,"VRR") == 0 && ms_transcurridos < pcb_sleep->quantum){
-                    pcb_sleep->quantum -= ms_transcurridos;
-                    queue_push(colaGenerica,aux);
-                    sem_post(&sem_colaGEN);
-                    enviar_pcb_de_block_a_ready_mas(pcb_sleep);
-                    
-                } else {
-                    queue_push(colaGenerica,aux);
-                    sem_post(&sem_colaGEN);
-                    enviar_pcb_de_block_a_ready(pcb_sleep);
-                }
-            }
-        
-        } else {
-            agregar_a_cola_finished("INVALID_INTERFACE");
-        }
-    }
-    else if(strcmp(aux->nombre, interfaz) != 0){
-        agregar_a_cola_finished("INVALID_INTERFACE");
-    } else {
-        agregar_a_cola_finished("INVALID_INTERFACE");
-
-    }
-    //free(interfaz);
-}
 
 void evaluar_wait(char* nombre_recurso_pedido){
     int coincidencia = 0;
@@ -870,90 +896,7 @@ bool es_RR_o_VRR() {
     return (strcmp(config_kernel.algoritmo_planificacion,"RR")== 0 || strcmp(config_kernel.algoritmo_planificacion,"VRR")== 0);
 }
 
-void io_stdin_read(char* interfaz, char* char_direccion_fisica, char* char_tamanio) {
-    uint32_t direccion_fisica = atoi(char_direccion_fisica);
-    uint32_t tamanio = atoi(char_tamanio);
 
-    t_interfaz* aux = queue_pop(colaSTDIN);
-
-    if (strcmp(aux->nombre, interfaz) == 0) {
-        if (strcmp(aux->tipo, "STDIN") == 0) {
-            enviar_codOp(aux->fd, STDIN_READ);
-            t_buffer* buffer_a_enviar = crear_buffer();
-
-            agregar_buffer_uint32(buffer_a_enviar, direccion_fisica);
-            agregar_buffer_uint32(buffer_a_enviar, tamanio);
-            agregar_buffer_uint32(buffer_a_enviar, pcb_ejecutando->cde->pid);
-
-            enviar_buffer(buffer_a_enviar, aux->fd);
-            destruir_buffer(buffer_a_enviar);
-
-            // Bloqueo el proceso
-            t_pcb* pcb_read_stdin = pcb_ejecutando;
-            enviar_de_exec_a_block();
-
-            mensajeKernelIO codigo = recibir_codOp(aux->fd);
-            if (codigo == STDIN_READ_OK) {
-                log_info(logger_kernel, "Llegue a STDIN_READ_OK");
-                if (strcmp(config_kernel.algoritmo_planificacion, "VRR") == 0 && ms_transcurridos < pcb_read_stdin->quantum) {
-                    pcb_read_stdin->quantum -= ms_transcurridos;
-                    enviar_pcb_de_block_a_ready_mas(pcb_read_stdin);
-                } else {
-                    enviar_pcb_de_block_a_ready(pcb_read_stdin);
-                }
-            }
-        } else {
-            agregar_a_cola_finished("INVALID_INTERFACE");
-        }
-    } else {
-        agregar_a_cola_finished("INVALID_INTERFACE");
-    }
-    queue_push(colaSTDIN, aux);
-}
-
-
-
-void io_stdout_write(char* interfaz, char* char_direccion_fisica, char* char_tamanio) {
-    uint32_t direccion_fisica   = atoi(char_direccion_fisica);
-    uint32_t tamanio             = atoi(char_tamanio);
-
-    t_interfaz* aux = queue_pop(colaSTDOUT);
-
-    if (strcmp(aux->nombre, interfaz) == 0 ){
-        if (strcmp(aux->tipo , "STDOUT") == 0) {
-            enviar_codOp(aux->fd, STDOUT_WRITE);
-            t_buffer* buffer_a_enviar = crear_buffer();
-
-            agregar_buffer_uint32(buffer_a_enviar, direccion_fisica);
-            agregar_buffer_uint32(buffer_a_enviar, tamanio);
-            agregar_buffer_uint32(buffer_a_enviar, pcb_ejecutando->cde->pid);
-
-            enviar_buffer(buffer_a_enviar, aux->fd);
-
-            destruir_buffer(buffer_a_enviar);
-
-            // Bloqueo el proceso
-            t_pcb* pcb_read_stdin = pcb_ejecutando;
-            enviar_de_exec_a_block();
-
-            mensajeKernelIO codigo = recibir_codOp(aux->fd);
-            if (codigo == STDOUT_WRITE_OK) {
-                log_info(logger_kernel, "Llegue a STDOUT_WRITE_OK");
-                if (strcmp(config_kernel.algoritmo_planificacion, "VRR") == 0 && ms_transcurridos < pcb_read_stdin->quantum) {
-                    pcb_read_stdin->quantum -= ms_transcurridos;
-                    enviar_pcb_de_block_a_ready_mas(pcb_read_stdin);
-                } else {
-                    enviar_pcb_de_block_a_ready(pcb_read_stdin);
-                }
-            }
-        } else {
-            agregar_a_cola_finished("INVALID_INTERFACE");
-        }
-    } else {
-        agregar_a_cola_finished("INVALID_INTERFACE");
-    }
-    queue_push(colaSTDOUT, aux);
-}
 
 
     // TODO: falta un else

@@ -77,6 +77,9 @@ void proceso_destroy(t_proceso* proceso_a_destruir);
 
 void destruir_instrucciones(t_instruccion* instruccion_a_destruir);
 
+void escribir_fs_read(int fd_IO);
+
+void leer_fs_write(int fd_IO);
 
 #endif /* MEMORIA_H_ */
 
