@@ -128,6 +128,8 @@ void ejecutar_IO_FS_CREATE() {
 
     log_info(logger_IO, "PID: %d - Crear Archivo: %s", pid, nombre_archivo); // LOG OBLIGATORIO
     enviar_codOp(fd_kernel, FS_CREATE_OK);
+    free(nombre_archivo);
+    destruir_buffer(buffer_recibido);
 }
 
 void ejecutar_IO_FS_DELETE() {
@@ -139,6 +141,8 @@ void ejecutar_IO_FS_DELETE() {
 
     log_info(logger_IO, "PID: %d - Eliminar Archivo: %s", pid, nombre_archivo); // LOG OBLIGATORIO
     enviar_codOp(fd_kernel, FS_DELETE_OK);
+    free(nombre_archivo);
+    destruir_buffer(buffer_recibido);
 }
     
 void ejecutar_IO_FS_TRUNCATE(){
@@ -151,6 +155,8 @@ void ejecutar_IO_FS_TRUNCATE(){
 
     log_info(logger_IO, "PID: %d - Truncar Archivo: %s - Tamaño: %u", pid, nombre_archivo, nuevo_tamanio); // LOG OBLIGATORIO
     enviar_codOp(fd_kernel, FS_TRUNCATE_OK);
+    free(nombre_archivo);
+    destruir_buffer(buffer_recibido);
 }
 
 void ejecutar_IO_FS_WRITE() {
@@ -183,7 +189,9 @@ void ejecutar_IO_FS_WRITE() {
 
         enviar_codOp(fd_kernel, FS_WRITE_OK);
         log_info(logger_IO, "PID: %d - Escribir Archivo: %s - Tamaño a Escribir: %d - Puntero Archivo: %d", pid, nombre_archivo, tamanio_a_escribir, puntero_archivo);
+        free(string_recibido);  
     }
+    free(nombre_archivo);
 }
 
 void ejecutar_IO_FS_READ() {
@@ -204,13 +212,16 @@ void ejecutar_IO_FS_READ() {
     agregar_buffer_string(buffer, valor_leido);
     agregar_buffer_uint32(buffer, tamanio_a_leer);
     enviar_buffer(buffer, fd_memoria);
+    destruir_buffer(buffer);
 
     mensajeIOMemoria cod_op = recibir_codOp(fd_memoria);
     
     if(cod_op == IO_M_FS_READ_OK) {
         enviar_codOp(fd_kernel, FS_READ_OK);
         log_info(logger_IO, "PID: %d - Leer Archivo: %s - Tamaño a Leer: %d - Puntero Archivo: %d", pid, nombre_archivo, tamanio_a_leer, puntero_archivo);
-    } 
+    }
+    free(nombre_archivo);
+    free(valor_leido);  
 }
 
 void crear_bitarray() {
@@ -279,6 +290,7 @@ bool existe_archivo(char* nombre_archivo) {
     }
 
     closedir(dp);
+    free(directory); 
     return 0; // El archivo no existe en el directorio
 }
 
@@ -287,8 +299,9 @@ void leer_info_archivos(){
     struct dirent *entry;
     DIR *dp = opendir(directory);
     printf("Lectura inicial de archivos en el FS:\n");
+    char* nombre_archivo;
     while ((entry = readdir(dp))) {
-        char* nombre_archivo = entry->d_name;
+        nombre_archivo = entry->d_name;
         // ignorar las entradas de directorio actual y directorio padre
         if (strcmp(nombre_archivo, ".") == 0 || strcmp(nombre_archivo, "..") == 0) {
             continue;
@@ -310,6 +323,8 @@ void leer_info_archivos(){
         }
     }
     closedir(dp);
+    //free(directory);
+    free(nombre_archivo);
 }
 
 void mostrar_info_archivos() {
@@ -323,7 +338,7 @@ void mostrar_info_archivos() {
         printf("- nombre: %s\n", nombre_archivo);
         printf("- bloque inicial: %d\n", bloque);
         printf("- tamanio: %d\n", tamanio);
-    }
+    }   
 }
 
 bool archivos_base_existen() {

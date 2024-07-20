@@ -55,9 +55,9 @@ void* io_stdin_read(void* arg) {
     parametros_read_t* params = (parametros_read_t*)arg;
     uint32_t direccion_fisica = atoi(params->char_direccion_fisica);
     uint32_t tamanio = atoi(params->char_tamanio);
-
-    t_pcb* pcb_aux = malloc(sizeof(t_pcb));
-    pcb_aux = pcb_ejecutando;
+    
+    //t_pcb* pcb_aux = malloc(sizeof(t_pcb));
+    t_pcb* pcb_aux = pcb_ejecutando;
     enviar_de_exec_a_block();
     
     sem_wait(&sem_colaREAD);
@@ -71,6 +71,7 @@ void* io_stdin_read(void* arg) {
             agregar_buffer_uint32(buffer_a_enviar, direccion_fisica);
             agregar_buffer_uint32(buffer_a_enviar, tamanio);
             agregar_buffer_uint32(buffer_a_enviar, pcb_aux->cde->pid);
+
 
             enviar_buffer(buffer_a_enviar, aux->fd);
             destruir_buffer(buffer_a_enviar);
@@ -98,8 +99,10 @@ void* io_stdin_read(void* arg) {
     } else {
         agregar_a_cola_finished("INVALID_INTERFACE");
     }
-    
-    free(arg);
+    free(params->interfaz);
+    free(params->char_direccion_fisica);
+    free(params->char_tamanio);
+    free(params);
     return NULL;
 }
 
@@ -152,8 +155,8 @@ void io_stdout_write(char* interfaz, char* char_direccion_fisica, char* char_tam
 //TODO : Es necesesario librear pcb_aux en las funciones, ver luego
 void io_fs_create(char* interfaz, char* nombreArchivo){
     //sem_wait(&sem_colaFS);
-    t_pcb* pcb_aux = malloc(sizeof(t_pcb));
-    pcb_aux = pcb_ejecutando;
+    //t_pcb* pcb_aux = malloc(sizeof(t_pcb));
+    t_pcb* pcb_aux = pcb_ejecutando;
     enviar_de_exec_a_block();
     t_interfaz* aux = queue_pop(colaDIALFS);
 
@@ -197,8 +200,8 @@ void io_fs_create(char* interfaz, char* nombreArchivo){
 
 void io_fs_delete(char* interfaz, char* nombreArchivo){
     //sem_wait(&sem_colaFS); 
-    t_pcb* pcb_aux = malloc(sizeof(t_pcb)); 
-    pcb_aux = pcb_ejecutando;
+    //t_pcb* pcb_aux = malloc(sizeof(t_pcb)); 
+    t_pcb* pcb_aux = pcb_ejecutando;
     enviar_de_exec_a_block();
     t_interfaz* aux = queue_pop(colaDIALFS);
 
@@ -245,8 +248,8 @@ void* io_fs_truncate(void* arg){
     char* nombreArchivo = params->nombreArchivo;
     uint32_t tamanio = atoi(params->tamanio);
 
-    t_pcb* pcb_aux = malloc(sizeof(t_pcb));
-    pcb_aux = pcb_ejecutando;
+    //t_pcb* pcb_aux = malloc(sizeof(t_pcb));
+    t_pcb* pcb_aux = pcb_ejecutando;
     enviar_de_exec_a_block();
     
     // sem_wait(&sem_colaFS);
@@ -285,7 +288,10 @@ void* io_fs_truncate(void* arg){
     } else {
         agregar_a_cola_finished("INVALID_INTERFACE");
     }
-    free(arg);
+    free(params->interfaz);
+    free(params->nombreArchivo);
+    free(params->tamanio);
+    free(params);
     return NULL;
 }
 
@@ -296,8 +302,7 @@ void* io_fs_write(void* arg) {
     uint32_t tamanio = atoi(params->tamanio);
     uint32_t valor_puntero = atoi(params->valor_puntero);
 
-    t_pcb* pcb_aux = malloc(sizeof(t_pcb));
-    pcb_aux = pcb_ejecutando;
+    t_pcb* pcb_aux = pcb_ejecutando;
     enviar_de_exec_a_block();
     
     // sem_wait(&sem_colaFS);
@@ -341,7 +346,12 @@ void* io_fs_write(void* arg) {
         agregar_a_cola_finished("INVALID_INTERFACE");
     }
     
-    free(arg);
+    free(params->interfaz);
+    free(params->nombreArchivo);
+    free(params->dir_fisica);
+    free(params->tamanio);
+    free(params->valor_puntero);
+    free(params);
     return NULL;
 }
 
@@ -352,8 +362,8 @@ void* io_fs_read(void* arg) {
     uint32_t tamanio = atoi(params->tamanio);
     uint32_t valor_puntero = atoi(params->valor_puntero);
 
-    t_pcb* pcb_aux = malloc(sizeof(t_pcb));
-    pcb_aux = pcb_ejecutando;
+    //t_pcb* pcb_aux = malloc(sizeof(t_pcb));
+    t_pcb* pcb_aux = pcb_ejecutando;
     enviar_de_exec_a_block();
     
     // sem_wait(&sem_colaFS);
@@ -396,7 +406,11 @@ void* io_fs_read(void* arg) {
     } else {
         agregar_a_cola_finished("INVALID_INTERFACE");
     }
-
-    free(arg);
+    free(params->interfaz);
+    free(params->nombreArchivo);
+    free(params->dir_fisica);
+    free(params->tamanio);
+    free(params->valor_puntero);
+    free(params);
     return NULL;
 }

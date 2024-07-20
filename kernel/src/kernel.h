@@ -72,4 +72,6 @@ void evaluar_instruccion(t_instruccion* instruccion_actual);
 void evaluar_wait(char* nombre_recurso_pedido);
 void evaluar_signal(char* nombre_recurso_pedido);
 
+t_log* iniciar_logger_kernel(char* rutaLog, char* nombreProceso, t_log_level level);
+
 #endif

@@ -190,6 +190,8 @@ void enviar_pcb_de_block_a_ready(t_pcb* pcb){
     
     agregar_pcb_a(colaREADY, pcb_a_ready, &mutex_ready);
     pcb_a_ready->estado = READY;
+    //destruir_pcb(pcb);
+
     
     //Agrego el pcb_a_ready a ejecutando
     // pthread_mutex_lock(&mutex_pcb_en_ejecucion);
@@ -221,7 +223,7 @@ void enviar_pcb_de_block_a_ready_mas(t_pcb* pcb){
     
     agregar_pcb_a(colaREADYMAS, pcb_a_ready, &mutex_ready);
     pcb_a_ready->estado = READY;
-    
+    //destruir_pcb(pcb);
     //Agrego el pcb_a_ready a ejecutando
     // pthread_mutex_lock(&mutex_pcb_en_ejecucion);
     // pcb_ejecutando = pcb_a_ready;

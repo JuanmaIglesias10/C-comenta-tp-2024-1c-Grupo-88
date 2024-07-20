@@ -11,7 +11,7 @@ void inicializar_kernel(){
 	pid_a_asignar = 0;
     planificacion_detenida = 0;
 
-	logger_kernel = iniciar_logger("logKernel.log","KERNEL",LOG_LEVEL_INFO);
+	logger_kernel = iniciar_logger_kernel("logKernel.log","KERNEL",LOG_LEVEL_INFO);
 	iniciar_config_kernel();
 	inicializar_conexiones();
 	inicializar_listas_colas();
@@ -68,6 +68,16 @@ void iniciar_config_kernel(){
 
     string_array_destroy(recursos);
     string_array_destroy(instancias);
+}
+
+t_log* iniciar_logger_kernel(char* rutaLog, char* nombreProceso, t_log_level level)
+{
+	t_log* nuevo_logger = log_create(rutaLog, nombreProceso, false, level);
+	if (nuevo_logger == NULL) {
+		printf("no se pudo crear el log");
+		exit(1);
+	}
+	return nuevo_logger;
 }
 
 void inicializar_conexiones(){
@@ -684,6 +694,7 @@ void evaluar_instruccion(t_instruccion* instruccion_actual){
             pthread_create(&hilo_interfaz_read, NULL, io_stdin_read, (void*)parametros_read);
             pthread_detach(hilo_interfaz_read);
             destruir_instruccion(instruccion_actual);
+
             break;
         case IO_STDOUT_WRITE:
             if(es_RR_o_VRR()){

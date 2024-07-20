@@ -58,11 +58,11 @@ void atender_consola(char* input) {
             actual = actual->next;
         }
 		//--CHECK--
-        // liberar_lista_script(lista_script);
+        liberar_lista_script(lista_script);
     } else {
         switch_comandos(cod_operacion, lista_mensaje[1]);
     }
-    // string_array_destroy(lista_mensaje);
+    string_array_destroy(lista_mensaje);
 }
 
 
