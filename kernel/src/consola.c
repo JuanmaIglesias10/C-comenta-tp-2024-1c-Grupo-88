@@ -48,21 +48,17 @@ void atender_consola(char* input) {
     }
     t_codigo_operacion cod_operacion = get_codigo_operacion(lista_mensaje[0], cant_par);
     if (cod_operacion == EJECUTAR_SCRIPT) {
-        t_list* lista_script = ejecutar_script(lista_mensaje[1]);
-        string_array_destroy(lista_mensaje);
-        
-        t_link_element* actual = lista_script->head;
-        while (actual != NULL) {
-            t_script* comando = (t_script*)(actual->data);
-            switch_comandos(comando->codigo_operacion, comando->par1);
-            actual = actual->next;
-        }
-		//--CHECK--
-        liberar_lista_script(lista_script);
+		t_list* lista_script = obtener_lista_script(lista_mensaje[1]);
+		
+		for(int i = 0; i < list_size(lista_script); i++) {
+			t_script* script = list_get(lista_script, i);
+			switch_comandos(script->codigo_operacion, script->par1);
+		}
+    	liberar_lista_script(lista_script);
     } else {
-        switch_comandos(cod_operacion, lista_mensaje[1]);
+    	switch_comandos(cod_operacion, lista_mensaje[1]);
     }
-    string_array_destroy(lista_mensaje);
+	string_array_destroy(lista_mensaje);
 }
 
 
@@ -112,50 +108,40 @@ t_codigo_operacion get_codigo_operacion(char* comando, int cant_par){
 	}
 }
 
-void switch_comandos(uint8_t codOp, char* lista_mensaje){
+void switch_comandos(uint8_t codOp, char* parametro){
 	switch(codOp){
 		case INICIAR_PROCESO:
-			iniciar_proceso(lista_mensaje);
-			free(lista_mensaje); 
+			iniciar_proceso(parametro);
 			break;
 		case FINALIZAR_PROCESO:
-			finalizar_proceso(lista_mensaje);
-			free(lista_mensaje); 
+			finalizar_proceso(parametro);
 			break;
 		case INICIAR_PLANIFICACION:
 			log_info(logger_kernel, "INICIO DE PLANIFICACIÓN");
 			iniciarPlanificacion();
-			free(lista_mensaje);
 			break;
 		case DETENER_PLANIFICACION:
 			log_info(logger_kernel, "PAUSA DE PLANIFICACIÓN");
 			detenerPlanificacion();
-			free(lista_mensaje);
 			break;
 		case MULTIPROGRAMACION:
-			log_info(logger_kernel, "CAMBIO DE GRADO DE MULTIPROGRAMACION A: %s", lista_mensaje);
-			cambiar_grado_multiprogramacion(lista_mensaje);
-			free(lista_mensaje);
+			log_info(logger_kernel, "CAMBIO DE GRADO DE MULTIPROGRAMACION A: %s", parametro);
+			cambiar_grado_multiprogramacion(parametro);
 			break;
 		case PROCESO_ESTADO:
 			procesosPorEstado();
-			free(lista_mensaje); 
 			break;
 		case E_PARAMETROS:
 			log_info(logger_kernel, "Error en los parametros pasados");
-			free(lista_mensaje);
 			break;
 		case MENSAJE_VACIO:
 			log_info(logger_kernel, "Mensaje recibido vacio");
-			free(lista_mensaje);
 			break;
 		case BASURA:
 			log_info(logger_kernel, "Operacion desconocida");
-			free(lista_mensaje);
 			break;
 		default:
 			log_warning(logger_kernel,"Operacion desconocida (default)");
-			free(lista_mensaje);
 			break;
 	}
 }
@@ -172,7 +158,7 @@ void liberar_lista_script(t_list* lista) {
     for (int i = 0; i < list_size(lista); i++) {
         t_script* script = list_get(lista, i);
         if (script->par1 != NULL) {
-            free(script->par1);
+        	free(script->par1);
         }
         free(script);
     }

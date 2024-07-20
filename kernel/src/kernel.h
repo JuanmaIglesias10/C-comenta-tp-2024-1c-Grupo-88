@@ -29,7 +29,6 @@ t_codigo_operacion get_codigo_operacion(char* , int );
 
 
 // FUNCIONALIDAD CONSOLA
-t_list* ejecutar_script(char* pathScript);
 t_list* obtener_lista_script(char* pathScript);
 void iniciar_proceso(char* path);
 void finalizar_proceso(char* pid_string);

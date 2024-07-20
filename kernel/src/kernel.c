@@ -164,13 +164,6 @@ t_recurso* inicializar_recurso(char* nombre_recurso, int instancias_totales){
     return recurso;
 }
 
-
-t_list* ejecutar_script(char* pathScript){
-	t_list* scriptProcesos = obtener_lista_script(pathScript);
-	return scriptProcesos;
-	
-}
-
 void iniciar_proceso(char* path) {
 	t_pcb* pcb_nuevo = crear_PCB();
 	enviar_codOp(fd_memoria , INICIAR_PROCESO_SOLICITUD);
