@@ -74,18 +74,17 @@ void testeo_FS() {
         leer_info_archivos(); // obligatorio
 
         // FS_3
-        char* cadena_leida;
-        cadena_leida = fs_leer_archivo("salida.txt", 0, 69);
-        printf("Cadena leída: %s\n", cadena_leida);
-        cadena_leida = fs_leer_archivo("cronologico.txt", 0, 69);
-        printf("Cadena leída: %s\n", cadena_leida);
+        char* cadena_leida1 = fs_leer_archivo("salida.txt", 0, 70);
+        printf("Cadena leída: %s\n", cadena_leida1);
+        free(cadena_leida1);
+        char* cadena_leida2 = fs_leer_archivo("cronologico.txt", 0, 70);
+        printf("Cadena leída: %s\n", cadena_leida2);
+        free(cadena_leida2);
 
         // FS_4
         fs_crear_archivo("pesado.txt"); // bloque 12 (desactualizado)
         fs_truncar_archivo("pesado.txt", 250, 1); // bloque 12 a 27
         fs_eliminar_archivo("archivo1.txt"); // se libera bloque 0
-
-        mostrar_info_archivos();
 
         fs_truncar_archivo("archivo2.txt", 70, 1); 
         // necesito 5 bloques pero solo tendria libres los primeros 2 y los ultimos 4 -> tengo que compactar
@@ -191,6 +190,9 @@ void ejecutar_IO_FS_WRITE() {
         log_info(logger_IO, "PID: %d - Escribir Archivo: %s - Tamaño a Escribir: %d - Puntero Archivo: %d", pid, nombre_archivo, tamanio_a_escribir, puntero_archivo);
         free(string_recibido);  
     }
+    else {
+        log_error(logger_IO, "cod_op erroneo");
+    }
     free(nombre_archivo);
 }
 
@@ -213,6 +215,7 @@ void ejecutar_IO_FS_READ() {
     agregar_buffer_uint32(buffer, tamanio_a_leer);
     enviar_buffer(buffer, fd_memoria);
     destruir_buffer(buffer);
+    free(valor_leido);  
 
     mensajeIOMemoria cod_op = recibir_codOp(fd_memoria);
     
@@ -220,8 +223,10 @@ void ejecutar_IO_FS_READ() {
         enviar_codOp(fd_kernel, FS_READ_OK);
         log_info(logger_IO, "PID: %d - Leer Archivo: %s - Tamaño a Leer: %d - Puntero Archivo: %d", pid, nombre_archivo, tamanio_a_leer, puntero_archivo);
     }
+    else {
+        log_error(logger_IO, "cod_op erroneo");
+    }
     free(nombre_archivo);
-    free(valor_leido);  
 }
 
 void crear_bitarray() {
@@ -253,18 +258,13 @@ void bitarray_clean(t_bitarray* bitarray) {
 }
 
 void mostrar_bitarray(t_bitarray* unBitarray) {
-    // TESTING:
-    //fflush(stdout);
     printf("Mapa de bloques libres\n");
     for(int i = 0; i < config_IO_DIALFS.block_count; i++) {
         bool bit = bitarray_test_bit(unBitarray, i);
         char* valorBit = bool_to_string(bit);
-        //fflush(stdout);
         printf("Bloque %d: %s\n",i,valorBit);
     }
-
-    // muestra un pedazo de memoria por pantalla en forma hexa
-    // mem_hexdump(bitarray->bitarray,bitarray->size);
+    printf("\n");
 }
 
 char* bool_to_string(bool value) {
@@ -290,7 +290,7 @@ bool existe_archivo(char* nombre_archivo) {
     }
 
     closedir(dp);
-    free(directory); 
+    //free(directory); 
     return 0; // El archivo no existe en el directorio
 }
 
@@ -323,8 +323,6 @@ void leer_info_archivos(){
         }
     }
     closedir(dp);
-    //free(directory);
-    free(nombre_archivo);
 }
 
 void mostrar_info_archivos() {
@@ -337,8 +335,9 @@ void mostrar_info_archivos() {
         char* nombre_archivo = info_archivo->nombre_archivo;
         printf("- nombre: %s\n", nombre_archivo);
         printf("- bloque inicial: %d\n", bloque);
-        printf("- tamanio: %d\n", tamanio);
+        printf("- tamanio: %d\n\n", tamanio);
     }   
+    printf("\n");
 }
 
 bool archivos_base_existen() {
@@ -385,8 +384,10 @@ void fs_crear_archivo(char* nombre_archivo) {
     bitarray_set_bit(bitarray,nro_bloque_libre);
     actualizar_bitmap();
 
-    config_set_value(config_md, "BLOQUE_INICIAL", string_itoa(nro_bloque_libre));
+    char* nro_bloque_libre_string = string_itoa(nro_bloque_libre);
+    config_set_value(config_md, "BLOQUE_INICIAL", nro_bloque_libre_string);
     config_set_value(config_md, "TAMANIO_ARCHIVO", "0");
+    free(nro_bloque_libre_string);
 
     t_info_archivo* info_archivo = (t_info_archivo*)malloc(sizeof(t_info_archivo));
     info_archivo->nombre_archivo = nombre_archivo;
@@ -473,8 +474,10 @@ void fs_truncar_archivo(char* nombre_archivo, uint32_t nuevo_tamanio, uint32_t p
         // el bloque inicial no va a necesitar cambiar
 
         // cambiar tamanio
-        config_set_value(config_md, "TAMANIO_ARCHIVO", string_itoa(nuevo_tamanio));
+        char* nuevo_tamanio_string = string_itoa(nuevo_tamanio);
+        config_set_value(config_md, "TAMANIO_ARCHIVO", nuevo_tamanio_string);
         config_save(config_md);
+        free(nuevo_tamanio_string);
 
         // liberar los bloques ya no necesarios
         // ejemplo: 0 1 2 3 4 5 -- ''6 7 8'' 9 10 -- 11 12 13 14 15
@@ -492,8 +495,10 @@ void fs_truncar_archivo(char* nombre_archivo, uint32_t nuevo_tamanio, uint32_t p
     else if (nuevo_tamanio < tamanio_actual + espacio_libre_ult_bloque) {
         log_debug(logger_IO,"Truncar. Caso 3. Ampliar en el ultimo bloque");
         // cambiar tamanio
-        config_set_value(config_md, "TAMANIO_ARCHIVO", string_itoa(nuevo_tamanio));
+        char* nuevo_tamanio_string = string_itoa(nuevo_tamanio);
+        config_set_value(config_md, "TAMANIO_ARCHIVO", nuevo_tamanio_string);
         config_save(config_md);
+        free(nuevo_tamanio_string);
     }
 
     /* Caso 4: tengo espacio contiguo suficiente despues del ultimo bloque actual para ampliar */
@@ -502,8 +507,10 @@ void fs_truncar_archivo(char* nombre_archivo, uint32_t nuevo_tamanio, uint32_t p
 
         // bloque inicial no cambia
         // cambiar tamanio
-        config_set_value(config_md, "TAMANIO_ARCHIVO", string_itoa(nuevo_tamanio));
+        char* nuevo_tamanio_string = string_itoa(nuevo_tamanio);
+        config_set_value(config_md, "TAMANIO_ARCHIVO", nuevo_tamanio_string);
         config_save(config_md);
+        free(nuevo_tamanio_string);
 
         // asigno los bloques 
         for(int i = ultimo_bloque_actual + 1; i <= ultimo_bloque_nuevo; i++) {
@@ -519,9 +526,14 @@ void fs_truncar_archivo(char* nombre_archivo, uint32_t nuevo_tamanio, uint32_t p
         ultimo_bloque_nuevo = nuevo_bloque_inicial + cantidad_bloques_nueva - 1;
         
         // cambiar tamanio y bloque inicial
-        config_set_value(config_md, "TAMANIO_ARCHIVO", string_itoa(nuevo_tamanio));
-        config_set_value(config_md, "BLOQUE_INICIAL", string_itoa(nuevo_bloque_inicial));
+        char* nuevo_tamanio_string = string_itoa(nuevo_tamanio);
+        char* nuevo_bloque_inicial_string = string_itoa(nuevo_bloque_inicial);
+        config_set_value(config_md, "TAMANIO_ARCHIVO", nuevo_tamanio_string);
+        config_set_value(config_md, "BLOQUE_INICIAL", nuevo_bloque_inicial_string);
         config_save(config_md);
+        free(nuevo_tamanio_string);
+        free(nuevo_bloque_inicial_string);
+
 
         // mover "archivo" de lugar dentro del archivo de bloques
         FILE* arch_bloques = fopen(path_archivo_bloques, "r+b"); // El puntero se posiciona al inicio
@@ -563,17 +575,23 @@ void fs_truncar_archivo(char* nombre_archivo, uint32_t nuevo_tamanio, uint32_t p
         list_remove_element(lista_info_archivos, info_archivo);
 
         log_info(logger_IO, "PID: %d - Inicio Compactación.", pid); // LOG OBLIGATORIO
+
         // compactar sin tener en cuenta el archivo a truncar
         compactar_FS();
+
         log_info(logger_IO, "PID: %d - Fin Compactación.", pid); // LOG OBLIGATORIO
 
         // buscar nueva posicion para el bloque inicial
         nuevo_bloque_inicial = buscar_primer_lugar_libre(cantidad_bloques_nueva);
 
         // cambiar tamanio y bloque inicial
-        config_set_value(config_md, "TAMANIO_ARCHIVO", string_itoa(nuevo_tamanio));
-        config_set_value(config_md, "BLOQUE_INICIAL", string_itoa(nuevo_bloque_inicial));
+        char* nuevo_tamanio_string = string_itoa(nuevo_tamanio);
+        char* nuevo_bloque_inicial_string = string_itoa(nuevo_bloque_inicial);
+        config_set_value(config_md, "TAMANIO_ARCHIVO", nuevo_tamanio_string);
+        config_set_value(config_md, "BLOQUE_INICIAL", nuevo_bloque_inicial_string);
         config_save(config_md);
+        free(nuevo_tamanio_string);
+        free(nuevo_bloque_inicial_string);
 
         // actualizar info del archivo
         info_archivo->config_archivo = config_md;
@@ -636,8 +654,10 @@ void compactar_FS() {
         }
 
         // actualizo el config con el nuevo bloque inicial
-        config_set_value(config_archivo, "BLOQUE_INICIAL", string_itoa(nuevo_bloque_inicial));
+        char* nuevo_bloque_inicial_string = string_itoa(nuevo_bloque_inicial);
+        config_set_value(config_archivo, "BLOQUE_INICIAL", nuevo_bloque_inicial_string);
         config_save(config_archivo);
+        free(nuevo_bloque_inicial_string);
 
         // escribo el contenido del archivo en el nuevo lugar
         fseek(arch_bloques, nuevo_bloque_inicial * tamanio_bloque, SEEK_SET);
@@ -733,9 +753,12 @@ void fs_eliminar_archivo(char* nombre_archivo) {
 
     // lo elimino de la lista de archivos
     list_remove_element(lista_info_archivos, info_archivo);
+    destruir_info_archivo(info_archivo);
+}
 
+void destruir_info_archivo(t_info_archivo* info_archivo) {
+    free(info_archivo->nombre_archivo);
     config_destroy(info_archivo->config_archivo);
-    //free(info_archivo->nombre_archivo);
     free(info_archivo);
 }
 

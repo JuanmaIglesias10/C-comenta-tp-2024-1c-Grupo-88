@@ -41,6 +41,7 @@ uint32_t buscar_primer_lugar_libre(uint32_t cantidad_bloques_necesaria);
 bool comparador_bloque_inicial(void* a, void* b);
 
 void fs_eliminar_archivo(char* nombre_archivo);
+void destruir_info_archivo(t_info_archivo* info_archivo);
 
 char* fs_leer_archivo(char* nombre_archivo, uint32_t puntero_archivo, uint32_t tamanio_a_leer);
 void fs_escribir_archivo(char* nombre_archivo, uint32_t puntero_archivo, uint32_t tamanio_a_escribir, char* info_a_escribir);
