@@ -54,10 +54,6 @@ void inicializar_IO_STDIN(char* nombre_interfaz){
 
 	enviar_info_kernel(nombre_interfaz,config_IO_STDIN.tipo_interfaz);
 
-	pthread_t hilo_memoria;
-	pthread_create(&hilo_memoria, NULL, (void*)atender_memoria_IO_STDIN, NULL);
-	pthread_detach(hilo_memoria);
-
 	pthread_t hilo_kernel;
 	pthread_create(&hilo_kernel, NULL, (void*)atender_kernel_IO_STDIN, NULL);
 	pthread_join(hilo_kernel, NULL);
@@ -74,10 +70,6 @@ void inicializar_IO_STDOUT(char* nombre_interfaz){
 	fd_kernel = conectarse(config_IO_STDOUT.ip_kernel,config_IO_STDOUT.puerto_kernel, "KERNEL", logger_IO);
 
 	enviar_info_kernel(nombre_interfaz,config_IO_STDOUT.tipo_interfaz);
-
-	pthread_t hilo_memoria;
-	pthread_create(&hilo_memoria, NULL, (void*)atender_memoria_IO_STDOUT, NULL);
-	pthread_detach(hilo_memoria);
 
 	pthread_t hilo_kernel;
 	pthread_create(&hilo_kernel, NULL, (void*)atender_kernel_IO_STDOUT, NULL);
