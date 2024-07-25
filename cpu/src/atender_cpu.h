@@ -5,6 +5,5 @@
 #include "cpu.h"
 #include "utils.h"
 
-void* atender_memoria();
 void* atender_kernel_dis();
 #endif /* ATENDER_H */
