@@ -2,21 +2,6 @@
 
 // HILOS
 
-void atender_memoria_IO_STDIN()
-{
-    while (1) {
-        // por ahora no se usa
-        sleep(10);
-    }
-} // to do: espera activa
-
-void atender_memoria_IO_STDOUT()
-{
-    while (1) {
-        // por ahora no se usa
-        sleep(10);
-    }
-} // to do: espera activa
 
 void atender_kernel_IO_GENERICA()
 {
