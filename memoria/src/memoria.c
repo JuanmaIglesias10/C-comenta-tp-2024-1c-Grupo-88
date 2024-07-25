@@ -318,6 +318,8 @@ void ejecutar_MOV_OUT(){
 
 
 	enviar_codOp(fd_cpu, MOV_OUT_OK);
+	log_info(logger_memoria, "PID: %d - Acción: ESCRIBIR - Dirección física: %d", pid, dirFisica);
+
 	// imprimir_memoria();
 
 }
@@ -522,7 +524,7 @@ void resize() {
 				void* direccionInicioPagina = memoriaPrincipal + nroMarcoLibre * config_memoria.tam_pagina;
 
 				t_pagina* paginaCreada = crear_pagina(nro_pagina_nueva, nroMarcoLibre, direccionInicioPagina, proceso->pid);
-				log_warning(logger_memoria, "El PID %d con el nro de Pagina %d ocupa el marco %d", proceso->pid, paginaCreada->nroPagina, paginaCreada->nroMarco);
+				// log_warning(logger_memoria, "El PID %d con el nro de Pagina %d ocupa el marco %d", proceso->pid, paginaCreada->nroPagina, paginaCreada->nroMarco);
 				list_add(proceso->listaPaginasProceso, paginaCreada);
 
 				list_replace(listaMarcos , nroMarcoLibre ,paginaCreada);
