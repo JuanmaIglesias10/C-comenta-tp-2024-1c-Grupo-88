@@ -49,11 +49,6 @@ void inicializar_conexiones(){
 	fd_kernel_dis = esperar_cliente(fd_cpu_dis, logger_cpu,"KERNEL(DISPATCH)"); 
 
 	fd_kernel_int = esperar_cliente(fd_cpu_int, logger_cpu,"KERNEL(INTERRUPT)"); 
-	
-	// TODO: Este hilo no esta siendo usado
-	pthread_t hilo_cpu_memoria;
-	pthread_create(&hilo_cpu_memoria, NULL, (void*)atender_memoria, NULL);
-	pthread_detach(hilo_cpu_memoria);
 
 	pthread_t hilo_kernel_dis;
 
