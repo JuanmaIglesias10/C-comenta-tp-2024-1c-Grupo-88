@@ -2,11 +2,15 @@
 
 int main(int argc, char* argv[]) {
 	char* nombre_interfaz = argv[1];
-	char* path_archivo_config = argv[2];
-	seleccionar_tipo_interfaz(nombre_interfaz , path_archivo_config);
+	char* nombre_arch_config = argv[2];
+	seleccionar_tipo_interfaz(nombre_interfaz , nombre_arch_config);
 }
 
-void seleccionar_tipo_interfaz(char* nombre_interfaz, char* path_archivo_config){
+void seleccionar_tipo_interfaz(char* nombre_interfaz, char* nombre_arch_config){
+
+	char* path_archivo_config = string_new();
+    string_append(&path_archivo_config, "./configs/");
+    string_append(&path_archivo_config, nombre_arch_config);
 
 	logger_IO = iniciar_logger("logEntradaSalida.log", nombre_interfaz ,LOG_LEVEL_DEBUG);
 	config = config_create(path_archivo_config);

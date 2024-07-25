@@ -10,10 +10,10 @@
 #include "manejoIO.h"
 
 // INIT
-void inicializar_kernel();
+void inicializar_kernel(char* nombre_arch_config);
 void inicializar_listas_colas();
 void inicializar_conexiones();
-void iniciar_config_kernel();
+void iniciar_config_kernel(char* nombre_arch_config);
 void inicializar_semaforos();
 void inicializar_planificadores();
 void inicializar_largo_plazo();

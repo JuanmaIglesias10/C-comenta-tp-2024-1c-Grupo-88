@@ -1,13 +1,15 @@
 #include "memoria.h"
 
-int main(void) {
-    inicializar_memoria();
+int main(int argc, char* argv[]) {
+
+	char* nombre_arch_config = argv[1];
+    inicializar_memoria(nombre_arch_config);
     return 0;
 }
 
-void inicializar_memoria(){
+void inicializar_memoria(char* nombre_arch_config){
     logger_memoria = iniciar_logger("logMemoria.log", "MEMORIA", LOG_LEVEL_INFO);
-    inicializar_config();
+    inicializar_config(nombre_arch_config);
 
     pthread_mutex_init(&mutex_lista_procesos, NULL);
 
@@ -19,8 +21,12 @@ void inicializar_memoria(){
     return;
 }
 
-void inicializar_config(){
-    config = config_create("./memoria.config");
+void inicializar_config(char* nombre_arch_config){
+	char* path_archivo_config = string_new();
+    string_append(&path_archivo_config, "./configs/");
+    string_append(&path_archivo_config, nombre_arch_config);
+    config = config_create(path_archivo_config);
+
     config_memoria.puerto_escucha = config_get_int_value(config, "PUERTO_ESCUCHA");
     config_memoria.tam_memoria = config_get_int_value(config, "TAM_MEMORIA");
     config_memoria.tam_pagina = config_get_int_value(config, "TAM_PAGINA");
@@ -272,9 +278,9 @@ void enviar_instruccion(){
 	destruir_buffer(buffer);
 
 	// Suponemos que si se consulta por un proceso es porque ya existe
-	pthread_mutex_lock(&mutex_lista_procesos);
+	//pthread_mutex_lock(&mutex_lista_procesos);
 	t_proceso* proceso = buscarProcesoPorPid(pid);
-	pthread_mutex_unlock(&mutex_lista_procesos);
+	//pthread_mutex_unlock(&mutex_lista_procesos);
 
 	t_instruccion* instruccion = list_get(proceso->instrucciones, pc);
 	buffer = crear_buffer();
@@ -446,12 +452,16 @@ uint32_t leerValorEnMemoria(size_t dirFisica, int cantBytes, t_proceso* proceso)
 }
 
 t_proceso* buscarProcesoPorPid(uint32_t pid){
+	pthread_mutex_lock(&mutex_lista_procesos);
 	for(int i = 0; i < list_size(listaProcesos); i++){
 
 		t_proceso* proceso = list_get(listaProcesos, i);
-		if(proceso->pid == pid)
+		if(proceso->pid == pid) {
+			pthread_mutex_unlock(&mutex_lista_procesos);
 			return proceso;
+		}
 	}
+	pthread_mutex_unlock(&mutex_lista_procesos);
 	return NULL; 
 }
 

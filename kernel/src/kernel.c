@@ -1,18 +1,20 @@
 #include "kernel.h"
 
-int main(void)
-{
-	inicializar_kernel(); 
+int main(int argc, char* argv[])
+{   
+    char* nombre_arch_config = argv[1];
+
+	inicializar_kernel(nombre_arch_config); 
 	iniciar_consola();
 }
 
-void inicializar_kernel(){
+void inicializar_kernel(char* nombre_arch_config){
 
 	pid_a_asignar = 0;
     planificacion_detenida = 0;
 
 	logger_kernel = iniciar_logger_kernel("logKernel.log","KERNEL",LOG_LEVEL_INFO);
-	iniciar_config_kernel();
+	iniciar_config_kernel(nombre_arch_config);
 	inicializar_conexiones();
 	inicializar_listas_colas();
 	inicializar_semaforos();
@@ -42,8 +44,15 @@ void inicializar_kernel(){
 
 }
 
-void iniciar_config_kernel(){
-	config = config_create("./kernel.config");
+void iniciar_config_kernel(char* nombre_arch_config){
+
+    char* path_archivo_config = string_new();
+    string_append(&path_archivo_config, "./configs/");
+    string_append(&path_archivo_config, nombre_arch_config);
+    config = config_create(path_archivo_config);
+
+    free(path_archivo_config);
+
 	config_kernel.puerto_escucha = config_get_int_value(config, "PUERTO_ESCUCHA");
 	config_kernel.ip_memoria = config_get_string_value(config, "IP_MEMORIA");
 	config_kernel.puerto_memoria = config_get_int_value(config, "PUERTO_MEMORIA");
@@ -290,17 +299,10 @@ void enviar_a_finalizado(t_pcb* pcb_a_finalizar, char* razon){
 void cambiar_grado_multiprogramacion(char* nuevo_grado){
     //para cambiarlo la planificacion debe estar detendida
     int grado_a_asignar = atoi(nuevo_grado);
-
-    if(planificacion_detenida == 1){ // se puede cambiar el grado de multiprogramacion
         
-        grado_de_multiprogramacion.__align = grado_a_asignar - config_kernel.grado_multiprogramacion + grado_de_multiprogramacion.__align - 1;
-        sem_post(&grado_de_multiprogramacion);
-        config_kernel.grado_multiprogramacion = grado_a_asignar; 
-    }
-    else{
-        // no se puede realizar el cambio
-        log_warning(logger_kernel, "La planificacion no se detuvo. No se puede cambiar el grado de multiprogramacion");
-    }
+    grado_de_multiprogramacion.__align = grado_a_asignar - config_kernel.grado_multiprogramacion + grado_de_multiprogramacion.__align - 1;
+    sem_post(&grado_de_multiprogramacion);
+    config_kernel.grado_multiprogramacion = grado_a_asignar;     
 }
 
 void detenerPlanificacion(){ 

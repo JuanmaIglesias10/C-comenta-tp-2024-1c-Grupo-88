@@ -706,7 +706,7 @@ uint32_t buscar_primer_lugar_libre(uint32_t cantidad_bloques_nueva) {
     
     uint32_t cantidad_bloques_libres_contiguos = 0;
     uint32_t i = 0;
-    uint32_t pos_primer_bloque_contiguo_libre;
+    uint32_t pos_primer_bloque_contiguo_libre = 9999;
 
     while ( (i <= config_IO_DIALFS.block_count - 1) && (cantidad_bloques_libres_contiguos != cantidad_bloques_nueva) ) {
 
