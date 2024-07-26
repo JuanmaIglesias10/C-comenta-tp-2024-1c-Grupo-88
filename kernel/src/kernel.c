@@ -680,7 +680,6 @@ void evaluar_instruccion(t_instruccion* instruccion_actual){
             if(es_RR_o_VRR()){
                 pcb_ejecutando->flag_clock = true;
             }
-            /*CONCHA */
             parametros_read_t* parametros_read = malloc(sizeof(parametros_read_t));
             parametros_read->interfaz = strdup(instruccion_actual->par1);
             parametros_read->char_direccion_fisica = strdup(instruccion_actual->par2);

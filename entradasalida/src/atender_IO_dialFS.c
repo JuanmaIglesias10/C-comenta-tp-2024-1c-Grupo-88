@@ -9,23 +9,23 @@ void atender_kernel_IO_DIALFS() {
         switch (cod_op) {
             case FS_CREATE:
                 ejecutar_IO_FS_CREATE();
-                //mostrar_info_archivos();
+                mostrar_info_archivos();
                 break;
             case FS_DELETE:
                 ejecutar_IO_FS_DELETE();
-                //mostrar_info_archivos();
+                mostrar_info_archivos();
                 break;
             case FS_TRUNCATE:
                 ejecutar_IO_FS_TRUNCATE();
-                //mostrar_info_archivos();
+                mostrar_info_archivos();
                 break;
             case FS_WRITE:
                 ejecutar_IO_FS_WRITE();
-                //mostrar_info_archivos();
+                mostrar_info_archivos();
                 break;
             case FS_READ:
                 ejecutar_IO_FS_READ();
-                //mostrar_info_archivos();
+                mostrar_info_archivos();
                 break;
             default:
                 // log_warning(logger_IO, "CODIGO DE OPERACION NO RECONOCIDO");
@@ -554,6 +554,7 @@ void fs_truncar_archivo(char* nombre_archivo, uint32_t nuevo_tamanio, uint32_t p
             bitarray_set_bit(bitarray,i); // lo marco lleno
         }
         actualizar_bitmap();
+        list_sort(lista_info_archivos, comparador_bloque_inicial);
     }
 
     // caso 6: no tengo espacio contiguo en el FS, debo compactar
