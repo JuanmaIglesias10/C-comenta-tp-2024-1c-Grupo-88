@@ -3,6 +3,7 @@
 // Variables globales CPU
 t_log* logger_cpu;
 t_config* config;
+t_config* config_ip;
 t_config_cpu config_cpu;
 
 // Colas

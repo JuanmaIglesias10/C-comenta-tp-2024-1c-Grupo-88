@@ -3,6 +3,7 @@
 
 t_log* logger_kernel;
 t_config* config;
+t_config* config_ip;
 t_config_kernel config_kernel;
 
 t_pcb* pcb_ejecutando;

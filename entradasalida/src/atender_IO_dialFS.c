@@ -9,26 +9,26 @@ void atender_kernel_IO_DIALFS() {
         switch (cod_op) {
             case FS_CREATE:
                 ejecutar_IO_FS_CREATE();
-                mostrar_info_archivos();
+                //mostrar_info_archivos();
                 break;
             case FS_DELETE:
                 ejecutar_IO_FS_DELETE();
-                mostrar_info_archivos();
+                //mostrar_info_archivos();
                 break;
             case FS_TRUNCATE:
                 ejecutar_IO_FS_TRUNCATE();
-                mostrar_info_archivos();
+                //mostrar_info_archivos();
                 break;
             case FS_WRITE:
                 ejecutar_IO_FS_WRITE();
-                mostrar_info_archivos();
+                //mostrar_info_archivos();
                 break;
             case FS_READ:
                 ejecutar_IO_FS_READ();
-                mostrar_info_archivos();
+                //mostrar_info_archivos();
                 break;
             default:
-                log_warning(logger_IO, "CODIGO DE OPERACION NO RECONOCIDO");
+                // log_warning(logger_IO, "CODIGO DE OPERACION NO RECONOCIDO");
                 return;
          }
     }
@@ -182,7 +182,7 @@ void ejecutar_IO_FS_WRITE() {
         char* string_recibido = leer_buffer_string(buffer_string);
         destruir_buffer(buffer_string);
 
-        log_warning(logger_IO, "%s" , string_recibido);
+        // log_warning(logger_IO, "%s" , string_recibido);
         //Pongo el string en el archivo
         fs_escribir_archivo(nombre_archivo, puntero_archivo, tamanio_a_escribir, string_recibido);
 
@@ -390,7 +390,7 @@ void fs_crear_archivo(char* nombre_archivo) {
     free(nro_bloque_libre_string);
 
     t_info_archivo* info_archivo = (t_info_archivo*)malloc(sizeof(t_info_archivo));
-    info_archivo->nombre_archivo = nombre_archivo;
+    info_archivo->nombre_archivo = strdup(nombre_archivo);
     info_archivo->config_archivo = config_md;
 
     //list_add(lista_info_archivos, info_archivo);

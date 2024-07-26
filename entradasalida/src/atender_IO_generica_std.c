@@ -10,10 +10,11 @@ void atender_kernel_IO_GENERICA()
             switch (cod_op) {
                 case SLEEP:
                     t_buffer* buffer_recibido = recibir_buffer(fd_kernel);
+                    uint32_t pid = leer_buffer_uint32(buffer_recibido);
                     uint8_t unidadesDeTrabajo = leer_buffer_uint8(buffer_recibido);
-                    log_warning(logger_IO, "empiezo sleep");
+                    log_info(logger_IO, "PID: %d - Operacion: IO_GEN_SLEEP" , pid);
                     usleep(unidadesDeTrabajo * config_IO_GENERICA.tiempo_unidad_trabajo);
-                    log_warning(logger_IO, "termino sleep");
+    
                     destruir_buffer(buffer_recibido);
                     enviar_codOp(fd_kernel,SLEEP_OK);
                     break;
@@ -59,12 +60,11 @@ void ejecutar_IO_STDIN_READ(){
     uint32_t dir_fisica = leer_buffer_uint32(buffer_recibido); // la direccion donde se va a guardar el valor
 	uint32_t tamMaximo = leer_buffer_uint32(buffer_recibido); // tamanio maximo del valor a leer
     uint32_t pid = leer_buffer_uint32(buffer_recibido); // pid del proceso que solicita la lectura
-
+    log_info(logger_IO, "PID: %d - Operacion: IO_STDIN_READ" , pid);
 	destruir_buffer(buffer_recibido);
 	int contador = 0;
     char* valor_ingresado;
     char* valor_truncado = malloc(tamMaximo + 1); 
-	log_warning(logger_IO, "El tamanio es %d" , tamMaximo);
 
 
 	while(1){
@@ -110,6 +110,7 @@ void ejecutar_IO_STDOUT_WRITE(){
     uint32_t dir_fisica       = leer_buffer_uint32(buffer_recibido); 
 	uint32_t tamaño_a_leer     = leer_buffer_uint32(buffer_recibido); 
     uint32_t pid              = leer_buffer_uint32(buffer_recibido);
+    log_info(logger_IO, "PID: %d - Operacion: IO_STDOUT_WRITE" , pid);
 
 	destruir_buffer(buffer_recibido);
 

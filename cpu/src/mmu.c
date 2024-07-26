@@ -97,15 +97,12 @@ void actualizar_TLB(uint32_t nro_pagina,uint32_t nro_marco) {
 
 	if(list_size(lista_TLB) < config_cpu.cantidad_entradas_tlb){
 		list_add(lista_TLB,entrada_TLB_nueva);
-		log_warning(logger_cpu, "se agrego una entrada nueva a la TLB");
 	}
 
 	else {
 		if(es_fifo()){
-			t_entrada_tlb* xdFIFO = list_remove(lista_TLB,0);
-			log_warning(logger_cpu, "%d"  ,xdFIFO->nro_pagina);
+			t_entrada_tlb* entrada_removida_fifo = list_remove(lista_TLB,0);
 			list_add(lista_TLB,entrada_TLB_nueva);
-			// log_warning(logger_cpu, "hubo un reemplazo por FIFO");
 		} 
 		
 		if(es_lru()) {
@@ -121,10 +118,8 @@ void actualizar_TLB(uint32_t nro_pagina,uint32_t nro_marco) {
 			}
 			entrada_TLB_nueva->cont_lru = cont_lru++;
 
-			t_entrada_tlb* xdLRU = list_get(lista_TLB,indice_a_reemplazar);
-			log_warning(logger_cpu, "%d" ,xdLRU->nro_pagina);
+			t_entrada_tlb* entrada_removida_lru = list_get(lista_TLB,indice_a_reemplazar);
 			list_replace(lista_TLB, indice_a_reemplazar, entrada_TLB_nueva);
-			// log_warning(logger_cpu, "hubo un reemplazo por LRU");
 		}
 	}
 }

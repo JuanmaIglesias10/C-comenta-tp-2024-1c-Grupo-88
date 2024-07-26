@@ -3,6 +3,7 @@
 // Logger Y Config
 t_log* logger_memoria;
 t_config* config;
+t_config* config_ip;
 t_config_memoria config_memoria;
 
 // Files Descriptors 

@@ -26,11 +26,12 @@ void inicializar_config(char* nombre_arch_config){
     string_append(&path_archivo_config, "./configs/");
     string_append(&path_archivo_config, nombre_arch_config);
     config = config_create(path_archivo_config);
+    config_ip = config_create("../utils/config_ip.config");
 
     config_memoria.puerto_escucha = config_get_int_value(config, "PUERTO_ESCUCHA");
     config_memoria.tam_memoria = config_get_int_value(config, "TAM_MEMORIA");
     config_memoria.tam_pagina = config_get_int_value(config, "TAM_PAGINA");
-    config_memoria.path_instrucciones = config_get_string_value(config, "PATH_INSTRUCCIONES");
+    config_memoria.path_instrucciones = config_get_string_value(config_ip, "PATH_INSTRUCCIONES");
     config_memoria.retardo_respuesta = config_get_int_value(config, "RETARDO_RESPUESTA");
 }
 
@@ -476,8 +477,8 @@ void devolver_nro_marco(){
 	t_proceso* proceso = buscarProcesoPorPid(pid);
 
 	t_pagina* pagina = buscarPaginaPorNroYPid(proceso,nro_pagina);
-	
-	enviar_codOp(fd_cpu, NUMERO_MARCO_OK);  //Hacia calcular_direccion_fisica en mmu.c
+	log_info(logger_memoria, "PID: %d - Pagina: %d - Marco: %d", pid, nro_pagina, pagina->nroMarco);
+;	enviar_codOp(fd_cpu, NUMERO_MARCO_OK);  //Hacia calcular_direccion_fisica en mmu.c
 	buffer = crear_buffer();
 	agregar_buffer_uint32(buffer, pagina->nroMarco);
 	enviar_buffer(buffer, fd_cpu);
@@ -492,8 +493,6 @@ t_pagina* buscarPaginaPorNroYPid(t_proceso* proceso , uint32_t nroPag){
 }
 	return NULL;
 }
-
-	
 
 void resize() {
 	t_buffer* buffer = recibir_buffer(fd_cpu);
@@ -619,11 +618,6 @@ void vaciar_marco(uint32_t nroMarco){
 	list_replace(listaMarcos, nroMarco, NULL);
 }
 
-
-
-// log_info(logger_memoria, "Destrucción: PID: %d - Tamaño: %d", procesoAEliminar->pid, cantPaginas);
-
-// TODO: revisar esta funcion que esta mal
 void escribir_stdin_read(int fd_IO){
     t_buffer* buffer_recibido = recibir_buffer(fd_IO);
     uint32_t dirFisica = leer_buffer_uint32(buffer_recibido);
@@ -635,6 +629,7 @@ void escribir_stdin_read(int fd_IO){
 	escribirValorEnMemoriaString(valor_ingresado, dirFisica, tamanio, proceso);
 	
 	enviar_codOp(fd_IO, IO_M_STDIN_READ_OK);
+	log_info(logger_memoria, "PID: %d - Acción: ESCRIBIR - Dirección física: %d", pid, dirFisica);
 	// imprimir_memoria();
 	free(valor_ingresado);
 }
@@ -650,9 +645,9 @@ void leer_stdout_write(int fd_IO){
 	t_proceso* proceso = buscarProcesoPorPid(pid);
 	
 	char* string_leido = leerValorEnMemoriaString(dirFisica, tamanio, proceso);
-	log_info(logger_memoria,"%s",string_leido);
 	
 	enviar_codOp(fd_IO, IO_M_STDOUT_WRITE_OK);
+	log_info(logger_memoria, "PID: %d - Acción: LEER - Dirección física: %d", pid, dirFisica);
 	t_buffer* buffer_a_enviar = crear_buffer();
 	agregar_buffer_string(buffer_a_enviar, string_leido);
 	enviar_buffer(buffer_a_enviar,fd_IO);
@@ -790,10 +785,13 @@ void ejecutar_copy_string(){
     destruir_buffer(buffer_recibido);
 	t_proceso* proceso = buscarProcesoPorPid(pid);
 	char* string_a_escribir = leerValorEnMemoriaString(direccion_fisica_si, tamString, proceso);
+	log_info(logger_memoria, "PID: %d - Acción: LEER - Dirección física: %d", pid, direccion_fisica_si);
 	
 	escribirValorEnMemoriaString(string_a_escribir, direccion_fisica_di, tamString, proceso);
+	log_info(logger_memoria, "PID: %d - Acción: ESCRIBIR - Dirección física: %d", pid, direccion_fisica_di);
 
 	enviar_codOp(fd_cpu, COPY_STRING_OK);
+
 
 	// imprimir_memoria();
 	free(string_a_escribir);
@@ -806,7 +804,7 @@ void finalizar_proceso(){
 	
 	t_proceso* proceso_a_eliminar = buscarProcesoPorPid(pidAFinalizar);
 
-	log_info(logger_memoria, "Destrucción: PID: %d - Tamaño: %d", proceso_a_eliminar->pid, proceso_a_eliminar->cantPaginas);
+	log_info(logger_memoria, "PID: %d - Tamaño: %d", proceso_a_eliminar->pid, proceso_a_eliminar->cantPaginas);
 
 	liberarPaginasDeUnProcesoResize(proceso_a_eliminar , 0);
 
@@ -843,9 +841,9 @@ void escribir_fs_read(int fd_IO){
     destruir_buffer(buffer_recibido);
 	t_proceso* proceso = buscarProcesoPorPid(pid);
 	escribirValorEnMemoriaString(valor_a_escribir, dirFisica, tamanio, proceso);
-	log_warning(logger_memoria , "estoy llegando");
 	
 	enviar_codOp(fd_IO, IO_M_FS_READ_OK);
+	log_info(logger_memoria, "PID: %d - Acción: LEER - Dirección física: %d", pid, dirFisica);
 	// imprimir_memoria();
 	free(valor_a_escribir);
 }
@@ -864,6 +862,7 @@ void leer_fs_write(int fd_IO){
 	log_info(logger_memoria,"%s",string_leido);
 	
 	enviar_codOp(fd_IO, IO_M_FS_WRITE_OK);
+	log_info(logger_memoria, "PID: %d - Acción: ESCRIBIR - Dirección física: %d", pid, dirFisica);
 	t_buffer* buffer_a_enviar = crear_buffer();
 	agregar_buffer_string(buffer_a_enviar, string_leido);
 	enviar_buffer(buffer_a_enviar,fd_IO);

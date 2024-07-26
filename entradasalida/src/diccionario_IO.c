@@ -7,6 +7,7 @@ t_config_IO_STDOUT config_IO_STDOUT;
 t_config_IO_DIALFS config_IO_DIALFS;
 t_log* logger_IO;
 t_config* config;
+t_config* config_ip;
 
 // Files Descriptors 
 int fd_kernel;

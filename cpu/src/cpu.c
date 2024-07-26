@@ -22,8 +22,9 @@ void inicializar_config(char* nombre_arch_config){
     string_append(&path_archivo_config, "./configs/");
     string_append(&path_archivo_config, nombre_arch_config);
     config = config_create(path_archivo_config);
+    config_ip = config_create("../utils/config_ip.config");
 
-	config_cpu.ip_memoria = config_get_string_value(config, "IP_MEMORIA");
+	config_cpu.ip_memoria = config_get_string_value(config_ip, "IP_MEMORIA");
 	config_cpu.puerto_memoria = config_get_int_value(config, "PUERTO_MEMORIA");
 	config_cpu.puerto_escucha_dispatch = config_get_int_value(config, "PUERTO_ESCUCHA_DISPATCH");
 	config_cpu.puerto_escucha_interrupt = config_get_int_value(config, "PUERTO_ESCUCHA_INTERRUPT");

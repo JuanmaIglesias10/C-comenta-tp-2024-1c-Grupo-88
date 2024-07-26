@@ -52,6 +52,7 @@ extern t_config_IO_STDOUT config_IO_STDOUT;
 extern t_config_IO_DIALFS config_IO_DIALFS;
 extern t_log* logger_IO;
 extern t_config* config;
+extern t_config* config_ip;
 
 // Files Descriptors 
 extern int fd_kernel;

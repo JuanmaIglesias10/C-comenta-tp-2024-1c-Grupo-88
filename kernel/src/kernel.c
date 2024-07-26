@@ -50,13 +50,14 @@ void iniciar_config_kernel(char* nombre_arch_config){
     string_append(&path_archivo_config, "./configs/");
     string_append(&path_archivo_config, nombre_arch_config);
     config = config_create(path_archivo_config);
+    config_ip = config_create("../utils/config_ip.config");
 
     free(path_archivo_config);
 
 	config_kernel.puerto_escucha = config_get_int_value(config, "PUERTO_ESCUCHA");
-	config_kernel.ip_memoria = config_get_string_value(config, "IP_MEMORIA");
+	config_kernel.ip_memoria = config_get_string_value(config_ip, "IP_MEMORIA");
 	config_kernel.puerto_memoria = config_get_int_value(config, "PUERTO_MEMORIA");
-	config_kernel.ip_cpu = config_get_string_value(config, "IP_CPU");
+	config_kernel.ip_cpu = config_get_string_value(config_ip, "IP_CPU");
 	config_kernel.puerto_cpu_dispatch = config_get_int_value(config, "PUERTO_CPU_DISPATCH");
 	config_kernel.puerto_cpu_interrupt = config_get_int_value(config, "PUERTO_CPU_INTERRUPT");
 	config_kernel.algoritmo_planificacion = config_get_string_value(config, "ALGORITMO_PLANIFICACION");
@@ -762,8 +763,7 @@ void evaluar_instruccion(t_instruccion* instruccion_actual){
             if(es_RR_o_VRR()){
                 pcb_ejecutando->flag_clock = true;
             }
-            log_warning(logger_kernel, "PID: %d - OUT OF MEMORY", pcb_ejecutando->cde->pid);
-            agregar_a_cola_finished("OUT OF MEMORY");
+            agregar_a_cola_finished("OUT_OF_MEMORY");
             destruir_instruccion(instruccion_actual);
             break;
         case EXIT:
@@ -777,7 +777,7 @@ void evaluar_instruccion(t_instruccion* instruccion_actual){
             if(es_RR_o_VRR()){
                 pcb_ejecutando->flag_clock = true;
             }
-            agregar_a_cola_finished("EXIT POR CONSOLA");
+            agregar_a_cola_finished("INTERRUPTED_BY_USER");
             destruir_instruccion(instruccion_actual);
             break;
         default: // FIN DE QUANTUM

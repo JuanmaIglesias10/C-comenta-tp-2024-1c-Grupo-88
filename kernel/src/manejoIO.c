@@ -15,6 +15,7 @@ void io_gen_sleep(char* interfaz, char* char_unidadesDeTrabajo) {
             if (strcmp(aux->tipo , "GENERICA") == 0) {
                 enviar_codOp(aux->fd, SLEEP);
                 t_buffer* buffer_a_enviar = crear_buffer();
+                agregar_buffer_uint32(buffer_a_enviar, pcb_ejecutando->cde->pid);
                 agregar_buffer_uint8(buffer_a_enviar, unidadesDeTrabajo);
                 enviar_buffer(buffer_a_enviar, aux->fd);
                 destruir_buffer(buffer_a_enviar);
@@ -22,7 +23,8 @@ void io_gen_sleep(char* interfaz, char* char_unidadesDeTrabajo) {
                 // Bloqueo el proceso
                 t_pcb* pcb_sleep = malloc(sizeof(t_pcb)); 
                 pcb_sleep = pcb_ejecutando;
-                             
+                log_info(logger_kernel, "PID: %d - Bloqueado por: %s", pcb_sleep->cde->pid, interfaz);
+                
                 enviar_de_exec_a_block();
                 
                 mensajeKernelIO codigo = recibir_codOp(aux->fd);
@@ -58,10 +60,12 @@ void* io_stdin_read(void* arg) {
     
     //t_pcb* pcb_aux = malloc(sizeof(t_pcb));
     t_pcb* pcb_aux = pcb_ejecutando;
+
     enviar_de_exec_a_block();
     
     sem_wait(&sem_colaREAD);
     t_interfaz* aux = queue_pop(colaSTDIN);
+    log_info(logger_kernel, "PID: %d - Bloqueado por: %s", pcb_aux->cde->pid, aux->nombre);
     
     if (strcmp(aux->nombre, params->interfaz) == 0) {
         if (strcmp(aux->tipo, "STDIN") == 0) {
@@ -129,6 +133,7 @@ void io_stdout_write(char* interfaz, char* char_direccion_fisica, char* char_tam
             // Bloqueo el proceso
             t_pcb* pcb_aux = pcb_ejecutando;
             enviar_de_exec_a_block();
+            log_info(logger_kernel, "PID: %d - Bloqueado por: %s", pcb_aux->cde->pid, interfaz);
 
             mensajeKernelIO codigo = recibir_codOp(aux->fd);
             if (codigo == STDOUT_WRITE_OK) {
@@ -159,6 +164,8 @@ void io_fs_create(char* interfaz, char* nombreArchivo){
     t_pcb* pcb_aux = pcb_ejecutando;
     enviar_de_exec_a_block();
     t_interfaz* aux = queue_pop(colaDIALFS);
+    log_info(logger_kernel, "PID: %d - Bloqueado por: %s", pcb_aux->cde->pid, interfaz);
+
 
     if (strcmp(aux->nombre, interfaz) == 0 ){
         if (strcmp(aux->tipo , "DIALFS") == 0) {
@@ -204,6 +211,8 @@ void io_fs_delete(char* interfaz, char* nombreArchivo){
     t_pcb* pcb_aux = pcb_ejecutando;
     enviar_de_exec_a_block();
     t_interfaz* aux = queue_pop(colaDIALFS);
+    log_info(logger_kernel, "PID: %d - Bloqueado por: %s", pcb_aux->cde->pid, interfaz);
+
 
     if (strcmp(aux->nombre, interfaz) == 0 ){
         if (strcmp(aux->tipo , "DIALFS") == 0) {
@@ -254,6 +263,8 @@ void* io_fs_truncate(void* arg){
     
     // sem_wait(&sem_colaFS);
     t_interfaz* aux = queue_pop(colaDIALFS);
+    log_info(logger_kernel, "PID: %d - Bloqueado por: %s", pcb_aux->cde->pid, aux->nombre);
+
     
     if (strcmp(aux->nombre, params->interfaz) == 0) {
         if (strcmp(aux->tipo, "DIALFS") == 0) {
@@ -307,6 +318,8 @@ void* io_fs_write(void* arg) {
     
     // sem_wait(&sem_colaFS);
     t_interfaz* aux = queue_pop(colaDIALFS);
+    log_info(logger_kernel, "PID: %d - Bloqueado por: %s", pcb_aux->cde->pid, aux->nombre);
+
     
     if (strcmp(aux->nombre, params->interfaz) == 0) {
         if (strcmp(aux->tipo, "DIALFS") == 0) {
@@ -368,6 +381,8 @@ void* io_fs_read(void* arg) {
     
     // sem_wait(&sem_colaFS);
     t_interfaz* aux = queue_pop(colaDIALFS);
+    log_info(logger_kernel, "PID: %d - Bloqueado por: %s", pcb_aux->cde->pid, aux->nombre);
+
     
     if (strcmp(aux->nombre, params->interfaz) == 0) {
         if (strcmp(aux->tipo, "DIALFS") == 0) {

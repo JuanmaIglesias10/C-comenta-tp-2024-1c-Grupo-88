@@ -34,6 +34,7 @@ typedef struct {
 // Logger Y Config
 extern t_log* logger_memoria;
 extern t_config* config;
+extern t_config* config_ip;
 extern t_config_memoria config_memoria;
 
 // Files Descriptors 
