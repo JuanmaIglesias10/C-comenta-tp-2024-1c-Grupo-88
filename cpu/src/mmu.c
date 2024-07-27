@@ -96,7 +96,14 @@ void actualizar_TLB(uint32_t nro_pagina,uint32_t nro_marco) {
 	entrada_TLB_nueva->nro_pagina = nro_pagina;
 
 	if(list_size(lista_TLB) < config_cpu.cantidad_entradas_tlb){
-		list_add(lista_TLB,entrada_TLB_nueva);
+		if(es_fifo()){
+			list_add(lista_TLB,entrada_TLB_nueva);
+		}
+		if(es_lru()) {
+			entrada_TLB_nueva->cont_lru = cont_lru;
+			cont_lru++;
+			list_add(lista_TLB,entrada_TLB_nueva);
+		}
 	}
 
 	else {
@@ -116,9 +123,10 @@ void actualizar_TLB(uint32_t nro_pagina,uint32_t nro_marco) {
 					primer_contador = entrada->cont_lru;
 				}
 			}
-			entrada_TLB_nueva->cont_lru = cont_lru++;
+			entrada_TLB_nueva->cont_lru = cont_lru;
+			cont_lru++;
 
-			t_entrada_tlb* entrada_removida_lru = list_get(lista_TLB,indice_a_reemplazar);
+			//t_entrada_tlb* entrada_removida_lru = list_get(lista_TLB,indice_a_reemplazar);
 			list_replace(lista_TLB, indice_a_reemplazar, entrada_TLB_nueva);
 		}
 	}
