@@ -52,6 +52,7 @@ extern t_config_IO_STDOUT config_IO_STDOUT;
 extern t_config_IO_DIALFS config_IO_DIALFS;
 extern t_log* logger_IO;
 extern t_config* config;
+extern t_config* config_ip;
 
 // Files Descriptors 
 extern int fd_kernel;
@@ -61,5 +62,7 @@ extern int fd_memoria;
 extern int tamanio_bitmap;
 extern t_bitarray* bitarray;
 extern t_list* lista_info_archivos;
+extern char* path_archivo_bloques;
+extern char* path_archivo_bitmap;
 
 #endif /* DICCIONARIO_IO_H_ */

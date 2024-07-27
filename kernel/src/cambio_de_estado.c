@@ -34,13 +34,13 @@ void ready_a_exec(){
 		//Actualizar cuando tengamos VRR
         char* lista_pcbs_en_ready = obtener_elementos_cargados_en(colaREADY);
 
-        log_info(logger_kernel, "Cola Ready de algoritmo %s: %s", config_kernel.algoritmo_planificacion, lista_pcbs_en_ready); //OBLIGATORIO
+        log_info(logger_kernel, "Cola Ready: %s", lista_pcbs_en_ready); //OBLIGATORIO
         
         if(strcmp(config_kernel.algoritmo_planificacion,"VRR") == 0 && !queue_is_empty(colaREADYMAS)){
 		    // sem_wait(&procesos_en_ready_mas);
 
             char* lista_pcbs_en_ready_mas = obtener_elementos_cargados_en(colaREADYMAS);
-            log_info(logger_kernel, "Cola Ready+ de algoritmo %s: %s", config_kernel.algoritmo_planificacion, lista_pcbs_en_ready_mas); //OBLIGATORIO
+            log_info(logger_kernel, "Cola Prioridad: %s", lista_pcbs_en_ready_mas); //OBLIGATORIO
             free(lista_pcbs_en_ready_mas);
         } 
         free(lista_pcbs_en_ready);	
@@ -190,6 +190,8 @@ void enviar_pcb_de_block_a_ready(t_pcb* pcb){
     
     agregar_pcb_a(colaREADY, pcb_a_ready, &mutex_ready);
     pcb_a_ready->estado = READY;
+    //destruir_pcb(pcb);
+
     
     //Agrego el pcb_a_ready a ejecutando
     // pthread_mutex_lock(&mutex_pcb_en_ejecucion);
@@ -221,7 +223,7 @@ void enviar_pcb_de_block_a_ready_mas(t_pcb* pcb){
     
     agregar_pcb_a(colaREADYMAS, pcb_a_ready, &mutex_ready);
     pcb_a_ready->estado = READY;
-    
+    //destruir_pcb(pcb);
     //Agrego el pcb_a_ready a ejecutando
     // pthread_mutex_lock(&mutex_pcb_en_ejecucion);
     // pcb_ejecutando = pcb_a_ready;

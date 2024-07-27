@@ -8,8 +8,8 @@
 #include "math.h"
 
 // Function declarations
-void inicializar_memoria();
-void inicializar_config();
+void inicializar_memoria(char* nombre_arch_config);
+void inicializar_config(char* nombre_arch_config);
 void inicializar_variables();
 void inicializar_conexiones();
 void enviar_tamanio_pagina();

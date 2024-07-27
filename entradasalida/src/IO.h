@@ -8,7 +8,7 @@
 
 #include "readline/readline.h"
 
-void seleccionar_tipo_interfaz(char* nombre_interfaz, char* path_archivo_config);
+void seleccionar_tipo_interfaz(char* nombre_interfaz, char* nombre_arch_config);
 
 void inicializar_IO_GENERICA(char* nombre_interfaz);
 void inicializar_IO_STDIN(char* nombre_interfaz);

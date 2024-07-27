@@ -4,9 +4,6 @@
 #include "IO.h"
 #include "diccionario_IO.h"
 
-void atender_memoria_IO_STDIN();
-void atender_memoria_IO_STDOUT();
-
 void atender_kernel_IO_GENERICA();
 void atender_kernel_IO_STDIN();
 void atender_kernel_IO_STDOUT();

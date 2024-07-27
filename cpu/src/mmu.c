@@ -70,10 +70,13 @@ uint32_t pedir_marco_memoria(uint32_t nro_pagina){
 }
 
 uint32_t consultar_TLB(uint32_t nro_pagina) {
+
+
+
 	for (size_t i = 0; i < list_size(lista_TLB); i++)
 	{
 		t_entrada_tlb* entrada_tlb = list_get(lista_TLB, i);
-		if(nro_pagina  == entrada_tlb->nro_pagina){
+		if(nro_pagina  == entrada_tlb->nro_pagina && entrada_tlb->pid == pid_de_cde_ejecutando){
 				//ACTUALIZAR CONTADOR LRU EN HIT
 				if(es_lru()){
 					entrada_tlb->cont_lru = cont_lru;
@@ -93,16 +96,20 @@ void actualizar_TLB(uint32_t nro_pagina,uint32_t nro_marco) {
 	entrada_TLB_nueva->nro_pagina = nro_pagina;
 
 	if(list_size(lista_TLB) < config_cpu.cantidad_entradas_tlb){
-		list_add(lista_TLB,entrada_TLB_nueva);
-		log_warning(logger_cpu, "se agrego una entrada nueva a la TLB");
+		if(es_fifo()){
+			list_add(lista_TLB,entrada_TLB_nueva);
+		}
+		if(es_lru()) {
+			entrada_TLB_nueva->cont_lru = cont_lru;
+			cont_lru++;
+			list_add(lista_TLB,entrada_TLB_nueva);
+		}
 	}
 
 	else {
 		if(es_fifo()){
-			t_entrada_tlb* xdFIFO = list_remove(lista_TLB,0);
-			log_warning(logger_cpu, "%d"  ,xdFIFO->nro_pagina);
+			t_entrada_tlb* entrada_removida_fifo = list_remove(lista_TLB,0);
 			list_add(lista_TLB,entrada_TLB_nueva);
-			log_warning(logger_cpu, "hubo un reemplazo por FIFO");
 		} 
 		
 		if(es_lru()) {
@@ -116,12 +123,11 @@ void actualizar_TLB(uint32_t nro_pagina,uint32_t nro_marco) {
 					primer_contador = entrada->cont_lru;
 				}
 			}
-			entrada_TLB_nueva->cont_lru = cont_lru++;
+			entrada_TLB_nueva->cont_lru = cont_lru;
+			cont_lru++;
 
-			t_entrada_tlb* xdLRU = list_get(lista_TLB,indice_a_reemplazar);
-			log_warning(logger_cpu, "%d" ,xdLRU->nro_pagina);
+			//t_entrada_tlb* entrada_removida_lru = list_get(lista_TLB,indice_a_reemplazar);
 			list_replace(lista_TLB, indice_a_reemplazar, entrada_TLB_nueva);
-			log_warning(logger_cpu, "hubo un reemplazo por LRU");
 		}
 	}
 }

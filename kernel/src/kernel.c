@@ -1,18 +1,20 @@
 #include "kernel.h"
 
-int main(void)
-{
-	inicializar_kernel(); 
+int main(int argc, char* argv[])
+{   
+    char* nombre_arch_config = argv[1];
+
+	inicializar_kernel(nombre_arch_config); 
 	iniciar_consola();
 }
 
-void inicializar_kernel(){
+void inicializar_kernel(char* nombre_arch_config){
 
 	pid_a_asignar = 0;
     planificacion_detenida = 0;
 
-	logger_kernel = iniciar_logger("logKernel.log","KERNEL",LOG_LEVEL_INFO);
-	iniciar_config_kernel();
+	logger_kernel = iniciar_logger_kernel("logKernel.log","KERNEL",LOG_LEVEL_INFO);
+	iniciar_config_kernel(nombre_arch_config);
 	inicializar_conexiones();
 	inicializar_listas_colas();
 	inicializar_semaforos();
@@ -42,12 +44,20 @@ void inicializar_kernel(){
 
 }
 
-void iniciar_config_kernel(){
-	config = config_create("./kernel.config");
+void iniciar_config_kernel(char* nombre_arch_config){
+
+    char* path_archivo_config = string_new();
+    string_append(&path_archivo_config, "./configs/");
+    string_append(&path_archivo_config, nombre_arch_config);
+    config = config_create(path_archivo_config);
+    config_ip = config_create("../utils/config_ip.config");
+
+    free(path_archivo_config);
+
 	config_kernel.puerto_escucha = config_get_int_value(config, "PUERTO_ESCUCHA");
-	config_kernel.ip_memoria = config_get_string_value(config, "IP_MEMORIA");
+	config_kernel.ip_memoria = config_get_string_value(config_ip, "IP_MEMORIA");
 	config_kernel.puerto_memoria = config_get_int_value(config, "PUERTO_MEMORIA");
-	config_kernel.ip_cpu = config_get_string_value(config, "IP_CPU");
+	config_kernel.ip_cpu = config_get_string_value(config_ip, "IP_CPU");
 	config_kernel.puerto_cpu_dispatch = config_get_int_value(config, "PUERTO_CPU_DISPATCH");
 	config_kernel.puerto_cpu_interrupt = config_get_int_value(config, "PUERTO_CPU_INTERRUPT");
 	config_kernel.algoritmo_planificacion = config_get_string_value(config, "ALGORITMO_PLANIFICACION");
@@ -68,6 +78,16 @@ void iniciar_config_kernel(){
 
     string_array_destroy(recursos);
     string_array_destroy(instancias);
+}
+
+t_log* iniciar_logger_kernel(char* rutaLog, char* nombreProceso, t_log_level level)
+{
+	t_log* nuevo_logger = log_create(rutaLog, nombreProceso, false, level);
+	if (nuevo_logger == NULL) {
+		printf("no se pudo crear el log");
+		exit(1);
+	}
+	return nuevo_logger;
 }
 
 void inicializar_conexiones(){
@@ -152,13 +172,6 @@ t_recurso* inicializar_recurso(char* nombre_recurso, int instancias_totales){
     recurso->sem_recurso = sem;
 
     return recurso;
-}
-
-
-t_list* ejecutar_script(char* pathScript){
-	t_list* scriptProcesos = obtener_lista_script(pathScript);
-	return scriptProcesos;
-	
 }
 
 void iniciar_proceso(char* path) {
@@ -287,17 +300,10 @@ void enviar_a_finalizado(t_pcb* pcb_a_finalizar, char* razon){
 void cambiar_grado_multiprogramacion(char* nuevo_grado){
     //para cambiarlo la planificacion debe estar detendida
     int grado_a_asignar = atoi(nuevo_grado);
-
-    if(planificacion_detenida == 1){ // se puede cambiar el grado de multiprogramacion
         
-        grado_de_multiprogramacion.__align = grado_a_asignar - config_kernel.grado_multiprogramacion + grado_de_multiprogramacion.__align - 1;
-        sem_post(&grado_de_multiprogramacion);
-        config_kernel.grado_multiprogramacion = grado_a_asignar; 
-    }
-    else{
-        // no se puede realizar el cambio
-        log_warning(logger_kernel, "La planificacion no se detuvo. No se puede cambiar el grado de multiprogramacion");
-    }
+    grado_de_multiprogramacion.__align = grado_a_asignar - config_kernel.grado_multiprogramacion + grado_de_multiprogramacion.__align - 1;
+    sem_post(&grado_de_multiprogramacion);
+    config_kernel.grado_multiprogramacion = grado_a_asignar;     
 }
 
 void detenerPlanificacion(){ 
@@ -674,7 +680,6 @@ void evaluar_instruccion(t_instruccion* instruccion_actual){
             if(es_RR_o_VRR()){
                 pcb_ejecutando->flag_clock = true;
             }
-            /*CONCHA */
             parametros_read_t* parametros_read = malloc(sizeof(parametros_read_t));
             parametros_read->interfaz = strdup(instruccion_actual->par1);
             parametros_read->char_direccion_fisica = strdup(instruccion_actual->par2);
@@ -684,6 +689,7 @@ void evaluar_instruccion(t_instruccion* instruccion_actual){
             pthread_create(&hilo_interfaz_read, NULL, io_stdin_read, (void*)parametros_read);
             pthread_detach(hilo_interfaz_read);
             destruir_instruccion(instruccion_actual);
+
             break;
         case IO_STDOUT_WRITE:
             if(es_RR_o_VRR()){
@@ -756,8 +762,7 @@ void evaluar_instruccion(t_instruccion* instruccion_actual){
             if(es_RR_o_VRR()){
                 pcb_ejecutando->flag_clock = true;
             }
-            log_warning(logger_kernel, "PID: %d - OUT OF MEMORY", pcb_ejecutando->cde->pid);
-            agregar_a_cola_finished("OUT OF MEMORY");
+            agregar_a_cola_finished("OUT_OF_MEMORY");
             destruir_instruccion(instruccion_actual);
             break;
         case EXIT:
@@ -771,7 +776,7 @@ void evaluar_instruccion(t_instruccion* instruccion_actual){
             if(es_RR_o_VRR()){
                 pcb_ejecutando->flag_clock = true;
             }
-            agregar_a_cola_finished("EXIT POR CONSOLA");
+            agregar_a_cola_finished("INTERRUPTED_BY_USER");
             destruir_instruccion(instruccion_actual);
             break;
         default: // FIN DE QUANTUM

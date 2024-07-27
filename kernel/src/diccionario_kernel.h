@@ -102,6 +102,7 @@ extern int planificacion_detenida;
 // Logger Y Config
 extern t_log* logger_kernel;
 extern t_config* config;
+extern t_config* config_ip;
 extern t_config_kernel config_kernel;
 
 // PCB

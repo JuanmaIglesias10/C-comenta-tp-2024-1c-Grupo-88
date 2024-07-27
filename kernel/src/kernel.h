@@ -10,10 +10,10 @@
 #include "manejoIO.h"
 
 // INIT
-void inicializar_kernel();
+void inicializar_kernel(char* nombre_arch_config);
 void inicializar_listas_colas();
 void inicializar_conexiones();
-void iniciar_config_kernel();
+void iniciar_config_kernel(char* nombre_arch_config);
 void inicializar_semaforos();
 void inicializar_planificadores();
 void inicializar_largo_plazo();
@@ -29,7 +29,6 @@ t_codigo_operacion get_codigo_operacion(char* , int );
 
 
 // FUNCIONALIDAD CONSOLA
-t_list* ejecutar_script(char* pathScript);
 t_list* obtener_lista_script(char* pathScript);
 void iniciar_proceso(char* path);
 void finalizar_proceso(char* pid_string);
@@ -71,5 +70,7 @@ void evaluar_instruccion(t_instruccion* instruccion_actual);
 
 void evaluar_wait(char* nombre_recurso_pedido);
 void evaluar_signal(char* nombre_recurso_pedido);
+
+t_log* iniciar_logger_kernel(char* rutaLog, char* nombreProceso, t_log_level level);
 
 #endif

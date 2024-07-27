@@ -34,6 +34,7 @@ extern uint32_t cont_lru;
 // Logger Y Config
 extern t_log* logger_cpu;
 extern t_config* config;
+extern t_config* config_ip;
 extern t_config_cpu config_cpu;
 
 // Files Descriptors 

@@ -7,6 +7,7 @@ t_config_IO_STDOUT config_IO_STDOUT;
 t_config_IO_DIALFS config_IO_DIALFS;
 t_log* logger_IO;
 t_config* config;
+t_config* config_ip;
 
 // Files Descriptors 
 int fd_kernel;
@@ -16,3 +17,5 @@ int fd_memoria;
 int tamanio_bitmap;
 t_bitarray* bitarray;
 t_list* lista_info_archivos;
+char* path_archivo_bloques;
+char* path_archivo_bitmap;

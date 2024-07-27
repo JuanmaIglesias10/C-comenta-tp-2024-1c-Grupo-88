@@ -8,9 +8,9 @@
 #include "math.h"
 #include "mmu.h"
 
-void inicializar_cpu();
+void inicializar_cpu(char* nombre_arch_config);
 
-void inicializar_config();
+void inicializar_config(char* nombre_arch_config);
 
 void inicializar_semaforos();
 

@@ -1,25 +1,30 @@
 #include "cpu.h"
 
-int main(void) {
+int main(int argc, char* argv[]) {
 
-	inicializar_cpu();
-
+    char* nombre_arch_config = argv[1];
+	inicializar_cpu(nombre_arch_config);
 }
 
-void inicializar_cpu() {
+void inicializar_cpu(char* nombre_arch_config) {
     lista_TLB = list_create(); //No mover de aca :) ¿Por qué? Ni idea
     cont_lru = 0;
 
 	logger_cpu = iniciar_logger("logCPU.log","CPU",LOG_LEVEL_INFO);
-	inicializar_config();
+	inicializar_config(nombre_arch_config);
     inicializar_registros();
     inicializar_semaforos();
 	inicializar_conexiones(); // aca hay un join
 }
 
-void inicializar_config(){
-	config = iniciar_config("./cpu.config");
-	config_cpu.ip_memoria = config_get_string_value(config, "IP_MEMORIA");
+void inicializar_config(char* nombre_arch_config){
+    char* path_archivo_config = string_new();
+    string_append(&path_archivo_config, "./configs/");
+    string_append(&path_archivo_config, nombre_arch_config);
+    config = config_create(path_archivo_config);
+    config_ip = config_create("../utils/config_ip.config");
+
+	config_cpu.ip_memoria = config_get_string_value(config_ip, "IP_MEMORIA");
 	config_cpu.puerto_memoria = config_get_int_value(config, "PUERTO_MEMORIA");
 	config_cpu.puerto_escucha_dispatch = config_get_int_value(config, "PUERTO_ESCUCHA_DISPATCH");
 	config_cpu.puerto_escucha_interrupt = config_get_int_value(config, "PUERTO_ESCUCHA_INTERRUPT");
@@ -45,11 +50,6 @@ void inicializar_conexiones(){
 	fd_kernel_dis = esperar_cliente(fd_cpu_dis, logger_cpu,"KERNEL(DISPATCH)"); 
 
 	fd_kernel_int = esperar_cliente(fd_cpu_int, logger_cpu,"KERNEL(INTERRUPT)"); 
-	
-	// TODO: Este hilo no esta siendo usado
-	pthread_t hilo_cpu_memoria;
-	pthread_create(&hilo_cpu_memoria, NULL, (void*)atender_memoria, NULL);
-	pthread_detach(hilo_cpu_memoria);
 
 	pthread_t hilo_kernel_dis;
 

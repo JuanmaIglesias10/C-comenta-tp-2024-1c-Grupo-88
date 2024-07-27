@@ -15,6 +15,7 @@ void io_gen_sleep(char* interfaz, char* char_unidadesDeTrabajo) {
             if (strcmp(aux->tipo , "GENERICA") == 0) {
                 enviar_codOp(aux->fd, SLEEP);
                 t_buffer* buffer_a_enviar = crear_buffer();
+                agregar_buffer_uint32(buffer_a_enviar, pcb_ejecutando->cde->pid);
                 agregar_buffer_uint8(buffer_a_enviar, unidadesDeTrabajo);
                 enviar_buffer(buffer_a_enviar, aux->fd);
                 destruir_buffer(buffer_a_enviar);
@@ -22,7 +23,8 @@ void io_gen_sleep(char* interfaz, char* char_unidadesDeTrabajo) {
                 // Bloqueo el proceso
                 t_pcb* pcb_sleep = malloc(sizeof(t_pcb)); 
                 pcb_sleep = pcb_ejecutando;
-                             
+                log_info(logger_kernel, "PID: %d - Bloqueado por: %s", pcb_sleep->cde->pid, interfaz);
+                
                 enviar_de_exec_a_block();
                 
                 mensajeKernelIO codigo = recibir_codOp(aux->fd);
@@ -55,13 +57,15 @@ void* io_stdin_read(void* arg) {
     parametros_read_t* params = (parametros_read_t*)arg;
     uint32_t direccion_fisica = atoi(params->char_direccion_fisica);
     uint32_t tamanio = atoi(params->char_tamanio);
+    
+    //t_pcb* pcb_aux = malloc(sizeof(t_pcb));
+    t_pcb* pcb_aux = pcb_ejecutando;
 
-    t_pcb* pcb_aux = malloc(sizeof(t_pcb));
-    pcb_aux = pcb_ejecutando;
     enviar_de_exec_a_block();
     
     sem_wait(&sem_colaREAD);
     t_interfaz* aux = queue_pop(colaSTDIN);
+    log_info(logger_kernel, "PID: %d - Bloqueado por: %s", pcb_aux->cde->pid, aux->nombre);
     
     if (strcmp(aux->nombre, params->interfaz) == 0) {
         if (strcmp(aux->tipo, "STDIN") == 0) {
@@ -71,6 +75,7 @@ void* io_stdin_read(void* arg) {
             agregar_buffer_uint32(buffer_a_enviar, direccion_fisica);
             agregar_buffer_uint32(buffer_a_enviar, tamanio);
             agregar_buffer_uint32(buffer_a_enviar, pcb_aux->cde->pid);
+
 
             enviar_buffer(buffer_a_enviar, aux->fd);
             destruir_buffer(buffer_a_enviar);
@@ -98,8 +103,10 @@ void* io_stdin_read(void* arg) {
     } else {
         agregar_a_cola_finished("INVALID_INTERFACE");
     }
-    
-    free(arg);
+    free(params->interfaz);
+    free(params->char_direccion_fisica);
+    free(params->char_tamanio);
+    free(params);
     return NULL;
 }
 
@@ -126,6 +133,7 @@ void io_stdout_write(char* interfaz, char* char_direccion_fisica, char* char_tam
             // Bloqueo el proceso
             t_pcb* pcb_aux = pcb_ejecutando;
             enviar_de_exec_a_block();
+            log_info(logger_kernel, "PID: %d - Bloqueado por: %s", pcb_aux->cde->pid, interfaz);
 
             mensajeKernelIO codigo = recibir_codOp(aux->fd);
             if (codigo == STDOUT_WRITE_OK) {
@@ -152,10 +160,12 @@ void io_stdout_write(char* interfaz, char* char_direccion_fisica, char* char_tam
 //TODO : Es necesesario librear pcb_aux en las funciones, ver luego
 void io_fs_create(char* interfaz, char* nombreArchivo){
     //sem_wait(&sem_colaFS);
-    t_pcb* pcb_aux = malloc(sizeof(t_pcb));
-    pcb_aux = pcb_ejecutando;
+    //t_pcb* pcb_aux = malloc(sizeof(t_pcb));
+    t_pcb* pcb_aux = pcb_ejecutando;
     enviar_de_exec_a_block();
     t_interfaz* aux = queue_pop(colaDIALFS);
+    log_info(logger_kernel, "PID: %d - Bloqueado por: %s", pcb_aux->cde->pid, interfaz);
+
 
     if (strcmp(aux->nombre, interfaz) == 0 ){
         if (strcmp(aux->tipo , "DIALFS") == 0) {
@@ -197,10 +207,12 @@ void io_fs_create(char* interfaz, char* nombreArchivo){
 
 void io_fs_delete(char* interfaz, char* nombreArchivo){
     //sem_wait(&sem_colaFS); 
-    t_pcb* pcb_aux = malloc(sizeof(t_pcb)); 
-    pcb_aux = pcb_ejecutando;
+    //t_pcb* pcb_aux = malloc(sizeof(t_pcb)); 
+    t_pcb* pcb_aux = pcb_ejecutando;
     enviar_de_exec_a_block();
     t_interfaz* aux = queue_pop(colaDIALFS);
+    log_info(logger_kernel, "PID: %d - Bloqueado por: %s", pcb_aux->cde->pid, interfaz);
+
 
     if (strcmp(aux->nombre, interfaz) == 0 ){
         if (strcmp(aux->tipo , "DIALFS") == 0) {
@@ -245,12 +257,14 @@ void* io_fs_truncate(void* arg){
     char* nombreArchivo = params->nombreArchivo;
     uint32_t tamanio = atoi(params->tamanio);
 
-    t_pcb* pcb_aux = malloc(sizeof(t_pcb));
-    pcb_aux = pcb_ejecutando;
+    //t_pcb* pcb_aux = malloc(sizeof(t_pcb));
+    t_pcb* pcb_aux = pcb_ejecutando;
     enviar_de_exec_a_block();
     
     // sem_wait(&sem_colaFS);
     t_interfaz* aux = queue_pop(colaDIALFS);
+    log_info(logger_kernel, "PID: %d - Bloqueado por: %s", pcb_aux->cde->pid, aux->nombre);
+
     
     if (strcmp(aux->nombre, params->interfaz) == 0) {
         if (strcmp(aux->tipo, "DIALFS") == 0) {
@@ -285,7 +299,10 @@ void* io_fs_truncate(void* arg){
     } else {
         agregar_a_cola_finished("INVALID_INTERFACE");
     }
-    free(arg);
+    free(params->interfaz);
+    free(params->nombreArchivo);
+    free(params->tamanio);
+    free(params);
     return NULL;
 }
 
@@ -296,12 +313,13 @@ void* io_fs_write(void* arg) {
     uint32_t tamanio = atoi(params->tamanio);
     uint32_t valor_puntero = atoi(params->valor_puntero);
 
-    t_pcb* pcb_aux = malloc(sizeof(t_pcb));
-    pcb_aux = pcb_ejecutando;
+    t_pcb* pcb_aux = pcb_ejecutando;
     enviar_de_exec_a_block();
     
     // sem_wait(&sem_colaFS);
     t_interfaz* aux = queue_pop(colaDIALFS);
+    log_info(logger_kernel, "PID: %d - Bloqueado por: %s", pcb_aux->cde->pid, aux->nombre);
+
     
     if (strcmp(aux->nombre, params->interfaz) == 0) {
         if (strcmp(aux->tipo, "DIALFS") == 0) {
@@ -341,7 +359,12 @@ void* io_fs_write(void* arg) {
         agregar_a_cola_finished("INVALID_INTERFACE");
     }
     
-    free(arg);
+    free(params->interfaz);
+    free(params->nombreArchivo);
+    free(params->dir_fisica);
+    free(params->tamanio);
+    free(params->valor_puntero);
+    free(params);
     return NULL;
 }
 
@@ -352,12 +375,14 @@ void* io_fs_read(void* arg) {
     uint32_t tamanio = atoi(params->tamanio);
     uint32_t valor_puntero = atoi(params->valor_puntero);
 
-    t_pcb* pcb_aux = malloc(sizeof(t_pcb));
-    pcb_aux = pcb_ejecutando;
+    //t_pcb* pcb_aux = malloc(sizeof(t_pcb));
+    t_pcb* pcb_aux = pcb_ejecutando;
     enviar_de_exec_a_block();
     
     // sem_wait(&sem_colaFS);
     t_interfaz* aux = queue_pop(colaDIALFS);
+    log_info(logger_kernel, "PID: %d - Bloqueado por: %s", pcb_aux->cde->pid, aux->nombre);
+
     
     if (strcmp(aux->nombre, params->interfaz) == 0) {
         if (strcmp(aux->tipo, "DIALFS") == 0) {
@@ -396,7 +421,11 @@ void* io_fs_read(void* arg) {
     } else {
         agregar_a_cola_finished("INVALID_INTERFACE");
     }
-
-    free(arg);
+    free(params->interfaz);
+    free(params->nombreArchivo);
+    free(params->dir_fisica);
+    free(params->tamanio);
+    free(params->valor_puntero);
+    free(params);
     return NULL;
 }
